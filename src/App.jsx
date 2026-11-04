@@ -25,6 +25,7 @@ import {
   MapPin,
   Phone,
   ShieldCheck,
+  Sparkle,
   SpinnerGap,
   SteeringWheel,
   Truck,
@@ -32,7 +33,9 @@ import {
   WhatsappLogo,
   X,
 } from "@phosphor-icons/react";
-import { faqs, makeOptions, priceSteps, vehicles } from "./data.js";
+import { addLead, getVehicles, subscribeVehicles } from "./adminStore.js";
+import { AiAssistant } from "./AiAssistant.jsx";
+import { faqs, priceSteps } from "./data.js";
 
 const phoneDisplay = "033 344 366";
 const phoneHref = "+37433344366";
@@ -141,7 +144,7 @@ function Hero({ onConsultation }) {
   );
 }
 
-function Finder({ criteria, setCriteria, onSearch, isLoading }) {
+function Finder({ criteria, setCriteria, onSearch, isLoading, makes }) {
   const years = Array.from({ length: 12 }, (_, index) => 2026 - index);
   const update = (key) => (event) => setCriteria((current) => ({ ...current, [key]: event.target.value }));
 
@@ -173,7 +176,7 @@ function Finder({ criteria, setCriteria, onSearch, isLoading }) {
           <span>Մակնիշ կամ մոդել</span>
           <select value={criteria.make} onChange={update("make")} disabled={isLoading}>
             <option value="all">Բոլոր մակնիշները</option>
-            {makeOptions.slice(1).map((make) => <option key={make} value={make}>{make}</option>)}
+            {makes.map((make) => <option key={make} value={make}>{make}</option>)}
           </select>
           <small>Դաշտը պարտադիր չէ</small>
         </label>
@@ -466,7 +469,7 @@ function CompareModal({ items, onClose, onRemove, onConsultation }) {
   );
 }
 
-function ConsultationModal({ selectedVehicle, onClose }) {
+function ConsultationModal({ selectedVehicle, onClose, source = "website" }) {
   const [form, setForm] = useState({ name: "", phone: "", method: "Հեռախոսազանգ", date: "", time: "10:00–13:00", note: "", consent: false });
   const [errors, setErrors] = useState({});
   const [status, setStatus] = useState("idle");
@@ -510,17 +513,28 @@ function ConsultationModal({ selectedVehicle, onClose }) {
       });
       return;
     }
+    addLead({
+      name: form.name,
+      phone: form.phone,
+      method: form.method,
+      vehicleId: selectedVehicle?.id ?? null,
+      vehicleLabel: selectedVehicleText,
+      date: form.date,
+      time: form.time,
+      note: form.note,
+      source,
+    });
     setStatus("submitting");
     timerRef.current = window.setTimeout(() => setStatus("success"), 700);
   };
 
   if (status === "success") {
     return (
-      <Modal title="Հարցումը պատրաստ է" onClose={onClose}>
+      <Modal title="Հարցումը պահպանվել է" onClose={onClose}>
         <div className="success-state">
           <span><CheckCircle size={44} weight="fill" /></span>
           <h3>Շնորհակալություն, {form.name}</h3>
-          <p>Ուղարկեք պատրաստված հարցումը WhatsApp-ով կամ զանգահարեք Hovex Motors-ին։ Հաղորդագրությունը չի ուղարկվի առանց ձեր հաստատման։</p>
+          <p>Հարցումն ավելացվել է ադմին վահանակի տեղային ցուցակին։ Կապն արագացնելու համար այն կարող եք նաև ուղարկել WhatsApp-ով կամ զանգահարել Hovex Motors-ին։ WhatsApp հաղորդագրությունը չի ուղարկվի առանց ձեր հաստատման։</p>
           <div><strong>Կապի եղանակ</strong><span>{form.method}</span></div>
           {selectedVehicle ? <div><strong>Ընտրված մեքենա</strong><span>{selectedVehicleText}</span></div> : null}
           <a className="button button--primary" href={whatsappUrl} target="_blank" rel="noreferrer"><WhatsappLogo size={20} weight="bold" /><span>Ուղարկել WhatsApp-ով</span></a>
@@ -559,6 +573,7 @@ function CompareBar({ count, onOpen, onClear }) {
 }
 
 export function App() {
+  const [allVehicles, setAllVehicles] = useState(() => getVehicles());
   const [criteria, setCriteria] = useState({ budget: "15000", yearFrom: "2020", yearTo: "2026", make: "all" });
   const [appliedCriteria, setAppliedCriteria] = useState(criteria);
   const [searchState, setSearchState] = useState("idle");
@@ -566,10 +581,19 @@ export function App() {
   const [detailVehicle, setDetailVehicle] = useState(null);
   const [consultVehicleId, setConsultVehicleId] = useState(undefined);
   const [compareOpen, setCompareOpen] = useState(false);
+  const [assistantOpen, setAssistantOpen] = useState(false);
+  const [consultSource, setConsultSource] = useState("website");
   const [notice, setNotice] = useState("");
   const searchTimerRef = useRef(null);
   const noticeTimerRef = useRef(null);
   const modalOpen = Boolean(detailVehicle) || consultVehicleId !== undefined || compareOpen;
+  const vehicles = useMemo(() => allVehicles.filter((vehicle) => vehicle.status === "published"), [allVehicles]);
+  const makes = useMemo(() => (
+    [...new Set(vehicles.map((vehicle) => vehicle.make).filter(Boolean))]
+      .sort((left, right) => left.localeCompare(right, "hy"))
+  ), [vehicles]);
+
+  useEffect(() => subscribeVehicles(setAllVehicles), []);
 
   useEffect(() => {
     document.body.classList.toggle("modal-open", modalOpen);
@@ -607,10 +631,10 @@ export function App() {
       const inMake = appliedCriteria.make === "all" || vehicle.make === appliedCriteria.make;
       return inBudget && inYear && inMake;
     });
-  }, [appliedCriteria]);
+  }, [appliedCriteria, vehicles]);
 
-  const featuredIds = ["hyundai-elantra-2023", "deepal-sl03-2025", "deepal-s05-2026"];
-  const displayedResults = searchState === "idle" ? vehicles.filter((vehicle) => featuredIds.includes(vehicle.id)) : results;
+  const featuredVehicles = vehicles.filter((vehicle) => vehicle.featured);
+  const displayedResults = searchState === "idle" ? (featuredVehicles.length ? featuredVehicles : vehicles.slice(0, 3)) : results;
   const comparedVehicles = vehicles.filter((vehicle) => compared.includes(vehicle.id));
   const selectedConsultVehicle = vehicles.find((vehicle) => vehicle.id === consultVehicleId) || null;
 
@@ -672,10 +696,22 @@ export function App() {
     setCompareOpen(true);
   };
 
-  const openConsultation = (id) => {
+  const openConsultation = (id, source = "website") => {
     setDetailVehicle(null);
     setCompareOpen(false);
+    setAssistantOpen(false);
+    setConsultSource(source);
     setConsultVehicleId(id ?? null);
+  };
+
+  const closeConsultation = () => {
+    setConsultVehicleId(undefined);
+    setConsultSource("website");
+  };
+
+  const openFinder = () => {
+    setAssistantOpen(false);
+    scrollToId("finder");
   };
 
   return (
@@ -683,7 +719,7 @@ export function App() {
       <Header onConsultation={openConsultation} />
       <main>
         <Hero onConsultation={openConsultation} />
-        <Finder criteria={criteria} setCriteria={setCriteria} onSearch={handleSearch} isLoading={searchState === "loading"} />
+        <Finder criteria={criteria} setCriteria={setCriteria} onSearch={handleSearch} isLoading={searchState === "loading"} makes={makes} />
         <CostStrip />
         <Results results={displayedResults} state={searchState} criteria={appliedCriteria} compared={compared} onCompare={toggleCompare} onDetails={setDetailVehicle} onConsultation={openConsultation} onReset={resetFilters} />
         <HowItWorks />
@@ -693,12 +729,13 @@ export function App() {
         <Faq />
       </main>
       <Footer />
-      <div className="mobile-actions"><button type="button" onClick={() => scrollToId("finder")}><MagnifyingGlass size={19} weight="bold" />Գտնել մեքենա</button><button type="button" onClick={() => openConsultation(null)}><ChatCircleText size={19} weight="bold" />Խորհրդատվություն</button></div>
+      <AiAssistant open={assistantOpen} onOpenChange={setAssistantOpen} vehicles={vehicles} criteria={criteria} compared={compared} onVehicleDetails={setDetailVehicle} onCompare={toggleCompare} onConsultation={(id) => openConsultation(id, "ai-assistant")} onOpenFinder={openFinder} />
+      <div className="mobile-actions"><button type="button" onClick={openFinder}><MagnifyingGlass size={19} weight="bold" />Գտնել մեքենա</button><button type="button" onClick={() => setAssistantOpen(true)} aria-expanded={assistantOpen} aria-controls="hovex-ai-panel"><Sparkle size={19} weight="fill" />AI օգնական</button><button type="button" onClick={() => openConsultation(null)}><ChatCircleText size={19} weight="bold" />Խորհրդատվություն</button></div>
       {compared.length ? <CompareBar count={compared.length} onOpen={openCompare} onClear={() => setCompared([])} /> : null}
       {notice ? <div className="toast" role="alert"><WarningCircle size={20} weight="fill" />{notice}</div> : null}
       {detailVehicle ? <VehicleDetails vehicle={detailVehicle} onClose={() => setDetailVehicle(null)} onConsultation={openConsultation} isCompared={compared.includes(detailVehicle.id)} onCompare={toggleCompare} /> : null}
       {compareOpen ? <CompareModal items={comparedVehicles} onClose={() => setCompareOpen(false)} onRemove={removeCompareItem} onConsultation={openConsultation} /> : null}
-      {consultVehicleId !== undefined ? <ConsultationModal selectedVehicle={selectedConsultVehicle} onClose={() => setConsultVehicleId(undefined)} /> : null}
+      {consultVehicleId !== undefined ? <ConsultationModal selectedVehicle={selectedConsultVehicle} onClose={closeConsultation} source={consultSource} /> : null}
     </>
   );
 }
