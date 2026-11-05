@@ -7,7 +7,7 @@ import {
   resetVehicles,
   saveLeads,
   saveVehicles,
-} from "../src/adminStore.js";
+} from "../src/adminStore";
 
 test("admin store supports inventory and lead workflows", () => {
   const initialVehicles = resetVehicles();

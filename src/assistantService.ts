@@ -1,15 +1,90 @@
-const assistantEndpoint = import.meta.env?.VITE_ASSISTANT_API_URL?.trim() || "";
-const MAX_HISTORY_MESSAGES = 8;
-const MAX_MESSAGE_LENGTH = 600;
+import type { Vehicle } from "./adminStore";
 
-const DEFAULT_SUGGESTIONS = [
+const assistantEndpoint: string = import.meta.env?.VITE_ASSISTANT_API_URL?.trim() || "";
+const MAX_HISTORY_MESSAGES = 8;
+
+export const MAX_MESSAGE_LENGTH: number = 600;
+
+export const DEFAULT_SUGGESTIONS: string[] = [
   "Գտիր մեքենա մինչև $15,000",
   "Ո՞ր էլեկտրական մեքենան է ինձ հարմար",
   "Ինչի՞ց է կազմվում գինը",
   "Որքա՞ն է տևում ներմուծումը",
 ];
 
-function normalizeText(value) {
+export interface FaqItem {
+  question: string;
+  answer: string;
+}
+
+export interface AssistantCriteria {
+  budget?: string | number | null;
+  yearFrom?: string | number | null;
+  yearTo?: string | number | null;
+  make?: string | null;
+  [key: string]: unknown;
+}
+
+export interface AssistantHistoryMessage {
+  role: string;
+  content: unknown;
+  [key: string]: unknown;
+}
+
+export type AssistantReplyMode = "local-demo" | "remote-ai" | "local-fallback";
+
+export interface AssistantReply {
+  text: string;
+  vehicleIds: string[];
+  suggestions: string[];
+  mode: AssistantReplyMode;
+  notice?: string;
+}
+
+export interface BuildLocalAssistantReplyOptions {
+  message: unknown;
+  vehicles?: readonly Vehicle[];
+  faqs?: readonly FaqItem[];
+}
+
+export interface AskAssistantOptions extends BuildLocalAssistantReplyOptions {
+  history?: readonly AssistantHistoryMessage[];
+  criteria?: AssistantCriteria;
+  comparedVehicleIds?: readonly string[];
+}
+
+interface YearRange {
+  min: number | null;
+  max: number | null;
+}
+
+interface RecommendationResult {
+  budget: number | null;
+  yearMin: number | null;
+  yearMax: number | null;
+  make: string | null;
+  fuel: string | null;
+  body: string | null;
+  hasCriteria: boolean;
+  vehicles: Vehicle[];
+}
+
+interface CompactVehicle {
+  id: string;
+  make: string;
+  model: string;
+  year: number;
+  body: string;
+  mileage: string;
+  fuel: string;
+  damage: string;
+  auction: string;
+  estimate_min: number;
+  estimate_max: number;
+  max_bid: number;
+}
+
+function normalizeText(value: unknown): string {
   return String(value || "")
     .toLocaleLowerCase("hy")
     .replace(/[՞՜՛]/g, "")
@@ -18,15 +93,15 @@ function normalizeText(value) {
     .trim();
 }
 
-function parseNumber(value, multiplier = "") {
+function parseNumber(value: unknown, multiplier = ""): number | null {
   const parsed = Number(String(value || "").replace(/[\s,]/g, ""));
   if (!Number.isFinite(parsed)) return null;
   return multiplier.toLocaleLowerCase() === "k" ? parsed * 1000 : parsed;
 }
 
-function extractBudget(message) {
+function extractBudget(message: unknown): number | null {
   const text = String(message || "");
-  const patterns = [
+  const patterns: RegExp[] = [
     /\$\s*([\d][\d\s,.]*)(k)?/i,
     /([\d][\d\s,.]*)(k)?\s*(?:usd|դոլար)/i,
     /(?:մինչև|բյուջե(?:ս|ով)?|budget)\s*\$?\s*([\d][\d\s,.]*)(k)?/i,
@@ -38,11 +113,11 @@ function extractBudget(message) {
   }
   const candidates = [...text.matchAll(/\b([\d][\d\s,]*)(k)?\b/gi)]
     .map((match) => parseNumber(match[1], match[2]))
-    .filter((value) => value >= 4000 && value <= 500000);
+    .filter((value): value is number => value !== null && value >= 4000 && value <= 500000);
   return candidates[0] || null;
 }
 
-function extractYears(message) {
+function extractYears(message: unknown): YearRange {
   const text = String(message || "");
   const range = text.match(/\b((?:19|20)\d{2})\s*(?:-|–|—|ից\s*մինչև)\s*((?:19|20)\d{2})\b/i);
   if (range) {
@@ -57,13 +132,13 @@ function extractYears(message) {
   return { min: year, max: null };
 }
 
-function findMake(message, vehicles) {
+function findMake(message: unknown, vehicles: readonly Vehicle[]): string | null {
   const normalized = normalizeText(message);
   return [...new Set(vehicles.map((vehicle) => vehicle.make).filter(Boolean))]
     .find((make) => normalized.includes(normalizeText(make))) || null;
 }
 
-function findFuel(message) {
+function findFuel(message: unknown): string | null {
   const normalized = normalizeText(message);
   if (/էլեկտր|electric|\bev\b/.test(normalized)) return "Էլեկտրական";
   if (/հիբրիդ|hybrid/.test(normalized)) return "Հիբրիդ";
@@ -72,7 +147,7 @@ function findFuel(message) {
   return null;
 }
 
-function findBody(message) {
+function findBody(message: unknown): string | null {
   const normalized = normalizeText(message);
   if (/քրոսովեր|crossover/.test(normalized)) return "քրոսովեր";
   if (/ամենագնաց|suv/.test(normalized)) return "ամենագնաց";
@@ -80,7 +155,7 @@ function findBody(message) {
   return null;
 }
 
-function formatUsd(value) {
+function formatUsd(value: unknown): string {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
@@ -88,11 +163,11 @@ function formatUsd(value) {
   }).format(Number(value) || 0);
 }
 
-function publishedVehicles(vehicles) {
+function publishedVehicles(vehicles: readonly Vehicle[]): Vehicle[] {
   return vehicles.filter((vehicle) => vehicle.status === "published");
 }
 
-function selectRecommendations(message, vehicles) {
+function selectRecommendations(message: unknown, vehicles: readonly Vehicle[]): RecommendationResult {
   const inventory = publishedVehicles(vehicles);
   const budget = extractBudget(message);
   const years = extractYears(message);
@@ -101,7 +176,7 @@ function selectRecommendations(message, vehicles) {
   const body = findBody(message);
   const hasCriteria = Boolean(budget || years.min || years.max || make || fuel || body);
 
-  const matchesCriteria = (vehicle, includeBudget = true) => {
+  const matchesCriteria = (vehicle: Vehicle, includeBudget = true): boolean => {
     if (includeBudget && budget && Number(vehicle.estimateMax) > budget) return false;
     if (years.min && Number(vehicle.year) < years.min) return false;
     if (years.max && Number(vehicle.year) > years.max) return false;
@@ -111,7 +186,7 @@ function selectRecommendations(message, vehicles) {
     return true;
   };
 
-  const sortCandidates = (items) => [...items].sort((left, right) => {
+  const sortCandidates = (items: readonly Vehicle[]): Vehicle[] => [...items].sort((left, right) => {
     if (Boolean(left.featured) !== Boolean(right.featured)) return left.featured ? -1 : 1;
     if (Number(left.year) !== Number(right.year)) return Number(right.year) - Number(left.year);
     return Number(left.estimateMax) - Number(right.estimateMax);
@@ -131,7 +206,7 @@ function selectRecommendations(message, vehicles) {
   };
 }
 
-function recommendationReply(message, vehicles) {
+function recommendationReply(message: unknown, vehicles: readonly Vehicle[]): AssistantReply {
   const result = selectRecommendations(message, vehicles);
   if (!result.hasCriteria) {
     return {
@@ -173,19 +248,23 @@ function recommendationReply(message, vehicles) {
   };
 }
 
-function findFaqAnswer(message, faqs) {
+function findFaqAnswer(message: unknown, faqs: readonly FaqItem[]): string | null {
   const normalized = normalizeText(message);
-  const rules = [
+  const rules: Array<{ test: RegExp; index: number }> = [
     { test: /տև|ժամկետ|շաբաթ|առաքման ժամանակ/, index: 4 },
     { test: /գին|արժեք|ներառում|ծախս|մաքս/, index: /վերջնական/.test(normalized) ? 0 : /միջակայք|ինչու/.test(normalized) ? 2 : 1 },
     { test: /ստուգ|vin|վնաս|պատմություն/, index: 3 },
     { test: /գրանց|հաշիվ/, index: 5 },
   ];
   const rule = rules.find((item) => item.test.test(normalized));
-  return rule ? faqs[rule.index]?.answer : null;
+  return rule ? faqs[rule.index]?.answer || null : null;
 }
 
-export function buildLocalAssistantReply({ message, vehicles = [], faqs = [] }) {
+export function buildLocalAssistantReply({
+  message,
+  vehicles = [],
+  faqs = [],
+}: BuildLocalAssistantReplyOptions): AssistantReply {
   const trimmed = String(message || "").trim().slice(0, MAX_MESSAGE_LENGTH);
   const normalized = normalizeText(trimmed);
   const asksForVehicle = /մեքենա|տարբերակ|ընտր|առաջարկ|գտ|բյուջե|էլեկտր|սեդան|քրոսովեր|ամենագնաց|car|vehicle|recommend|budget/.test(normalized)
@@ -239,7 +318,7 @@ export function buildLocalAssistantReply({ message, vehicles = [], faqs = [] }) 
   };
 }
 
-function getSessionId() {
+function getSessionId(): string {
   if (typeof window === "undefined") return "server-session";
   const key = "hovex.assistant.session.v1";
   const existing = window.sessionStorage.getItem(key);
@@ -249,7 +328,7 @@ function getSessionId() {
   return id;
 }
 
-function compactVehicle(vehicle) {
+function compactVehicle(vehicle: Vehicle): CompactVehicle {
   return {
     id: vehicle.id,
     make: vehicle.make,
@@ -266,27 +345,42 @@ function compactVehicle(vehicle) {
   };
 }
 
-function normalizeRemoteReply(payload, vehicles) {
-  const message = payload?.message;
-  const text = typeof message === "string"
-    ? message
-    : message?.text || payload?.reply || payload?.text;
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return typeof value === "object" && value !== null ? value as Record<string, unknown> : null;
+}
+
+function normalizeRemoteReply(payload: unknown, vehicles: readonly Vehicle[]): AssistantReply {
+  const payloadRecord = asRecord(payload) || {};
+  const rawMessage = payloadRecord.message;
+  const messageRecord = asRecord(rawMessage);
+  const text = typeof rawMessage === "string"
+    ? rawMessage
+    : messageRecord?.text || payloadRecord.reply || payloadRecord.text;
   if (typeof text !== "string" || !text.trim()) throw new Error("Assistant response is missing text");
-  const requestedIds = message?.suggested_vehicle_ids || payload?.vehicleIds || payload?.vehicle_ids || [];
+  const requestedIds = messageRecord?.suggested_vehicle_ids || payloadRecord.vehicleIds || payloadRecord.vehicle_ids || [];
   const publishedIds = new Set(publishedVehicles(vehicles).map((vehicle) => vehicle.id));
-  const vehicleIds = Array.isArray(requestedIds) ? requestedIds.filter((id) => publishedIds.has(id)).slice(0, 3) : [];
-  const rawSuggestions = message?.quick_replies || payload?.suggestions || [];
+  const vehicleIds = Array.isArray(requestedIds)
+    ? requestedIds.filter((id): id is string => typeof id === "string" && publishedIds.has(id)).slice(0, 3)
+    : [];
+  const rawSuggestions = messageRecord?.quick_replies || payloadRecord.suggestions || [];
   const suggestions = Array.isArray(rawSuggestions)
-    ? rawSuggestions.filter((item) => typeof item === "string" && item.trim()).slice(0, 4)
+    ? rawSuggestions.filter((item): item is string => typeof item === "string" && Boolean(item.trim())).slice(0, 4)
     : [];
   return { text: text.trim(), vehicleIds, suggestions, mode: "remote-ai" };
 }
 
-export function isRemoteAssistantConfigured() {
+export function isRemoteAssistantConfigured(): boolean {
   return Boolean(assistantEndpoint);
 }
 
-export async function askAssistant({ message, history = [], vehicles = [], faqs = [], criteria = {}, comparedVehicleIds = [] }) {
+export async function askAssistant({
+  message,
+  history = [],
+  vehicles = [],
+  faqs = [],
+  criteria = {},
+  comparedVehicleIds = [],
+}: AskAssistantOptions): Promise<AssistantReply> {
   const trimmed = String(message || "").trim().slice(0, MAX_MESSAGE_LENGTH);
   if (!trimmed) throw new Error("Message is required");
   if (!assistantEndpoint) return buildLocalAssistantReply({ message: trimmed, vehicles, faqs });
@@ -329,5 +423,3 @@ export async function askAssistant({ message, history = [], vehicles = [], faqs 
     window.clearTimeout(timeout);
   }
 }
-
-export { DEFAULT_SUGGESTIONS, MAX_MESSAGE_LENGTH };

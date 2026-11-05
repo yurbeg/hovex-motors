@@ -1,4 +1,4 @@
-import { vehicles as sourceVehicles } from "./data.js";
+import { vehicles as sourceVehicles } from "./data";
 
 const VEHICLES_STORAGE_KEY = "hovex.admin.vehicles.v1";
 const LEADS_STORAGE_KEY = "hovex.admin.leads.v1";
@@ -6,15 +6,94 @@ const VEHICLES_CHANGED_EVENT = "hovex:vehicles-changed";
 const LEADS_CHANGED_EVENT = "hovex:leads-changed";
 const SEED_UPDATED_AT = "2026-11-04T08:00:00.000Z";
 
-const vehicleStatuses = new Set(["published", "draft", "archived"]);
-const leadStatuses = new Set(["new", "contacted", "booked", "closed"]);
-const featuredVehicleIds = new Set([
+export type VehicleStatus = "published" | "draft" | "archived";
+export type LeadStatus = "new" | "contacted" | "booked" | "closed";
+
+export interface Vehicle {
+  id: string;
+  make: string;
+  model: string;
+  year: number;
+  body: string;
+  mileage: string;
+  fuel: string;
+  damage: string;
+  auction: string;
+  estimateMin: number;
+  estimateMax: number;
+  maxBid: number;
+  image: string;
+  imagePosition: string;
+  badge: string;
+  accent: string;
+  status: VehicleStatus;
+  featured: boolean;
+  sortOrder: number;
+  updatedAt: string;
+  [key: string]: unknown;
+}
+
+export type VehicleInput = Partial<Vehicle> & {
+  published?: boolean;
+  [key: string]: unknown;
+};
+
+export interface VehicleForm {
+  make: string;
+  model: string;
+  year: number;
+  body: string;
+  mileage: string;
+  fuel: string;
+  damage: string;
+  auction: string;
+  estimateMin: string;
+  estimateMax: string;
+  maxBid: string;
+  image: string;
+  imagePosition: string;
+  badge: string;
+  accent: string;
+  status: VehicleStatus;
+  featured: boolean;
+}
+
+export interface Lead {
+  id: string;
+  name: string;
+  phone: string;
+  method: string;
+  vehicleId: string | null;
+  vehicleLabel: string;
+  date: string;
+  time: string;
+  note: string;
+  status: LeadStatus;
+  source: string;
+  demo: boolean;
+  createdAt: string;
+  updatedAt: string;
+  [key: string]: unknown;
+}
+
+export type LeadInput = Partial<Lead> & {
+  vehicle?: string;
+  preferredDate?: string;
+  preferredTime?: string;
+  [key: string]: unknown;
+};
+
+export type CollectionSubscriber<T> = (items: T[]) => void;
+
+const vehicleStatuses = new Set<VehicleStatus>(["published", "draft", "archived"]);
+const leadStatuses = new Set<LeadStatus>(["new", "contacted", "booked", "closed"]);
+const featuredVehicleIds = new Set<string>([
   "hyundai-elantra-2023",
   "deepal-sl03-2025",
   "deepal-s05-2026",
 ]);
 
-export const DEFAULT_VEHICLE_FORM = {
+export const DEFAULT_VEHICLE_FORM: VehicleForm = {
   make: "",
   model: "",
   year: new Date().getFullYear(),
@@ -34,36 +113,41 @@ export const DEFAULT_VEHICLE_FORM = {
   featured: false,
 };
 
-function isBrowser() {
+function isBrowser(): boolean {
   return typeof window !== "undefined";
 }
 
-function clone(value) {
-  return JSON.parse(JSON.stringify(value));
+function clone<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value)) as T;
 }
 
-function makeId(prefix) {
+function makeId(prefix: string): string {
   const uuid = globalThis.crypto?.randomUUID?.();
   return uuid ? `${prefix}-${uuid}` : `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
-function text(value, fallback = "") {
+function text(value: unknown, fallback = ""): string {
   if (typeof value !== "string") return fallback;
   return value.trim() || fallback;
 }
 
-function number(value, fallback = 0) {
+function number(value: unknown, fallback = 0): number {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
-function dateTime(value, fallback) {
+function dateTime(value: unknown, fallback: string): string {
   return typeof value === "string" && !Number.isNaN(Date.parse(value)) ? value : fallback;
 }
 
-function normalizeVehicle(item = {}, index = 0, fallbackUpdatedAt = new Date().toISOString()) {
-  const status = vehicleStatuses.has(item.status)
-    ? item.status
+function normalizeVehicle(
+  item: Record<string, unknown> = {},
+  index = 0,
+  fallbackUpdatedAt = new Date().toISOString(),
+): Vehicle {
+  const rawStatus = item.status;
+  const status: VehicleStatus = typeof rawStatus === "string" && vehicleStatuses.has(rawStatus as VehicleStatus)
+    ? rawStatus as VehicleStatus
     : item.published === false
       ? "draft"
       : "published";
@@ -93,8 +177,16 @@ function normalizeVehicle(item = {}, index = 0, fallbackUpdatedAt = new Date().t
   };
 }
 
-function normalizeLead(item = {}, fallbackCreatedAt = new Date().toISOString()) {
+function normalizeLead(
+  item: Record<string, unknown> = {},
+  fallbackCreatedAt = new Date().toISOString(),
+): Lead {
   const createdAt = dateTime(item.createdAt, fallbackCreatedAt);
+  const rawStatus = item.status;
+  const status: LeadStatus = typeof rawStatus === "string" && leadStatuses.has(rawStatus as LeadStatus)
+    ? rawStatus as LeadStatus
+    : "new";
+
   return {
     ...item,
     id: text(item.id) || makeId("lead"),
@@ -106,7 +198,7 @@ function normalizeLead(item = {}, fallbackCreatedAt = new Date().toISOString()) 
     date: text(item.date || item.preferredDate),
     time: text(item.time || item.preferredTime),
     note: text(item.note),
-    status: leadStatuses.has(item.status) ? item.status : "new",
+    status,
     source: text(item.source, "website"),
     demo: Boolean(item.demo),
     createdAt,
@@ -114,7 +206,7 @@ function normalizeLead(item = {}, fallbackCreatedAt = new Date().toISOString()) 
   };
 }
 
-const seededVehicles = sourceVehicles.map((vehicle, index) => normalizeVehicle({
+const seededVehicles: Vehicle[] = sourceVehicles.map((vehicle, index) => normalizeVehicle({
   ...vehicle,
   status: "published",
   featured: featuredVehicleIds.has(vehicle.id),
@@ -122,7 +214,7 @@ const seededVehicles = sourceVehicles.map((vehicle, index) => normalizeVehicle({
   updatedAt: SEED_UPDATED_AT,
 }, index, SEED_UPDATED_AT));
 
-const seededLeads = [
+const seededLeads: Lead[] = [
   {
     id: "lead-demo-001",
     name: "Անի Մկրտչյան",
@@ -189,12 +281,12 @@ const seededLeads = [
   },
 ].map((lead) => normalizeLead(lead, lead.createdAt));
 
-let memoryVehicles = clone(seededVehicles);
-let memoryLeads = clone(seededLeads);
+let memoryVehicles: Vehicle[] = clone(seededVehicles);
+let memoryLeads: Lead[] = clone(seededLeads);
 let vehiclesHydrated = false;
 let leadsHydrated = false;
 
-function readStorage(key) {
+function readStorage(key: string): string | null {
   if (!isBrowser()) return null;
   try {
     return window.localStorage.getItem(key);
@@ -203,7 +295,7 @@ function readStorage(key) {
   }
 }
 
-function writeStorage(key, value) {
+function writeStorage(key: string, value: unknown): boolean {
   if (!isBrowser()) return false;
   try {
     window.localStorage.setItem(key, JSON.stringify(value));
@@ -213,25 +305,25 @@ function writeStorage(key, value) {
   }
 }
 
-function parseCollection(raw) {
+function parseCollection(raw: string | null): unknown[] | null {
   if (!raw) return null;
   try {
-    const value = JSON.parse(raw);
+    const value: unknown = JSON.parse(raw);
     return Array.isArray(value) ? value : null;
   } catch {
     return null;
   }
 }
 
-function emit(eventName, detail) {
+function emit<T>(eventName: string, detail: T): void {
   if (!isBrowser()) return;
-  window.dispatchEvent(new CustomEvent(eventName, { detail: clone(detail) }));
+  window.dispatchEvent(new CustomEvent<T>(eventName, { detail: clone(detail) }));
 }
 
-export function getVehicles() {
+export function getVehicles(): Vehicle[] {
   const stored = parseCollection(readStorage(VEHICLES_STORAGE_KEY));
   if (stored) {
-    memoryVehicles = stored.map((vehicle, index) => normalizeVehicle(vehicle, index));
+    memoryVehicles = stored.map((vehicle, index) => normalizeVehicle(vehicle as Record<string, unknown>, index));
   } else if (!vehiclesHydrated) {
     writeStorage(VEHICLES_STORAGE_KEY, memoryVehicles);
   }
@@ -239,10 +331,10 @@ export function getVehicles() {
   return clone(memoryVehicles);
 }
 
-export function saveVehicles(items) {
+export function saveVehicles(items: readonly VehicleInput[] | unknown): Vehicle[] {
   const now = new Date().toISOString();
   const normalized = (Array.isArray(items) ? items : []).map((vehicle, index) => (
-    normalizeVehicle(vehicle, index, now)
+    normalizeVehicle(vehicle as Record<string, unknown>, index, now)
   ));
   memoryVehicles = normalized;
   vehiclesHydrated = true;
@@ -251,14 +343,14 @@ export function saveVehicles(items) {
   return clone(normalized);
 }
 
-export function resetVehicles() {
+export function resetVehicles(): Vehicle[] {
   return saveVehicles(clone(seededVehicles));
 }
 
-export function getLeads() {
+export function getLeads(): Lead[] {
   const stored = parseCollection(readStorage(LEADS_STORAGE_KEY));
   if (stored) {
-    memoryLeads = stored.map((lead) => normalizeLead(lead));
+    memoryLeads = stored.map((lead) => normalizeLead(lead as Record<string, unknown>));
   } else if (!leadsHydrated) {
     writeStorage(LEADS_STORAGE_KEY, memoryLeads);
   }
@@ -266,9 +358,9 @@ export function getLeads() {
   return clone(memoryLeads);
 }
 
-export function saveLeads(items) {
+export function saveLeads(items: readonly LeadInput[] | unknown): Lead[] {
   const now = new Date().toISOString();
-  const normalized = (Array.isArray(items) ? items : []).map((lead) => normalizeLead(lead, now));
+  const normalized = (Array.isArray(items) ? items : []).map((lead) => normalizeLead(lead as Record<string, unknown>, now));
   memoryLeads = normalized;
   leadsHydrated = true;
   writeStorage(LEADS_STORAGE_KEY, normalized);
@@ -276,12 +368,16 @@ export function saveLeads(items) {
   return clone(normalized);
 }
 
-export function addLead(payload) {
+export function addLead(payload: LeadInput): Lead {
   const now = new Date().toISOString();
+  const rawStatus = payload?.status;
+  const status: LeadStatus = typeof rawStatus === "string" && leadStatuses.has(rawStatus as LeadStatus)
+    ? rawStatus as LeadStatus
+    : "new";
   const lead = normalizeLead({
     ...payload,
     id: text(payload?.id) || makeId("lead"),
-    status: leadStatuses.has(payload?.status) ? payload.status : "new",
+    status,
     source: text(payload?.source, "website"),
     createdAt: now,
     updatedAt: now,
@@ -290,11 +386,21 @@ export function addLead(payload) {
   return clone(lead);
 }
 
-function subscribe({ callback, eventName, storageKey, read }) {
+interface SubscribeOptions<T> {
+  callback: CollectionSubscriber<T>;
+  eventName: string;
+  storageKey: string;
+  read: () => T[];
+}
+
+function subscribe<T>({ callback, eventName, storageKey, read }: SubscribeOptions<T>): () => void {
   if (!isBrowser() || typeof callback !== "function") return () => {};
 
-  const onCustomEvent = (event) => callback(clone(event.detail ?? read()));
-  const onStorage = (event) => {
+  const onCustomEvent: EventListener = (event) => {
+    const detail = (event as CustomEvent<T[]>).detail;
+    callback(clone(detail ?? read()));
+  };
+  const onStorage = (event: StorageEvent): void => {
     if (event.key === storageKey) callback(read());
   };
 
@@ -306,7 +412,7 @@ function subscribe({ callback, eventName, storageKey, read }) {
   };
 }
 
-export function subscribeVehicles(callback) {
+export function subscribeVehicles(callback: CollectionSubscriber<Vehicle>): () => void {
   return subscribe({
     callback,
     eventName: VEHICLES_CHANGED_EVENT,
@@ -315,7 +421,7 @@ export function subscribeVehicles(callback) {
   });
 }
 
-export function subscribeLeads(callback) {
+export function subscribeLeads(callback: CollectionSubscriber<Lead>): () => void {
   return subscribe({
     callback,
     eventName: LEADS_CHANGED_EVENT,

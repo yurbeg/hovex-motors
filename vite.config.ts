@@ -1,5 +1,6 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
   build: {
@@ -12,8 +13,8 @@ export default defineConfig({
     host: "0.0.0.0",
     allowedHosts: ["terminal.local"],
     warmup: {
-      clientFiles: ["./src/main.jsx"],
+      clientFiles: ["./src/main.tsx"],
     },
   },
-  plugins: [react()],
+  plugins: [tailwindcss(), react()],
 });

@@ -1,11 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { buildLocalAssistantReply } from "../src/assistantService.js";
-import { getVehicles, resetVehicles } from "../src/adminStore.js";
-import { faqs } from "../src/data.js";
+import { buildLocalAssistantReply } from "../src/assistantService";
+import { getVehicles, resetVehicles, type Vehicle } from "../src/adminStore";
+import { faqs } from "../src/data";
 
 const vehicles = resetVehicles();
-const ask = (message, inventory = vehicles) => buildLocalAssistantReply({ message, vehicles: inventory, faqs });
+const ask = (message: string, inventory: Vehicle[] = vehicles) => buildLocalAssistantReply({ message, vehicles: inventory, faqs });
 
 test("understands Armenian greetings", () => {
   const reply = ask("Բարև");
@@ -18,8 +18,8 @@ test("recommends only in-budget published vehicles", () => {
   assert.deepEqual(new Set(reply.vehicleIds), new Set(["kia-forte-2021", "hyundai-elantra-2023"]));
   for (const id of reply.vehicleIds) {
     const vehicle = vehicles.find((item) => item.id === id);
-    assert.equal(vehicle.status, "published");
-    assert.ok(vehicle.estimateMax <= 15000);
+    assert.equal(vehicle?.status, "published");
+    assert.ok((vehicle?.estimateMax ?? Number.POSITIVE_INFINITY) <= 15000);
   }
 });
 
@@ -27,21 +27,21 @@ test("respects electric and year-range criteria", () => {
   const electric = ask("Էլեկտրական մեքենա մինչև $30,000");
   assert.ok(electric.vehicleIds.includes("deepal-sl03-2025"));
   assert.ok(electric.vehicleIds.includes("deepal-s05-2026"));
-  assert.ok(electric.vehicleIds.every((id) => vehicles.find((item) => item.id === id).fuel === "Էլեկտրական"));
+  assert.ok(electric.vehicleIds.every((id) => vehicles.find((item) => item.id === id)?.fuel === "Էլեկտրական"));
 
   const yearRange = ask("Մեքենա 2021–2023 թվականների");
   assert.ok(yearRange.vehicleIds.length > 0);
   assert.ok(yearRange.vehicleIds.every((id) => {
-    const year = vehicles.find((item) => item.id === id).year;
+    const year = vehicles.find((item) => item.id === id)?.year ?? 0;
     return year >= 2021 && year <= 2023;
   }));
 });
 
 test("does not relax a hard budget or expose archived inventory", () => {
   assert.deepEqual(ask("Մեքենա մինչև $7,000").vehicleIds, []);
-  const inventory = vehicles.map((vehicle) => vehicle.id === "deepal-sl03-2025" ? { ...vehicle, status: "archived" } : vehicle);
+  const inventory: Vehicle[] = vehicles.map((vehicle) => vehicle.id === "deepal-sl03-2025" ? { ...vehicle, status: "archived" } : vehicle);
   assert.ok(!ask("Էլեկտրական մեքենա մինչև $20,000", inventory).vehicleIds.includes("deepal-sl03-2025"));
-  const statusless = vehicles.map(({ status, ...vehicle }) => vehicle);
+  const statusless = vehicles.map(({ status: _status, ...vehicle }) => vehicle) as unknown as Vehicle[];
   assert.deepEqual(ask("Մեքենա մինչև $15,000", statusless).vehicleIds, []);
 });
 

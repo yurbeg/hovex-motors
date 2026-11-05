@@ -2,6 +2,8 @@
 
 Hovex Motors-ի համար պատրաստված responsive web prototype՝ ԱՄՆ աճուրդներից մեքենա ընտրելու և մասնագետի հետ խորհրդատվություն ամրագրելու համար։
 
+Frontend-ը կառուցված է React, TypeScript, Tailwind CSS 4 և Vite տեխնոլոգիաներով։ Կոմպոնենտների ամբողջ styling-ը գրված է Tailwind utility class-երով, իսկ միակ ընդհանուր stylesheet-ը պարունակում է միայն Tailwind import-ը, տեղային font-երը և անհրաժեշտ global browser կանոնները։
+
 ## Հնարավորություններ
 
 - մեքենաների որոնում ըստ բյուջեի, տարեթվի և մակնիշի,
@@ -40,7 +42,9 @@ npm run dev
 ## Production build
 
 ```bash
+npm run typecheck
 npm run build
+npm run test:admin
 npm run test:assistant
 npm run test:sites
 ```

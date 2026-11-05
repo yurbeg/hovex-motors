@@ -1,4 +1,31 @@
-export const vehicles = [
+import type { Vehicle } from "./adminStore";
+
+export type CatalogVehicle = Pick<
+  Vehicle,
+  | "id"
+  | "make"
+  | "model"
+  | "year"
+  | "body"
+  | "mileage"
+  | "fuel"
+  | "damage"
+  | "auction"
+  | "estimateMin"
+  | "estimateMax"
+  | "maxBid"
+  | "image"
+  | "imagePosition"
+  | "badge"
+  | "accent"
+>;
+
+export interface FaqItem {
+  question: string;
+  answer: string;
+}
+
+export const vehicles: CatalogVehicle[] = [
   {
     id: "kia-forte-2021",
     make: "Kia",
@@ -127,7 +154,7 @@ export const vehicles = [
   },
 ];
 
-export const faqs = [
+export const faqs: FaqItem[] = [
   {
     question: "Ցուցադրված գինը վերջնակա՞ն է։",
     answer:
@@ -160,7 +187,7 @@ export const faqs = [
   },
 ];
 
-export const priceSteps = [
+export const priceSteps: string[] = [
   "Մեքենայի գնում",
   "Աճուրդի վճար",
   "ԱՄՆ տեղափոխում",
@@ -169,7 +196,7 @@ export const priceSteps = [
   "Hovex ծառայություն",
 ];
 
-export const makeOptions = [
+export const makeOptions: string[] = [
   "Բոլոր մակնիշները",
   "Cadillac",
   "Deepal",
