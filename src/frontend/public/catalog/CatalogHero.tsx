@@ -1,0 +1,6 @@
+import { eyebrowClasses, pageShellClasses } from "../shared/styles";
+import { classNames } from "../shared/utils";
+
+export function CatalogHero({ loading, vehicleCount }: { loading: boolean; vehicleCount: number }) {
+  return <section className="border-b border-[var(--border)] bg-[#f0ece4]"><div className={classNames(pageShellClasses, "flex min-h-[300px] items-end justify-between gap-12 py-[58px] max-[800px]:min-h-0 max-[800px]:flex-col max-[800px]:items-start max-[800px]:gap-6 max-[800px]:py-10")}><div className="max-w-[830px]"><p className={eyebrowClasses}><span />Hovex-ի հրապարակված առաջարկները</p><h1 className="m-0 text-[clamp(38px,4.5vw,62px)] leading-[1.08] font-black max-[800px]:text-[36px]">Մեքենաների կատալոգ</h1><p className="mt-[18px] mb-0 max-w-[720px] text-[16px] leading-[1.7] text-[var(--ink-soft)] max-[800px]:text-[13px]">Դիտեք կայքի բազայում հրապարակված ամբողջ տեսականին, համեմատեք տարբերակները և ճշտեք վերջնական հաշվարկը Hovex-ի մասնագետի հետ։</p></div><div className="grid min-w-[190px] rounded-[17px] border border-[#d4c8a7] bg-[var(--yellow-pale)] px-5 py-4 max-[800px]:min-w-0 max-[800px]:w-full"><span className="text-[11px] font-bold text-[#76653a]">Հրապարակված մեքենաներ</span><strong className="mt-1 text-[32px] leading-none">{loading ? "—" : vehicleCount}</strong></div></div></section>;
+}

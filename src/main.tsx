@@ -1,13 +1,20 @@
 import React, { lazy, Suspense } from "react";
 import { createRoot } from "react-dom/client";
+import { resolveAppRoute } from "./app/routes";
 import "./styles.css";
 
-const isAdminPath = /^\/admin(?:\/|$)/.test(window.location.pathname);
-const RootApp = isAdminPath
-  ? lazy(() => import("./AdminApp").then((module) => ({ default: module.AdminApp })))
-  : lazy(() => import("./App").then((module) => ({ default: module.App })));
+const appRoute = resolveAppRoute(window.location.pathname);
+const RootApp = appRoute === "admin"
+  ? lazy(() => import("./frontend/admin/AdminApp").then((module) => ({ default: module.AdminApp })))
+  : appRoute === "catalog"
+    ? lazy(() => import("./frontend/public/CatalogApp").then((module) => ({ default: module.CatalogApp })))
+    : lazy(() => import("./frontend/public/HomeApp").then((module) => ({ default: module.HomeApp })));
 
-if (isAdminPath) document.title = "Hovex Admin";
+document.title = appRoute === "admin"
+  ? "Hovex Admin"
+  : appRoute === "catalog"
+    ? "Մեքենաների կատալոգ | Hovex Motors"
+    : "Hovex Motors — մեքենաների ընտրություն և ներմուծում";
 
 const root = document.getElementById("root");
 

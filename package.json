@@ -10,10 +10,15 @@
     "preview": "vite preview",
     "test:admin": "node --import tsx --test tests/admin-store.test.ts",
     "test:assistant": "node --import tsx --test tests/assistant-service.test.ts",
+    "test:supabase": "node --import tsx --test tests/supabase-vehicles.test.ts",
+    "test:admin-repository": "node --import tsx --test tests/admin-vehicle-repository.test.ts",
+    "test:admin-image": "node --import tsx --test tests/admin-image-repository.test.ts",
+    "test:routes": "node --import tsx --test tests/app-route.test.ts",
     "test:sites": "node --test tests/sites-worker.test.mjs"
   },
   "dependencies": {
     "@phosphor-icons/react": "^2.1.10",
+    "@supabase/supabase-js": "^2.119.0",
     "@vitejs/plugin-react": "5.0.4",
     "react": "19.2.0",
     "react-dom": "19.2.0",

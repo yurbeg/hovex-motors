@@ -1,0 +1,10 @@
+import { useState } from "react";
+import { CaretDown, CaretUp, Phone } from "@phosphor-icons/react";
+import { faqs } from "../../../content/catalog";
+import { eyebrowClasses, pageShellClasses, sectionTitleClasses } from "../shared/styles";
+import { classNames, phoneDisplay, phoneHref } from "../shared/utils";
+
+export function Faq() {
+  const [openIndex, setOpenIndex] = useState(0);
+  return <section className={classNames(pageShellClasses, "grid grid-cols-[0.65fr_1.35fr] items-start gap-[clamp(45px,7vw,110px)] pt-5 pb-[100px] max-[1080px]:grid-cols-[0.8fr_1.2fr] max-[1080px]:gap-[45px] max-[800px]:grid-cols-1 max-[800px]:gap-9 max-[800px]:pb-[72px]")} id="faq"><div className="sticky top-[116px] max-[800px]:static"><p className={eyebrowClasses}><span />Պարզ պատասխաններ</p><h2 className={sectionTitleClasses}>Հաճախ տրվող հարցեր</h2><p className="mt-4 mb-[19px] text-sm leading-[1.65] text-[var(--ink-soft)]">Չգտա՞ք ձեր հարցի պատասխանը։ Զանգահարեք մեզ կամ ամրագրեք անվճար խորհրդատվություն։</p><a className="inline-flex items-center gap-2 text-[15px] font-bold" href={`tel:${phoneHref}`}><Phone size={19} weight="fill" />{phoneDisplay}</a></div><div className="border-t border-[var(--border)]">{faqs.map((item, index) => { const isOpen = openIndex === index; const panelId = `faq-answer-${index}`; return <article className="border-b border-[var(--border)]" key={item.question}><button className="flex min-h-[75px] w-full cursor-pointer items-center justify-between gap-5 border-0 bg-transparent px-1 py-[17px] text-left text-base leading-[1.45] font-bold max-[800px]:min-h-[68px] max-[800px]:text-sm [&_svg]:shrink-0 [&_svg]:text-[#98761f]" type="button" aria-expanded={isOpen} aria-controls={panelId} onClick={() => setOpenIndex(isOpen ? -1 : index)}><span>{item.question}</span>{isOpen ? <CaretUp size={21} weight="bold" /> : <CaretDown size={21} weight="bold" />}</button>{isOpen ? <p id={panelId} className="mt-[-4px] mr-0 mb-5 ml-0 pr-[50px] text-[13px] leading-[1.7] text-[var(--ink-soft)] max-[800px]:pr-5">{item.answer}</p> : null}</article>; })}</div></section>;
+}

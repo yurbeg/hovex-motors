@@ -41,6 +41,29 @@ test("falls back to index.html for an unknown app route", async () => {
   assert.deepEqual(calls, ["/flow/step-two?source=share", "/index.html"]);
 });
 
+test("serves the app shell for a direct catalog route with query filters", async () => {
+  const calls = [];
+  const response = await worker.fetch(
+    new Request("https://example.test/catalog?make=Toyota", {
+      headers: { accept: "text/html" },
+    }),
+    {
+      ASSETS: {
+        fetch: async (request) => {
+          const url = new URL(request.url);
+          calls.push(url.pathname + url.search);
+          return new Response(url.pathname === "/index.html" ? "app" : "missing", {
+            status: url.pathname === "/index.html" ? 200 : 404,
+          });
+        },
+      },
+    },
+  );
+
+  assert.equal(response.status, 200);
+  assert.deepEqual(calls, ["/catalog?make=Toyota", "/index.html"]);
+});
+
 test("does not turn missing API or write requests into the app shell", async () => {
   for (const request of [
     new Request("https://example.test/api/missing", { headers: { accept: "application/json" } }),
