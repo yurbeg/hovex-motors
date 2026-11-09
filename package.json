@@ -14,6 +14,7 @@
     "test:admin-repository": "node --import tsx --test tests/admin-vehicle-repository.test.ts",
     "test:admin-image": "node --import tsx --test tests/admin-image-repository.test.ts",
     "test:routes": "node --import tsx --test tests/app-route.test.ts",
+    "test:public-inventory": "node --import tsx --test tests/public-inventory-filter.test.ts",
     "test:auction-catalog": "node --import tsx --test tests/auction-catalog.test.ts",
     "test:auctionsapi": "node --import tsx --test tests/motorapis-auth.test.ts tests/motorapis-client.test.ts tests/motorapis-mapper.test.ts tests/motorapis-repository.test.ts tests/motorapis-sync.test.ts",
     "test:motorapis": "npm run test:auctionsapi",

@@ -1,6 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { loadPublicVehicles } from "../../application/publicCatalog";
+import {
+  countPublicInventoryVehicles,
+  filterPublicInventoryVehicles,
+  publicInventoryFilterFromSearch,
+  publicInventorySearchWithFilter,
+  type PublicInventoryFilter,
+} from "../../application/publicInventory";
 import type { Vehicle } from "../../domain/vehicle";
 import { addLead, getVehicles, subscribeVehicles } from "../../infrastructure/browser/adminStore";
 import { AiAssistant } from "./assistant/AiAssistant";
@@ -30,6 +37,11 @@ export function HomeApp() {
   const [allVehicles, setAllVehicles] = useState<Vehicle[]>(() => getVehicles());
   const [criteria, setCriteria] = useState<SearchCriteria>(DEFAULT_SEARCH_CRITERIA);
   const [appliedCriteria, setAppliedCriteria] = useState<SearchCriteria>(criteria);
+  const [inventoryFilter, setInventoryFilter] = useState<PublicInventoryFilter>(() => (
+    typeof window === "undefined"
+      ? "all"
+      : publicInventoryFilterFromSearch(window.location.search)
+  ));
   const [searchState, setSearchState] = useState<SearchState>("idle");
   const searchTimerRef = useRef<number | undefined>(undefined);
   const vehicles = useMemo(() => allVehicles.filter((vehicle) => vehicle.status === "published"), [allVehicles]);
@@ -70,6 +82,24 @@ export function HomeApp() {
 
   useEffect(() => () => window.clearTimeout(searchTimerRef.current), []);
 
+  useEffect(() => {
+    const handlePopState = (): void => {
+      setInventoryFilter(publicInventoryFilterFromSearch(window.location.search));
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
+  useEffect(() => {
+    const search = publicInventorySearchWithFilter(window.location.search, inventoryFilter);
+    const nextUrl = `${window.location.pathname}${search}${window.location.hash}`;
+    const currentUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+    if (nextUrl !== currentUrl) {
+      window.history.replaceState(window.history.state, "", nextUrl);
+    }
+  }, [inventoryFilter]);
+
   const results = useMemo(() => {
     const budget = Number(appliedCriteria.budget) || Number.POSITIVE_INFINITY;
     const yearFrom = Number(appliedCriteria.yearFrom);
@@ -82,8 +112,15 @@ export function HomeApp() {
     });
   }, [appliedCriteria, vehicles]);
 
-  const featuredVehicles = vehicles.filter((vehicle) => vehicle.featured);
-  const displayedResults = searchState === "idle" ? (featuredVehicles.length ? featuredVehicles : vehicles.slice(0, 3)) : results;
+  const inventoryBaseVehicles = searchState === "searched" ? results : vehicles;
+  const inventoryCounts = useMemo(
+    () => countPublicInventoryVehicles(inventoryBaseVehicles),
+    [inventoryBaseVehicles],
+  );
+  const inventoryResults = useMemo(
+    () => filterPublicInventoryVehicles(inventoryBaseVehicles, inventoryFilter),
+    [inventoryBaseVehicles, inventoryFilter],
+  );
 
   const handleSearch = (event: FormEvent<HTMLFormElement>): void => {
     event.preventDefault();
@@ -105,8 +142,14 @@ export function HomeApp() {
   const resetFilters = (): void => {
     setCriteria(DEFAULT_SEARCH_CRITERIA);
     setAppliedCriteria(DEFAULT_SEARCH_CRITERIA);
+    setInventoryFilter("all");
     setSearchState("idle");
     window.setTimeout(() => scrollToId("finder"), 0);
+  };
+
+  const changeInventoryFilter = (nextFilter: PublicInventoryFilter): void => {
+    setInventoryFilter(nextFilter);
+    window.setTimeout(() => scrollToId("vehicles"), 0);
   };
 
   const openFinder = (): void => {
@@ -121,7 +164,7 @@ export function HomeApp() {
         <Hero onConsultation={interactions.openConsultation} />
         <VehicleFinder criteria={criteria} setCriteria={setCriteria} onSearch={handleSearch} isLoading={searchState === "loading"} makes={makes} />
         <CostStrip />
-        <SearchResults results={displayedResults} state={searchState} criteria={appliedCriteria} compared={interactions.compared} onCompare={interactions.toggleCompare} onDetails={interactions.setDetailVehicle} onConsultation={interactions.openConsultation} onReset={resetFilters} />
+        <SearchResults results={inventoryResults} state={searchState} criteria={appliedCriteria} inventoryFilter={inventoryFilter} inventoryCounts={inventoryCounts} compared={interactions.compared} onInventoryFilterChange={changeInventoryFilter} onCompare={interactions.toggleCompare} onDetails={interactions.setDetailVehicle} onConsultation={interactions.openConsultation} onReset={resetFilters} />
         <HowItWorks />
         <ConsultationBanner onConsultation={interactions.openConsultation} />
         <TransparencySection onConsultation={interactions.openConsultation} />
