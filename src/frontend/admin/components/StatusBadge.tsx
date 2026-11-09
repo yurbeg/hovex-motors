@@ -1,19 +1,22 @@
 import type { LeadStatus } from "../../../domain/lead";
-import type { VehicleStatus } from "../../../domain/vehicle";
+import type { VehicleInventoryStatus, VehicleStatus } from "../../../domain/vehicle";
 import type { StatusConfig } from "../shared/adminTypes";
 import { classNames } from "../shared/classNames";
-import { leadStatus, vehicleStatus } from "../shared/statuses";
+import { leadStatus, vehicleInventoryStatus, vehicleStatus } from "../shared/statuses";
 import { statusToneClasses } from "../shared/styles";
 
 type StatusBadgeProps =
   | { type: "lead"; value: LeadStatus }
-  | { type: "vehicle"; value: VehicleStatus };
+  | { type: "vehicle"; value: VehicleStatus }
+  | { type: "inventory"; value: VehicleInventoryStatus };
 
 export function StatusBadge(props: StatusBadgeProps) {
   const { type, value } = props;
   const config: StatusConfig | undefined = type === "lead"
-    ? leadStatus[value]
-    : vehicleStatus[value];
+    ? leadStatus[value as LeadStatus]
+    : type === "inventory"
+      ? vehicleInventoryStatus[value as VehicleInventoryStatus]
+      : vehicleStatus[value as VehicleStatus];
   const fallback: StatusConfig = { label: value || "—", tone: "gray" };
   const resolved = config || fallback;
 

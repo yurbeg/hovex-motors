@@ -1,5 +1,9 @@
 import type { ChangeEvent } from "react";
-import type { Vehicle, VehicleStatus } from "../../../domain/vehicle";
+import type {
+  Vehicle,
+  VehicleInventoryStatus,
+  VehicleStatus,
+} from "../../../domain/vehicle";
 
 export interface VehicleEditorForm {
   id?: string;
@@ -19,6 +23,7 @@ export interface VehicleEditorForm {
   badge: string;
   accent: string;
   status: VehicleStatus;
+  inventoryStatus: VehicleInventoryStatus;
   featured: boolean;
   sortOrder?: number;
   createdAt?: string;
@@ -73,6 +78,7 @@ export const emptyVehicle: VehicleEditorForm = {
   badge: "Նոր առաջարկ",
   accent: "yellow",
   status: "draft",
+  inventoryStatus: "at_auction",
   featured: false,
 };
 

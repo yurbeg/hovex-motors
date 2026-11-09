@@ -34,6 +34,7 @@ const baseRow: VehicleRow = {
   badge: "Test",
   accent: "yellow",
   status: "published",
+  inventory_status: "at_auction",
   featured: false,
   sort_order: 2,
   created_at: "2026-11-05T00:00:00.000Z",
@@ -124,6 +125,7 @@ test("create maps only writable columns and trusts database timestamps", async (
     badge: baseRow.badge,
     accent: baseRow.accent,
     status: baseRow.status,
+    inventory_status: baseRow.inventory_status,
     featured: baseRow.featured,
     sort_order: baseRow.sort_order,
   });
@@ -140,6 +142,7 @@ test("update whitelists mutable fields and returns the database row", async () =
   const databaseRow: VehicleRow = {
     ...baseRow,
     badge: "",
+    inventory_status: "in_transit",
     featured: false,
     sort_order: 0,
     updated_at: "2026-11-05T12:00:00.000Z",
@@ -155,6 +158,7 @@ test("update whitelists mutable fields and returns the database row", async () =
   const patch = {
     id: "attempted-id-change",
     badge: "",
+    inventoryStatus: "in_transit",
     featured: false,
     sortOrder: 0,
     createdAt: "2000-01-01T00:00:00.000Z",
@@ -168,7 +172,12 @@ test("update whitelists mutable fields and returns the database row", async () =
   });
 
   assert.equal(updatedId, baseRow.id);
-  assert.deepEqual(updatedPatch, { badge: "", featured: false, sort_order: 0 });
+  assert.deepEqual(updatedPatch, {
+    badge: "",
+    inventory_status: "in_transit",
+    featured: false,
+    sort_order: 0,
+  });
   assert.equal(expectedUpdatedAt, baseRow.updated_at);
   assert.equal(updated.id, baseRow.id);
   assert.equal(updated.updatedAt, databaseRow.updated_at);

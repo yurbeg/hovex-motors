@@ -24,6 +24,7 @@ const PUBLIC_VEHICLE_COLUMNS = [
   "badge",
   "accent",
   "status",
+  "inventory_status",
   "featured",
   "sort_order",
   "created_at",

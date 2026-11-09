@@ -26,6 +26,7 @@ const ADMIN_VEHICLE_COLUMNS = [
   "badge",
   "accent",
   "status",
+  "inventory_status",
   "featured",
   "sort_order",
   "created_at",
@@ -103,6 +104,7 @@ function mapCreateRow(vehicle: Vehicle): AdminVehicleInsertRow {
     badge: vehicle.badge,
     accent: vehicle.accent,
     status: vehicle.status,
+    inventory_status: vehicle.inventoryStatus,
     featured: vehicle.featured,
     sort_order: vehicle.sortOrder,
   };
@@ -126,6 +128,7 @@ function mapUpdateRow(patch: Partial<Vehicle>): AdminVehicleUpdateRow {
     ...(patch.badge !== undefined ? { badge: patch.badge } : {}),
     ...(patch.accent !== undefined ? { accent: patch.accent } : {}),
     ...(patch.status !== undefined ? { status: patch.status } : {}),
+    ...(patch.inventoryStatus !== undefined ? { inventory_status: patch.inventoryStatus } : {}),
     ...(patch.featured !== undefined ? { featured: patch.featured } : {}),
     ...(patch.sortOrder !== undefined ? { sort_order: patch.sortOrder } : {}),
   };

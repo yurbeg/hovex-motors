@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import type { Vehicle } from "../src/adminStore";
+import type { Vehicle, VehicleInventoryStatus } from "../src/adminStore";
 import { resolveSupabaseConfig } from "../src/supabaseClient";
 import { loadPublicVehicles, mapVehicleRow } from "../src/vehicleRepository";
 
@@ -22,6 +22,7 @@ const row = {
   badge: "Test",
   accent: "yellow",
   status: "published",
+  inventory_status: "at_auction",
   featured: true,
   sort_order: 2,
   created_at: "2026-11-05T00:00:00.000Z",
@@ -59,8 +60,29 @@ test("Supabase vehicle rows map explicitly to the frontend model", () => {
   assert.equal(vehicle.estimateMax, 12000);
   assert.equal(vehicle.maxBid, 8000);
   assert.equal(vehicle.imagePosition, "50% 40%");
+  assert.equal(vehicle.inventoryStatus, "at_auction");
   assert.equal(vehicle.sortOrder, 2);
   assert.equal(vehicle.updatedAt, "2026-11-05T01:00:00.000Z");
+});
+
+test("Supabase vehicle rows accept only supported inventory statuses", () => {
+  const inventoryStatuses = [
+    "available",
+    "in_transit",
+    "at_auction",
+  ] satisfies VehicleInventoryStatus[];
+
+  for (const inventoryStatus of inventoryStatuses) {
+    assert.equal(
+      mapVehicleRow({ ...row, inventory_status: inventoryStatus }).inventoryStatus,
+      inventoryStatus,
+    );
+  }
+
+  assert.throws(
+    () => mapVehicleRow({ ...row, inventory_status: "unknown" }),
+    /invalid inventory(?:_| )status/i,
+  );
 });
 
 test("a successful empty Supabase catalog remains empty", async () => {

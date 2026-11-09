@@ -1,5 +1,6 @@
 import { classNames } from "../shared/classNames";
 import { formControlClasses, formLabelClasses } from "../shared/styles";
+import { vehicleInventoryStatus } from "../shared/statuses";
 import type {
   VehicleEditorErrors,
   VehicleEditorForm,
@@ -38,6 +39,14 @@ export function VehiclePricingFields({ form, errors, update }: VehiclePricingFie
         <span>Պիտակի գույն</span>
         <select className={formControlClasses} value={form.accent} onChange={update("accent")}>
           <option value="yellow">Դեղին</option><option value="green">Կանաչ</option><option value="blue">Կապույտ</option><option value="orange">Նարնջագույն</option><option value="black">Սև</option>
+        </select>
+      </label>
+      <label className={formLabelClasses}>
+        <span>Մեքենայի գտնվելու վիճակ</span>
+        <select name="inventoryStatus" className={formControlClasses} value={form.inventoryStatus} onChange={update("inventoryStatus")}>
+          {Object.entries(vehicleInventoryStatus).map(([value, item]) => (
+            <option key={value} value={value}>{item.label}</option>
+          ))}
         </select>
       </label>
       <label className={formLabelClasses}>

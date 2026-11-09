@@ -1,4 +1,5 @@
 export type VehicleStatus = "published" | "draft" | "archived";
+export type VehicleInventoryStatus = "available" | "in_transit" | "at_auction";
 
 export interface Vehicle {
   id: string;
@@ -18,6 +19,7 @@ export interface Vehicle {
   badge: string;
   accent: string;
   status: VehicleStatus;
+  inventoryStatus: VehicleInventoryStatus;
   featured: boolean;
   sortOrder: number;
   createdAt: string;
@@ -47,6 +49,7 @@ export interface VehicleForm {
   badge: string;
   accent: string;
   status: VehicleStatus;
+  inventoryStatus: VehicleInventoryStatus;
   featured: boolean;
 }
 
@@ -67,5 +70,6 @@ export const DEFAULT_VEHICLE_FORM: VehicleForm = {
   badge: "",
   accent: "yellow",
   status: "draft",
+  inventoryStatus: "at_auction",
   featured: false,
 };

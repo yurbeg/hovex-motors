@@ -4,6 +4,7 @@ import type { ConsultationHandler } from "../shared/types";
 import { Button } from "../shared/Button";
 import { vehicleBadgeToneClasses } from "../shared/styles";
 import { classNames, formatUsdRange, handleVehicleImageError } from "../shared/utils";
+import { InventoryStatusBadge } from "./InventoryStatusBadge";
 
 interface VehicleCardProps {
   vehicle: Vehicle;
@@ -19,7 +20,7 @@ export function VehicleCard({ vehicle, isCompared, onCompare, onDetails, onConsu
       <div className="relative h-[250px] overflow-hidden bg-[#d7d2c8] max-[1240px]:h-[225px] max-[800px]:h-[245px]">
         <img className="h-full w-full bg-[#171715] object-contain transition-transform duration-300 group-hover:scale-[1.025]" src={vehicle.image} alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`} style={{ objectPosition: vehicle.imagePosition }} loading="lazy" decoding="async" onError={handleVehicleImageError} />
         {vehicle.badge.trim() ? <span className={classNames("absolute top-[13px] left-[13px] z-[2] rounded-full px-2.5 py-2 text-[11px] leading-none font-bold", vehicleBadgeToneClasses[vehicle.accent] ?? vehicleBadgeToneClasses.black)}>{vehicle.badge}</span> : null}
-        <span className="absolute top-3.5 right-[13px] z-[2] rounded-full bg-[rgba(255,255,255,0.92)] px-[9px] py-[7px] text-[11px] leading-none font-bold tracking-[0.08em] text-[var(--ink)]">ԴԵՄՈ</span>
+        <InventoryStatusBadge className="absolute top-[13px] right-[13px] z-[2] max-w-[48%] overflow-hidden text-ellipsis shadow-[0_3px_12px_rgba(17,17,15,0.12)]" status={vehicle.inventoryStatus} />
         <button type="button" className={classNames("absolute right-[13px] bottom-[13px] z-[2] flex min-h-9 cursor-pointer items-center gap-1.5 rounded-full border border-[rgba(255,255,255,0.7)] bg-[rgba(17,17,15,0.86)] px-[11px] text-[11px] leading-none font-bold text-white", isCompared && "border-[var(--yellow)] bg-[var(--yellow)] text-[var(--ink)]")} aria-pressed={isCompared} onClick={() => onCompare(vehicle.id)}>
           {isCompared ? <Check size={17} weight="bold" /> : <ArrowsLeftRight size={17} weight="bold" />}
           {isCompared ? "Ընտրված է" : "Համեմատել"}

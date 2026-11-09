@@ -1,6 +1,6 @@
-import type { VehicleStatus } from "../../domain/vehicle";
+import type { VehicleInventoryStatus, VehicleStatus } from "../../domain/vehicle";
 
-export type { VehicleStatus } from "../../domain/vehicle";
+export type { VehicleInventoryStatus, VehicleStatus } from "../../domain/vehicle";
 
 export type Json =
   | string
@@ -28,6 +28,7 @@ export type VehicleRow = {
   badge: string;
   accent: string;
   status: VehicleStatus;
+  inventory_status: VehicleInventoryStatus;
   featured: boolean;
   sort_order: number;
   created_at: string;
@@ -52,6 +53,7 @@ export type VehicleInsert = {
   badge?: string;
   accent?: string;
   status?: VehicleStatus;
+  inventory_status?: VehicleInventoryStatus;
   featured?: boolean;
   sort_order?: number;
   created_at?: string;

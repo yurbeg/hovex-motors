@@ -18,6 +18,10 @@ defines the server-enforced authorization rules used by the browser app.
   `motorapi_*` names are retained for migration compatibility. The importer
   does not call the full-reconciliation RPC because provider pages are mutable;
   only explicit archive events may deactivate lots.
+- `migrations/202611090001_motorapi_catalog_title_search.sql` keeps title-only
+  AuctionsAPI vehicles searchable in the public catalog.
+- `migrations/202611090002_vehicle_inventory_status.sql` adds the independent
+  available / in-transit / at-auction stage used by admin and public cards.
 - `functions/motorapis-sync/` is the legacy-named, server-only AuctionsAPI
   scheduled importer. Shared client, mapping, repository, and orchestration
   code lives in `functions/_shared/`.

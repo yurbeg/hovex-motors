@@ -17,6 +17,10 @@ test("admin store supports inventory and lead workflows", () => {
     assert.equal(initialVehicles.length, 7);
     assert.equal(initialVehicles.filter((vehicle) => vehicle.status === "published").length, 7);
     assert.equal(initialVehicles.filter((vehicle) => vehicle.featured).length, 3);
+    assert.deepEqual(
+      new Set(initialVehicles.map((vehicle) => vehicle.inventoryStatus)),
+      new Set(["available", "in_transit", "at_auction"]),
+    );
 
     const draft = {
       ...initialVehicles[0],
@@ -24,10 +28,16 @@ test("admin store supports inventory and lead workflows", () => {
       make: "Test",
       model: "Admin",
       status: "draft",
+      inventoryStatus: "in_transit",
       featured: false,
     };
     saveVehicles([draft, ...initialVehicles]);
     assert.equal(getVehicles()[0].status, "draft");
+    assert.equal(getVehicles()[0].inventoryStatus, "in_transit");
+
+    const { inventoryStatus: _legacyInventoryStatus, ...legacyVehicle } = initialVehicles[0];
+    saveVehicles([{ ...legacyVehicle, id: "legacy-admin-vehicle" }]);
+    assert.equal(getVehicles()[0].inventoryStatus, "at_auction");
 
     const lead = addLead({
       name: "Test Lead",

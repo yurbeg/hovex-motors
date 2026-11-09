@@ -18,6 +18,7 @@ export type CatalogVehicle = Pick<
   | "imagePosition"
   | "badge"
   | "accent"
+  | "inventoryStatus"
 >;
 
 export interface FaqItem {
@@ -43,6 +44,7 @@ export const vehicles: CatalogVehicle[] = [
     imagePosition: "50% 50%",
     badge: "Բյուջետային ընտրություն",
     accent: "green",
+    inventoryStatus: "at_auction",
   },
   {
     id: "hyundai-elantra-2023",
@@ -61,6 +63,7 @@ export const vehicles: CatalogVehicle[] = [
     imagePosition: "50% 28%",
     badge: "Hovex-ի առաջարկ",
     accent: "yellow",
+    inventoryStatus: "in_transit",
   },
   {
     id: "deepal-sl03-2025",
@@ -79,6 +82,7 @@ export const vehicles: CatalogVehicle[] = [
     imagePosition: "50% 53%",
     badge: "Էլեկտրական",
     accent: "blue",
+    inventoryStatus: "available",
   },
   {
     id: "deepal-s05-2026",
@@ -97,6 +101,7 @@ export const vehicles: CatalogVehicle[] = [
     imagePosition: "50% 34%",
     badge: "Նոր մոդել",
     accent: "blue",
+    inventoryStatus: "in_transit",
   },
   {
     id: "hongqi-ehs9-2024",
@@ -115,6 +120,7 @@ export const vehicles: CatalogVehicle[] = [
     imagePosition: "50% 60%",
     badge: "Պրեմիում",
     accent: "black",
+    inventoryStatus: "available",
   },
   {
     id: "cadillac-escalade-2025",
@@ -133,6 +139,7 @@ export const vehicles: CatalogVehicle[] = [
     imagePosition: "50% 55%",
     badge: "ԱՄՆ աճուրդ",
     accent: "orange",
+    inventoryStatus: "at_auction",
   },
   {
     id: "maybach-eqs-2025",
@@ -151,6 +158,7 @@ export const vehicles: CatalogVehicle[] = [
     imagePosition: "50% 48%",
     badge: "Բացառիկ",
     accent: "black",
+    inventoryStatus: "at_auction",
   },
 ];
 

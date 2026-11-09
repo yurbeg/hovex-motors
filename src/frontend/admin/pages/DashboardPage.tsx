@@ -6,7 +6,7 @@ import {
   Star,
 } from "@phosphor-icons/react";
 import type { Lead } from "../../../domain/lead";
-import type { Vehicle, VehicleStatus } from "../../../domain/vehicle";
+import type { Vehicle, VehicleInventoryStatus } from "../../../domain/vehicle";
 import { AdminButton } from "../components/AdminButton";
 import { DataModeNotice } from "../components/DataModeNotice";
 import { StatCard } from "../components/StatCard";
@@ -15,7 +15,7 @@ import { RequestTable } from "../leads/RequestTable";
 import type { NavView } from "../shared/adminTypes";
 import { classNames } from "../shared/classNames";
 import { formatLongDate } from "../shared/formatters";
-import { vehicleStatus } from "../shared/statuses";
+import { vehicleInventoryStatus } from "../shared/statuses";
 import {
   eyebrowClasses,
   pageHeadingButtonClasses,
@@ -45,12 +45,13 @@ export function DashboardPage({
   const waitingLeads = leads.filter((lead) => ["new", "contacted"].includes(lead.status)).length;
   const published = vehicles.filter((vehicle) => vehicle.status === "published").length;
   const featured = vehicles.filter((vehicle) => vehicle.featured && vehicle.status === "published").length;
+  const available = vehicles.filter((vehicle) => vehicle.inventoryStatus === "available").length;
   const recent = [...leads]
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .slice(0, 5);
-  const statusCounts = (Object.keys(vehicleStatus) as VehicleStatus[]).map((status) => ({
+  const statusCounts = (Object.keys(vehicleInventoryStatus) as VehicleInventoryStatus[]).map((status) => ({
     status,
-    count: vehicles.filter((vehicle) => vehicle.status === status).length,
+    count: vehicles.filter((vehicle) => vehicle.inventoryStatus === status).length,
   }));
 
   return (
@@ -67,7 +68,7 @@ export function DashboardPage({
       <section className="mb-[22px] grid grid-cols-4 gap-4 max-[1180px]:grid-cols-2 max-[700px]:gap-2.5 max-[430px]:grid-cols-1" aria-label="Հիմնական ցուցանիշներ">
         <StatCard label="Նոր հարցումներ" value={newLeads} note="Սպասում են առաջին կապին" icon={ChatCircleText} tone="blue" />
         <StatCard label="Ակտիվ առաջարկներ" value={published} note={`${vehicles.length} ընդհանուր մեքենայից`} icon={Car} tone="yellow" />
-        <StatCard label="Ընտրյալ առաջարկներ" value={featured} note="Ցուցադրվում են գլխավոր էջում" icon={Star} tone="ink" />
+        <StatCard label="Առկա մեքենաներ" value={available} note={`${featured} ընտրյալ առաջարկ`} icon={Star} tone="ink" />
         <StatCard label="Կապի հերթում" value={waitingLeads} note="Նոր կամ ընթացքի մեջ" icon={Clock} tone="orange" />
       </section>
       <div className="grid grid-cols-[minmax(0,1.75fr)_minmax(280px,0.72fr)] items-start gap-5 max-[1180px]:grid-cols-1">
@@ -80,21 +81,21 @@ export function DashboardPage({
         </section>
         <aside className={classNames(panelClasses, "max-[1180px]:grid max-[1180px]:grid-cols-2 max-[700px]:block")}>
           <header className={classNames(panelHeaderClasses, "max-[1180px]:col-span-full")}>
-            <div><p className={eyebrowClasses}>Կայքի բովանդակություն</p><h2 className="mb-0 mt-1 text-lg leading-[1.2]">Մեքենաների վիճակ</h2></div>
+            <div><p className={eyebrowClasses}>Կայքի բովանդակություն</p><h2 className="mb-0 mt-1 text-lg leading-[1.2]">Մեքենաների տեղաբաշխում</h2></div>
           </header>
           <div className="grid px-5 pb-[19px] pt-[7px]">
             {statusCounts.map(({ status, count }) => {
               const percentage = vehicles.length ? Math.round((count / vehicles.length) * 100) : 0;
               return (
                 <div className="border-b border-[#eeeae3] py-3.5 last:border-b-0" key={status}>
-                  <p className="mb-[9px] mt-0 flex items-center justify-between"><StatusBadge type="vehicle" value={status} /><strong className="text-sm">{count}</strong></p>
+                  <p className="mb-[9px] mt-0 flex items-center justify-between"><StatusBadge type="inventory" value={status} /><strong className="text-sm">{count}</strong></p>
                   <span className="block h-[5px] overflow-hidden rounded-full bg-[#efede8]"><i className="block h-full rounded-[inherit] bg-[#ffc400]" style={{ width: `${percentage}%` }} /></span>
                 </div>
               );
             })}
           </div>
           <button type="button" className="mx-5 mb-5 flex min-h-16 w-[calc(100%_-_40px)] cursor-pointer items-center gap-[11px] rounded-[11px] border border-[#e2ddd5] bg-[#f8f6f1] px-[13px] py-[11px] text-left max-[1180px]:mt-5 max-[1180px]:self-center [&>svg]:text-[#806300]" onClick={() => onNavigate("vehicles")}>
-            <Car size={20} weight="bold" /><span className="grid flex-1"><strong className="text-[10px]">Կառավարել առաջարկները</strong><small className="text-[8px] text-[#88837c]">Թարմացնել գները և հրապարակման վիճակը</small></span><span>→</span>
+            <Car size={20} weight="bold" /><span className="grid flex-1"><strong className="text-[10px]">Կառավարել առաջարկները</strong><small className="text-[8px] text-[#88837c]">Թարմացնել գտնվելու և հրապարակման վիճակը</small></span><span>→</span>
           </button>
         </aside>
       </div>

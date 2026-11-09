@@ -1,4 +1,5 @@
 import { formatMoney } from "../shared/formatters";
+import { StatusBadge } from "../components/StatusBadge";
 import type { VehicleEditorForm } from "./vehicleEditorModel";
 
 interface VehiclePreviewProps {
@@ -21,7 +22,7 @@ export function VehiclePreview({ form, imagePreviewUrl }: VehiclePreviewProps) {
         <span className="absolute bottom-2 left-2 max-w-[calc(100%_-_16px)] overflow-hidden text-ellipsis whitespace-nowrap rounded-[5px] bg-[#ffc400] px-[7px] py-1 text-[7px] font-black">{form.badge || "Պիտակ"}</span>
       </div>
       <div className="self-center">
-        <p className="m-0 text-[9px] text-[#817c74]">{form.year || "Տարեթիվ"} · {form.body || "Թափք"}</p>
+        <div className="flex flex-wrap items-center gap-2"><p className="m-0 text-[9px] text-[#817c74]">{form.year || "Տարեթիվ"} · {form.body || "Թափք"}</p><StatusBadge type="inventory" value={form.inventoryStatus} /></div>
         <h3 className="mb-3.5 mt-[5px] text-lg">{form.make || "Մակնիշ"} {form.model || "Մոդել"}</h3>
         <strong className="text-base">{formatMoney(form.estimateMin)}–{formatMoney(form.estimateMax).replace("$", "")}</strong>
       </div>

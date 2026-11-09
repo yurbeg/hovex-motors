@@ -4,6 +4,7 @@ import type { ConsultationHandler } from "../shared/types";
 import { Button } from "../shared/Button";
 import { Modal } from "../shared/Modal";
 import { formatUsd, formatUsdRange, handleVehicleImageError } from "../shared/utils";
+import { InventoryStatusBadge } from "./InventoryStatusBadge";
 
 interface VehicleDetailsModalProps {
   vehicle: Vehicle;
@@ -26,7 +27,7 @@ export function VehicleDetailsModal({ vehicle, onClose, onConsultation, isCompar
   return (
     <Modal title={`${vehicle.year} ${vehicle.make} ${vehicle.model}`} onClose={onClose} size="large">
       <div className="grid min-h-[450px] grid-cols-[0.88fr_1.12fr] max-[800px]:grid-cols-1">
-        <div className="relative min-h-[450px] overflow-hidden bg-[#dedad2] max-[800px]:min-h-[290px] max-[800px]:max-h-[340px] [&_img]:h-full [&_img]:w-full [&_img]:bg-[#171715] [&_img]:object-contain"><img src={vehicle.image} alt={`${vehicle.make} ${vehicle.model}`} style={{ objectPosition: vehicle.imagePosition }} decoding="async" onError={handleVehicleImageError} /><span className="absolute top-[17px] left-[17px] rounded-full bg-[var(--yellow)] px-2.5 py-2 text-[10px] font-black tracking-[0.05em]">ԴԵՄՈ ՏԱՐԲԵՐԱԿ</span></div>
+        <div className="relative min-h-[450px] overflow-hidden bg-[#dedad2] max-[800px]:min-h-[290px] max-[800px]:max-h-[340px] [&_img]:h-full [&_img]:w-full [&_img]:bg-[#171715] [&_img]:object-contain"><img src={vehicle.image} alt={`${vehicle.make} ${vehicle.model}`} style={{ objectPosition: vehicle.imagePosition }} decoding="async" onError={handleVehicleImageError} /><InventoryStatusBadge className="absolute top-[17px] left-[17px] shadow-[0_3px_12px_rgba(17,17,15,0.12)]" status={vehicle.inventoryStatus} /></div>
         <div className="p-7 max-[800px]:p-5">
           <p className="m-0 text-[11px] font-bold text-[var(--ink-soft)]">{vehicle.auction}</p><h3 className="mt-[5px] mb-5 text-[25px]">{vehicle.badge}</h3>
           <div className="grid grid-cols-2 gap-2.5">

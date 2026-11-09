@@ -1,6 +1,7 @@
 import { vehicles as sourceVehicles } from "../../content/catalog";
 import type {
   Vehicle,
+  VehicleInventoryStatus,
   VehicleInput,
   VehicleStatus,
 } from "../../domain/vehicle";
@@ -11,6 +12,7 @@ export type {
   Vehicle,
   VehicleForm,
   VehicleInput,
+  VehicleInventoryStatus,
   VehicleStatus,
 } from "../../domain/vehicle";
 export type { Lead, LeadInput, LeadStatus } from "../../domain/lead";
@@ -24,6 +26,7 @@ const SEED_UPDATED_AT = "2026-11-04T08:00:00.000Z";
 export type CollectionSubscriber<T> = (items: T[]) => void;
 
 const vehicleStatuses = new Set<VehicleStatus>(["published", "draft", "archived"]);
+const vehicleInventoryStatuses = new Set<VehicleInventoryStatus>(["available", "in_transit", "at_auction"]);
 const leadStatuses = new Set<LeadStatus>(["new", "contacted", "booked", "closed"]);
 const featuredVehicleIds = new Set<string>([
   "hyundai-elantra-2023",
@@ -69,6 +72,11 @@ function normalizeVehicle(
     : item.published === false
       ? "draft"
       : "published";
+  const rawInventoryStatus = item.inventoryStatus;
+  const inventoryStatus: VehicleInventoryStatus = typeof rawInventoryStatus === "string"
+    && vehicleInventoryStatuses.has(rawInventoryStatus as VehicleInventoryStatus)
+    ? rawInventoryStatus as VehicleInventoryStatus
+    : "at_auction";
 
   return {
     ...item,
@@ -89,6 +97,7 @@ function normalizeVehicle(
     badge: text(item.badge),
     accent: text(item.accent, "yellow"),
     status,
+    inventoryStatus,
     featured: Boolean(item.featured),
     sortOrder: number(item.sortOrder, index),
     createdAt: dateTime(item.createdAt, fallbackUpdatedAt),
