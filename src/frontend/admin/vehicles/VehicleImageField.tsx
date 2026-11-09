@@ -46,13 +46,13 @@ export function VehicleImageField({
         {selectedImageFile
           ? <p className="m-0 overflow-hidden text-ellipsis text-[9px] font-bold text-[#3e3b36]">{selectedImageFile.name} · {(selectedImageFile.size / (1024 * 1024)).toFixed(2)} ՄԲ</p>
           : <p className="m-0 text-[8px] leading-[1.5] text-[#817c74]">JPG, PNG, WebP կամ AVIF · առավելագույնը 8 ՄԲ</p>}
-        {errors.image ? <small role="alert">{errors.image}</small> : null}
+        {errors.image ? <small id="vehicle-editor-image-error" role="alert">{errors.image}</small> : null}
       </div>
       <label className={classNames(formLabelClasses, "col-span-full max-[700px]:col-auto")}>
         <span>Կամ նկարի հասցե *</span>
         <div className={classNames("flex h-[43px] items-center gap-2 rounded-[9px] border border-[#d8d4cc] pl-[11px] text-[#8b867e] focus-within:border-[#806600] focus-within:shadow-[0_0_0_3px_rgba(255,196,0,0.16)]", errors.image && "border-[#c95540]")}>
           <ImageSquare size={19} />
-          <input className="h-10 w-full border-0 bg-white px-[11px] pl-0 text-[10px] text-[#26241f] outline-none disabled:cursor-not-allowed disabled:bg-[#f2efe9]" value={form.image} onChange={update("image")} disabled={Boolean(selectedImageFile)} />
+          <input name="image" className="h-10 w-full border-0 bg-white px-[11px] pl-0 text-[10px] text-[#26241f] outline-none disabled:cursor-not-allowed disabled:bg-[#f2efe9]" value={form.image} onChange={update("image")} disabled={Boolean(selectedImageFile)} aria-invalid={Boolean(errors.image)} aria-describedby={errors.image ? "vehicle-editor-image-error" : undefined} />
         </div>
         {selectedImageFile ? <small className="!text-[#817c74]">Ընտրված ֆայլը պահպանելիս կփոխարինի այս հասցեին։</small> : null}
       </label>

@@ -39,6 +39,7 @@ export type AdminImageRepositoryErrorCode =
   | "ADMIN_IMAGE_TYPE_INVALID"
   | "ADMIN_IMAGE_TOO_LARGE"
   | "ADMIN_IMAGE_PATH_INVALID"
+  | "ADMIN_IMAGE_STORAGE_NOT_READY"
   | "ADMIN_IMAGE_UPLOAD_FAILED"
   | "ADMIN_IMAGE_PUBLIC_URL_FAILED";
 
@@ -47,6 +48,7 @@ export const ADMIN_IMAGE_ERROR_MESSAGES: Record<AdminImageRepositoryErrorCode, s
   ADMIN_IMAGE_TYPE_INVALID: "Ընտրեք JPG, PNG, WebP կամ AVIF ձևաչափի նկար։",
   ADMIN_IMAGE_TOO_LARGE: "Նկարի չափը չպետք է գերազանցի 8 ՄԲ-ը։",
   ADMIN_IMAGE_PATH_INVALID: "Նկարի անվտանգ հասցե ստեղծել չհաջողվեց։",
+  ADMIN_IMAGE_STORAGE_NOT_READY: "Նկարների պահոցը դեռ կարգավորված չէ։ Գործարկեք Supabase-ի vehicle_images_storage migration-ը։",
   ADMIN_IMAGE_UPLOAD_FAILED: "Նկարը Supabase Storage վերբեռնել չհաջողվեց։",
   ADMIN_IMAGE_PUBLIC_URL_FAILED: "Վերբեռնված նկարի հանրային հասցեն ստանալ չհաջողվեց։",
 };
@@ -64,6 +66,17 @@ export class AdminImageRepositoryError extends Error {
 function fail(code: AdminImageRepositoryErrorCode, cause?: unknown): never {
   if (cause instanceof AdminImageRepositoryError && cause.code === code) throw cause;
   throw new AdminImageRepositoryError(code, cause);
+}
+
+function isMissingBucketError(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const message = "message" in error && typeof error.message === "string"
+    ? error.message
+    : "";
+  const statusCode = "statusCode" in error
+    ? String(error.statusCode)
+    : "";
+  return statusCode === "404" && /bucket/i.test(message);
 }
 
 function resolveMimeType(file: File): AdminImageMimeType {
@@ -151,6 +164,9 @@ export async function uploadAdminVehicleImage(
     source = requireDataSource(dataSource);
     await source.upload(path, file, { contentType: mimeType, upsert: false });
   } catch (error) {
+    if (isMissingBucketError(error)) {
+      return fail("ADMIN_IMAGE_STORAGE_NOT_READY", error);
+    }
     return fail("ADMIN_IMAGE_UPLOAD_FAILED", error);
   }
 

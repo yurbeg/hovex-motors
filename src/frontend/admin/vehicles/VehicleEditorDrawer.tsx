@@ -15,6 +15,7 @@ import { VehiclePresentationFields } from "./VehiclePresentationFields";
 import { VehiclePreview } from "./VehiclePreview";
 import {
   createVehicleEditorForm,
+  firstVehicleEditorErrorField,
   toVehicleSavePayload,
   validateVehicleEditorForm,
 } from "./vehicleEditorModel";
@@ -50,6 +51,7 @@ export function VehicleEditorDrawer({
   const [imagePreviewUrl, setImagePreviewUrl] = useState("");
   const [submitError, setSubmitError] = useState("");
   const [submittingPhase, setSubmittingPhase] = useState<SubmittingPhase>("idle");
+  const formRef = useRef<HTMLFormElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const submissionInFlightRef = useRef(false);
   const effectiveBusy = busy || submittingPhase !== "idle";
@@ -110,7 +112,18 @@ export function VehicleEditorDrawer({
     if (submissionInFlightRef.current || effectiveBusy) return;
     const nextErrors = validateVehicleEditorForm(form, Boolean(selectedImageFile));
     setErrors(nextErrors);
-    if (Object.keys(nextErrors).length) return;
+    const firstInvalidField = firstVehicleEditorErrorField(nextErrors);
+    if (firstInvalidField) {
+      setSubmitError("Պահպանումը չկատարվեց։ Լրացրեք կարմիրով նշված պարտադիր դաշտերը։");
+      window.requestAnimationFrame(() => {
+        const control = formRef.current?.querySelector<HTMLElement>(
+          `[name="${firstInvalidField}"]`,
+        );
+        control?.focus({ preventScroll: true });
+        control?.scrollIntoView({ behavior: "smooth", block: "center" });
+      });
+      return;
+    }
 
     submissionInFlightRef.current = true;
     setSubmittingPhase(selectedImageFile ? "uploading" : "saving");
@@ -141,8 +154,17 @@ export function VehicleEditorDrawer({
       wide
       locked={effectiveBusy}
     >
-      <form className="flex min-h-full flex-col" onSubmit={submit} noValidate aria-busy={effectiveBusy}>
+      <form ref={formRef} className="flex min-h-full flex-col" onSubmit={submit} noValidate aria-busy={effectiveBusy}>
         <VehiclePreview form={form} imagePreviewUrl={imagePreviewUrl} />
+        {submitError ? (
+          <div
+            className="sticky top-0 z-10 mx-5 my-3 rounded-[10px] border border-[#efc9c1] bg-[#fff4f1] px-3.5 py-3 text-[9px] font-bold text-[#9c3424] shadow-[0_8px_24px_rgba(80,32,23,0.08)]"
+            role="alert"
+            aria-live="assertive"
+          >
+            {submitError}
+          </div>
+        ) : null}
         <VehicleBasicFields form={form} errors={errors} update={update} disabled={effectiveBusy} />
         <VehiclePresentationFields
           form={form}
@@ -154,7 +176,6 @@ export function VehicleEditorDrawer({
           onSelectImage={selectImage}
           onClearSelectedImage={clearSelectedImage}
         />
-        {submitError ? <div className="mx-5 mb-4 rounded-[10px] border border-[#efc9c1] bg-[#fff4f1] px-3.5 py-3 text-[9px] font-bold text-[#9c3424]" role="alert">{submitError}</div> : null}
         <VehicleEditorFooter
           isNew={isNew}
           vehicle={vehicle}

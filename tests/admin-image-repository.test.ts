@@ -181,6 +181,24 @@ test("wraps upload failures with a stable Armenian error and preserves the cause
   assert.equal(publicUrlCalls, 0);
 });
 
+test("reports a missing Storage bucket as a setup error", async () => {
+  const cause = { statusCode: "404", message: "Bucket not found" };
+  const dataSource = makeDataSource({
+    upload: async () => { throw cause; },
+  });
+
+  await assert.rejects(
+    () => uploadAdminVehicleImage(imageFile("image/jpeg"), {
+      dataSource,
+      pathId: "missing-bucket",
+    }),
+    (error: unknown) => error instanceof AdminImageRepositoryError
+      && error.code === "ADMIN_IMAGE_STORAGE_NOT_READY"
+      && error.message === ADMIN_IMAGE_ERROR_MESSAGES.ADMIN_IMAGE_STORAGE_NOT_READY
+      && error.cause === cause,
+  );
+});
+
 test("rejects a missing or unsafe public URL with a stable Armenian error", async () => {
   for (const publicUrl of ["", "javascript:alert(1)", "not a URL"]) {
     const dataSource = makeDataSource({ publicUrl });

@@ -40,6 +40,22 @@ export type VehicleFieldUpdater = (
   key: keyof VehicleEditorForm,
 ) => (event: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
 
+const vehicleEditorValidationOrder = [
+  "make",
+  "model",
+  "year",
+  "estimateMin",
+  "estimateMax",
+  "maxBid",
+  "image",
+] as const satisfies readonly (keyof VehicleEditorForm)[];
+
+export function firstVehicleEditorErrorField(
+  errors: VehicleEditorErrors,
+): keyof VehicleEditorForm | null {
+  return vehicleEditorValidationOrder.find((field) => Boolean(errors[field])) ?? null;
+}
+
 export const emptyVehicle: VehicleEditorForm = {
   make: "",
   model: "",
