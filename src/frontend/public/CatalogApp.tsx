@@ -1,117 +1,158 @@
 import { useEffect, useMemo, useState } from "react";
-import { loadPublicVehicles } from "../../application/publicCatalog";
-import type { Vehicle } from "../../domain/vehicle";
-import { addLead, getVehicles } from "../../infrastructure/browser/adminStore";
-import { AiAssistant } from "./assistant/AiAssistant";
-import type { CatalogFilters } from "./shared/types";
-import { DEFAULT_CATALOG_FILTERS } from "./shared/types";
-import { catalogFiltersFromUrl, scrollToId } from "./shared/utils";
-import { usePublicInteractions } from "./hooks/usePublicInteractions";
-import { PublicHeader } from "./layout/PublicHeader";
-import { PublicFooter } from "./layout/PublicFooter";
-import { MobileActionBar } from "./layout/MobileActionBar";
-import { CatalogHero } from "./catalog/CatalogHero";
-import { CatalogSourceNotice } from "./catalog/CatalogSourceNotice";
+import { Phone } from "@phosphor-icons/react";
+import {
+  auctionCatalogSearchFromState,
+  auctionCatalogStateFromSearch,
+} from "../../application/auctionCatalog";
+import type {
+  AuctionCatalogFacets,
+  AuctionCatalogFilters,
+  AuctionCatalogLot,
+} from "../../domain/auctionCatalog";
+import {
+  DEFAULT_AUCTION_CATALOG_FILTERS,
+  EMPTY_AUCTION_CATALOG_FACETS,
+} from "../../domain/auctionCatalog";
+import { resolveCatalogLotId } from "../../app/routes";
+import {
+  loadAuctionCatalogFacets,
+  loadAuctionCatalogPage,
+} from "../../infrastructure/supabase/auctionCatalogRepository";
 import { CatalogFilterPanel } from "./catalog/CatalogFilterPanel";
+import { CatalogHero } from "./catalog/CatalogHero";
+import { CatalogMobileActionBar } from "./catalog/CatalogMobileActionBar";
 import { CatalogResults } from "./catalog/CatalogResults";
+import { AuctionVehicleDetailsPage } from "./catalog/AuctionVehicleDetailsPage";
 import { ConsultationBanner } from "./consultation/ConsultationBanner";
-import { CompareBar } from "./vehicles/CompareBar";
-import { Notice } from "./shared/Notice";
-import { VehicleDetailsModal } from "./vehicles/VehicleDetailsModal";
-import { CompareModal } from "./vehicles/CompareModal";
-import { ConsultationModal } from "./consultation/ConsultationModal";
+import { PublicFooter } from "./layout/PublicFooter";
+import { PublicHeader } from "./layout/PublicHeader";
+import { phoneHref, scrollToId } from "./shared/utils";
 
-export function CatalogApp() {
-  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
-  const [catalogLoading, setCatalogLoading] = useState(true);
-  const [catalogSource, setCatalogSource] = useState<"supabase" | "local-demo" | null>(null);
+const catalogErrorMessage = "Կատալոգի տվյալները հիմա հասանելի չեն։ Կրկին փորձեք մի փոքր ուշ։";
+
+function AuctionCatalogIndexPage() {
+  const initialState = useMemo(() => auctionCatalogStateFromSearch(window.location.search), []);
+  const [filters, setFilters] = useState<AuctionCatalogFilters>(initialState.filters);
+  const [page, setPage] = useState(initialState.page);
+  const [items, setItems] = useState<AuctionCatalogLot[]>([]);
+  const [total, setTotal] = useState(0);
+  const [pageCount, setPageCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [facets, setFacets] = useState<AuctionCatalogFacets>(EMPTY_AUCTION_CATALOG_FACETS);
+  const [facetsLoading, setFacetsLoading] = useState(true);
+  const [facetsError, setFacetsError] = useState(false);
   const [reloadToken, setReloadToken] = useState(0);
-  const [filters, setFilters] = useState<CatalogFilters>(catalogFiltersFromUrl);
-  const interactions = usePublicInteractions(vehicles);
+
+  useEffect(() => {
+    const query = auctionCatalogSearchFromState(filters, page);
+    window.history.replaceState(window.history.state, "", `${window.location.pathname}${query}${window.location.hash}`);
+  }, [filters, page]);
 
   useEffect(() => {
     let active = true;
     const controller = new AbortController();
-    setCatalogLoading(true);
+    setLoading(true);
+    setError(null);
 
-    void loadPublicVehicles({ signal: controller.signal }).then((result) => {
+    const delay = filters.query.trim() ? 250 : 0;
+    const timeout = window.setTimeout(() => {
+      void loadAuctionCatalogPage({ filters, page, signal: controller.signal }).then((result) => {
+        if (!active || controller.signal.aborted) return;
+        if (result.pageCount > 0 && page > result.pageCount) {
+          setPage(result.pageCount);
+          return;
+        }
+        setItems(result.items);
+        setTotal(result.total);
+        setPageCount(result.pageCount);
+        setLoading(false);
+      }).catch(() => {
+        if (!active || controller.signal.aborted) return;
+        setItems([]);
+        setTotal(0);
+        setPageCount(0);
+        setError(catalogErrorMessage);
+        setLoading(false);
+      });
+    }, delay);
+
+    return () => {
+      active = false;
+      controller.abort();
+      window.clearTimeout(timeout);
+    };
+  }, [filters, page, reloadToken]);
+
+  useEffect(() => {
+    let active = true;
+    const controller = new AbortController();
+    setFacetsLoading(true);
+    setFacetsError(false);
+
+    void loadAuctionCatalogFacets(filters.make, controller.signal).then((result) => {
       if (!active || controller.signal.aborted) return;
-      const nextVehicles = result.items.filter((vehicle) => vehicle.status === "published");
-      setVehicles(nextVehicles);
-      setCatalogSource(result.source);
-      setCatalogLoading(false);
+      setFacets(result);
+      setFacetsLoading(false);
     }).catch(() => {
       if (!active || controller.signal.aborted) return;
-      const nextVehicles = getVehicles().filter((vehicle) => vehicle.status === "published");
-      setVehicles(nextVehicles);
-      setCatalogSource("local-demo");
-      setCatalogLoading(false);
+      setFacets((current) => ({ ...EMPTY_AUCTION_CATALOG_FACETS, makes: current.makes }));
+      setFacetsError(true);
+      setFacetsLoading(false);
     });
 
     return () => {
       active = false;
       controller.abort();
     };
-    // reloadToken intentionally owns this request lifecycle.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [reloadToken]);
+  }, [filters.make, reloadToken]);
 
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const syncParam = (name: string, value: string, defaultValue = "") => {
-      if (!value || value === defaultValue) params.delete(name);
-      else params.set(name, value);
-    };
-    syncParam("q", filters.query);
-    syncParam("make", filters.make, "all");
-    syncParam("yearFrom", filters.yearFrom, "all");
-    syncParam("maxBudget", filters.maxBudget);
-    syncParam("sort", filters.sort, "recommended");
-    const query = params.toString();
-    const nextUrl = `${window.location.pathname}${query ? `?${query}` : ""}${window.location.hash}`;
-    window.history.replaceState(window.history.state, "", nextUrl);
-  }, [filters]);
+  const hasActiveFilters = useMemo(() => Object.entries(filters).some(([key, value]) => (
+    value !== DEFAULT_AUCTION_CATALOG_FILTERS[key as keyof AuctionCatalogFilters]
+  )), [filters]);
 
-  const makes = useMemo(() => [...new Set(vehicles.map((vehicle) => vehicle.make).filter(Boolean))].sort((left, right) => left.localeCompare(right, "hy")), [vehicles]);
-  const years = useMemo(() => [...new Set(vehicles.map((vehicle) => vehicle.year))].sort((left, right) => right - left), [vehicles]);
-  const filteredVehicles = useMemo(() => {
-    const needle = filters.query.trim().toLocaleLowerCase("hy");
-    const yearFrom = filters.yearFrom === "all" ? 0 : Number(filters.yearFrom);
-    const maxBudget = filters.maxBudget === "" ? Number.POSITIVE_INFINITY : Number(filters.maxBudget);
-    const next = vehicles.filter((vehicle) => {
-      const haystack = [vehicle.make, vehicle.model, vehicle.body, vehicle.fuel, vehicle.year].join(" ").toLocaleLowerCase("hy");
-      return (!needle || haystack.includes(needle)) && (filters.make === "all" || vehicle.make === filters.make) && vehicle.year >= yearFrom && vehicle.estimateMax <= maxBudget;
-    });
-    if (filters.sort === "newest") return next.sort((left, right) => Date.parse(right.createdAt) - Date.parse(left.createdAt) || right.year - left.year);
-    if (filters.sort === "price-asc") return next.sort((left, right) => left.estimateMax - right.estimateMax);
-    if (filters.sort === "price-desc") return next.sort((left, right) => right.estimateMax - left.estimateMax);
-    return next;
-  }, [filters, vehicles]);
+  const updateFilters = (next: AuctionCatalogFilters): void => {
+    let normalized = next.make !== filters.make ? { ...next, model: "all" } : next;
+    const yearFrom = normalized.yearFrom === "all" ? null : Number(normalized.yearFrom);
+    const yearTo = normalized.yearTo === "all" ? null : Number(normalized.yearTo);
+    if (yearFrom !== null && yearTo !== null && yearFrom > yearTo) {
+      normalized = normalized.yearFrom !== filters.yearFrom
+        ? { ...normalized, yearTo: "all" }
+        : { ...normalized, yearFrom: "all" };
+    }
+    setFilters(normalized);
+    setPage(1);
+  };
 
-  const showAllVehicles = (): void => {
-    interactions.setAssistantOpen(false);
-    setFilters(DEFAULT_CATALOG_FILTERS);
+  const resetFilters = (): void => {
+    setFilters(DEFAULT_AUCTION_CATALOG_FILTERS);
+    setPage(1);
+  };
+
+  const changePage = (nextPage: number): void => {
+    setPage(nextPage);
     window.setTimeout(() => scrollToId("catalog-results"), 0);
   };
 
+  const retry = (): void => setReloadToken((value) => value + 1);
+  const callHovex = () => window.location.assign(`tel:${phoneHref}`);
+
   return (
     <>
-      <PublicHeader page="catalog" onConsultation={interactions.openConsultation} />
+      <PublicHeader page="catalog" onConsultation={callHovex} />
       <main id="top">
-        <CatalogHero loading={catalogLoading} vehicleCount={vehicles.length} />
-        <CatalogSourceNotice visible={catalogSource === "local-demo" && !catalogLoading} onRetry={() => setReloadToken((value) => value + 1)} />
-        <CatalogFilterPanel filters={filters} makes={makes} years={years} onChange={setFilters} />
-        <CatalogResults loading={catalogLoading} vehicles={vehicles} filteredVehicles={filteredVehicles} filters={filters} compared={interactions.compared} onFiltersChange={setFilters} onCompare={interactions.toggleCompare} onDetails={interactions.setDetailVehicle} onConsultation={interactions.openConsultation} />
-        <ConsultationBanner onConsultation={interactions.openConsultation} />
+        <CatalogHero loading={loading} vehicleCount={total} />
+        <CatalogFilterPanel filters={filters} facets={facets} facetsLoading={facetsLoading} facetsError={facetsError} onChange={updateFilters} />
+        <CatalogResults loading={loading} error={error} items={items} total={total} page={page} pageCount={pageCount} hasActiveFilters={hasActiveFilters} onRetry={retry} onReset={resetFilters} onPageChange={changePage} />
+        <ConsultationBanner onConsultation={callHovex} actionLabel="Զանգահարել մասնագետին" actionIcon={Phone} />
       </main>
       <PublicFooter />
-      <AiAssistant open={interactions.assistantOpen} onOpenChange={interactions.setAssistantOpen} vehicles={vehicles} criteria={{ budget: filters.maxBudget, yearFrom: filters.yearFrom, make: filters.make === "all" ? null : filters.make }} compared={interactions.compared} onVehicleDetails={interactions.setDetailVehicle} onCompare={interactions.toggleCompare} onConsultation={(id) => interactions.openConsultation(id, "ai-assistant")} onOpenFinder={showAllVehicles} />
-      <MobileActionBar page="catalog" assistantOpen={interactions.assistantOpen} onOpenAssistant={() => interactions.setAssistantOpen(true)} onConsultation={() => interactions.openConsultation(null)} onPrimaryAction={() => window.location.assign("/")} />
-      {interactions.compared.length ? <CompareBar count={interactions.compared.length} onOpen={interactions.openCompare} onClear={() => interactions.setCompared([])} /> : null}
-      <Notice message={interactions.notice} />
-      {interactions.detailVehicle ? <VehicleDetailsModal vehicle={interactions.detailVehicle} onClose={() => interactions.setDetailVehicle(null)} onConsultation={interactions.openConsultation} isCompared={interactions.compared.includes(interactions.detailVehicle.id)} onCompare={interactions.toggleCompare} /> : null}
-      {interactions.compareOpen ? <CompareModal items={interactions.comparedVehicles} onClose={() => interactions.setCompareOpen(false)} onRemove={interactions.removeCompareItem} onConsultation={interactions.openConsultation} /> : null}
-      {interactions.consultVehicleId !== undefined ? <ConsultationModal selectedVehicle={interactions.selectedConsultVehicle} onClose={interactions.closeConsultation} source={interactions.consultSource} onSubmitLead={addLead} /> : null}
+      <CatalogMobileActionBar />
     </>
   );
+}
+
+export function CatalogApp() {
+  const lotId = resolveCatalogLotId(window.location.pathname);
+  return lotId ? <AuctionVehicleDetailsPage lotId={lotId} /> : <AuctionCatalogIndexPage />;
 }

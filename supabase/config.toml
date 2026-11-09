@@ -1,0 +1,5 @@
+project_id = "hovex-site"
+
+# Compatibility name: this Edge Function imports from AuctionsAPI.
+[functions.motorapis-sync]
+verify_jwt = false

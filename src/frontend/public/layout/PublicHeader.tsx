@@ -54,8 +54,8 @@ export function PublicHeader({ onConsultation, page = "home" }: PublicHeaderProp
             <Phone size={19} weight="fill" aria-hidden="true" />
             <span className="max-[1240px]:hidden">{phoneDisplay}</span>
           </a>
-          <Button className="min-h-[45px] px-4 text-[13px] max-[800px]:hidden" icon={CalendarBlank} onClick={() => onConsultation(null)}>
-            Անվճար խորհրդատվություն
+          <Button className="min-h-[45px] px-4 text-[13px] max-[800px]:hidden" icon={page === "catalog" ? Phone : CalendarBlank} onClick={() => onConsultation(null)}>
+            {page === "catalog" ? "Զանգահարել մասնագետին" : "Անվճար խորհրդատվություն"}
           </Button>
         </div>
       </div>

@@ -1,17 +1,25 @@
 # Hovex architecture
 
-Hovex currently uses a browser application backed directly by Supabase. The
-repository has two trust boundaries:
+Hovex uses a browser application backed by Supabase. The repository has three
+trust boundaries:
 
 - `src/` is frontend code. Everything under this directory is bundled by Vite
   and can be inspected by a site visitor.
 - `supabase/` is backend configuration. Its migrations define PostgreSQL,
   Auth authorization, Row Level Security (RLS), and Storage policies.
+- `supabase/functions/` and `scripts/motorapis-sync.ts` are trusted server-side
+  AuctionsAPI import code. They may use provider and Supabase secret keys; none
+  of these modules are imported by the Vite browser entrypoint.
 
-There is no Node.js application server in this repository. Files under
+There is no always-on Node.js application server in this repository. Files under
 `src/infrastructure/supabase/` are browser-side adapters, not backend code.
 They use only the public Supabase URL and publishable key. A `service_role` key
 or another server secret must never be placed in `src/` or a `VITE_*` variable.
+Scheduled AuctionsAPI work runs in the legacy-named `motorapis-sync` Supabase
+Edge Function; the Node script is an operator CLI using the same tested
+synchronization core. The provider secret is `AUCTIONSAPI_API_KEY` and remains
+server-only. AuctionsAPI operates independently and is not affiliated with
+Copart, IAAI, or Encar.
 
 ## Frontend layers
 
@@ -54,8 +62,18 @@ paths directly.
 
 ## Data ownership
 
-- Vehicles: Supabase PostgreSQL is authoritative when configured. The public
-  catalog falls back to bundled demo inventory when Supabase is unavailable.
+- Curated homepage vehicles: Supabase PostgreSQL is authoritative when
+  configured. The homepage presentation flow can fall back to bundled demo
+  inventory when Supabase is unavailable.
+- Copart catalog: AuctionsAPI is the upstream provider. Normalized
+  `motorapi_vehicles` and `motorapi_lots` tables are authoritative. Browser
+  clients can read only the safe, active-Copart `motorapi_catalog` view;
+  `/catalog` never falls back to demo auction data. The `motorapi_*` database,
+  migration, function, and file names are compatibility identifiers retained
+  to avoid rewriting an applied schema; they do not identify the current
+  provider brand. AuctionsAPI pagination is mutable rather than a frozen
+  snapshot, so an absent row never deactivates a stored lot; only an explicit
+  `/archived-lots` event does.
 - Consultation leads: currently prototype-only browser `localStorage` data.
   It is not shared between devices and must not be treated as production CRM
   persistence.

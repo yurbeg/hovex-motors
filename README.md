@@ -17,9 +17,26 @@ Frontend-ը կառուցված է React, TypeScript, Tailwind CSS 4 և Vite տե
 - `/admin` հասցեով Supabase Auth-ով պաշտպանված կառավարման վահանակ՝ մեքենաների համար,
 - desktop, tablet և mobile տարբերակներ։
 
-> Աճուրդային տվյալներն ու գները demo գնահատականներ են։ Իրական տվյալների համար անհրաժեշտ է միացնել լիցենզավորված auction data provider։
+> Գլխավոր էջի ընտրված առաջարկների հասցված արժեքները demo գնահատականներ են։
+> `/catalog` էջում իրական աճուրդային տվյալներ հայտնվում են միայն AuctionsAPI-ի
+> հաջող ներմուծումից հետո և չեն ներկայացվում որպես վերջնական գնման արժեք։
 
 > Supabase-ը կարգավորելուց հետո admin վահանակի մեքենաները պահվում են PostgreSQL բազայում և համաժամեցվում են սարքերի միջև։ Հաճախորդների հարցումները դեռ ցուցադրական են ու պահվում են տվյալ դիտարկիչի `localStorage`-ում։
+
+## AuctionsAPI / Copart կենդանի կատալոգ
+
+`/catalog` էջը կարող է ցուցադրել Supabase-ում ներմուծված ակտիվ Copart լոտերը՝
+լուսանկարներով, բնութագրերով, ընթացիկ խաղադրույքով և Buy Now գնով։ AuctionsAPI
+գաղտնի բանալին երբեք չի փոխանցվում browser-ին․ ներմուծումն աշխատում է
+Supabase Edge Function-ում կամ տեղային server-only հրամանով։ Կարգավորման,
+միգրացիաների, փորձնական/ամբողջական ներմուծման և ժամային schedule-ի քայլերը
+նկարագրված են [AuctionsAPI ինտեգրման ուղեցույցում](./MOTORAPIS.md)։
+
+AuctionsAPI-ն անկախ տվյալների մատակարար է և կապված չէ Copart-ի, IAAI-ի կամ
+Encar-ի հետ։ Պաշտոնական փաստաթղթերը՝
+[`auctionsapi.com/docs`](https://auctionsapi.com/docs)։ Repository-ի արդեն
+ստեղծված որոշ ներքին ֆայլեր և PostgreSQL անուններ շարունակում են կրել
+`motorapis` անունը՝ migration compatibility-ն չխախտելու համար։
 
 ## AI օգնական
 
@@ -31,9 +48,15 @@ VITE_ASSISTANT_API_URL=https://your-api.example.com/assistant
 
 Endpoint-ը պետք է ընդունի `POST` JSON հարցում և վերադարձնի `message.text`, `message.suggested_vehicle_ids` ու `message.quick_replies` դաշտերը։ `OPENAI_API_KEY`-ը պահեք միայն backend-ի secret manager-ում կամ environment-ում․ այն երբեք չպետք է հայտնվի `VITE_*` փոփոխականում կամ browser code-ում։ Եթե endpoint-ը անհասանելի է, օգնականը անվտանգ վերադառնում է տեղային demo պատասխաններին։
 
-## Supabase կատալոգ
+## Supabase ցուցադրվող մեքենաներ
 
-Հանրային մեքենաների կատալոգը կարող է կարդալ Supabase Free-ի PostgreSQL բազայից։ `/catalog` հասցեն ցուցադրում է բազայում առկա բոլոր `published` մեքենաները՝ `featured`, `sort_order`, ապա `id` հերթականությամբ։ `draft` և `archived` մեքենաները հանրային կատալոգ չեն հասնում՝ և՛ հարցման, և՛ Row Level Security կանոնների շնորհիվ։ Առանց Supabase կարգավորման կայքը շարունակում է աշխատել ներկառուցված demo մեքենաներով, իսկ կապի ժամանակավոր սխալի դեպքում նույնպես անվտանգ վերադառնում է demo ցուցակին։
+Գլխավոր էջի ընտրված առաջարկներն ու admin վահանակը շարունակում են օգտագործել
+`vehicles` աղյուսակը։ Միայն `published` գրառումներն են հասանելի հանրային
+browser-ին, իսկ `draft` և `archived` մեքենաները պաշտպանված են հարցմամբ և Row
+Level Security կանոններով։ Եթե այս աղյուսակի Supabase կապը կարգավորված չէ,
+գլխավոր էջի ցուցադրական հոսքը կարող է օգտագործել ներկառուցված demo տվյալները։
+Իրական `/catalog` Copart էջը demo fallback չի օգտագործում և կարդում է միայն
+նոր `motorapi_catalog` ներկայացումը։
 
 1. Supabase SQL Editor-ում գործարկեք `supabase/migrations/202611050001_create_vehicles.sql` ֆայլը։
 2. Նույն տեղում մեկ անգամ գործարկեք `supabase/seed.sql` ֆայլը։

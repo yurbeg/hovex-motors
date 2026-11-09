@@ -5,6 +5,9 @@ dist/
 .env.*
 !.env.example
 
+# Supabase Edge Function secrets (also covered by the generic .env rules above)
+supabase/functions/.env
+
 .DS_Store
 Thumbs.db
 *.log
