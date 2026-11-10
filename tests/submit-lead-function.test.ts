@@ -18,8 +18,11 @@ const validPayload = {
   name: "  Անի Մկրտչյան  ",
   phone: " +374 99 123 456 ",
   contactMethod: "whatsapp",
+  requestKind: "full_calculation",
   vehicleId: "vehicle-42",
   vehicleLabel: "2024 Toyota RAV4",
+  lotId: " 70010001 ",
+  vin: " 1HGCM82633A004352 ",
   preferredDate: "2026-11-11",
   preferredTime: "13:00–16:00",
   note: "  Խնդրում եմ զանգահարել աշխատանքային ժամերին։  ",
@@ -85,15 +88,35 @@ test("validation normalizes the public payload and rejects client-controlled fie
   assert.equal(valid.value.name, "Անի Մկրտչյան");
   assert.equal(valid.value.phone, "+374 99 123 456");
   assert.equal(valid.value.note, "Խնդրում եմ զանգահարել աշխատանքային ժամերին։");
+  assert.equal(valid.value.requestKind, "full_calculation");
+  assert.equal(valid.value.lotId, "70010001");
+  assert.equal(valid.value.vin, "1HGCM82633A004352");
+
+  const {
+    requestKind: _requestKind,
+    lotId: _lotId,
+    vin: _vin,
+    ...legacyPayload
+  } = validPayload;
+  const legacy = validateLeadSubmission(legacyPayload, fixedNow);
+  assert.equal(legacy.ok, true);
+  if (legacy.ok) {
+    assert.equal(legacy.value.requestKind, "consultation");
+    assert.equal(legacy.value.lotId, null);
+    assert.equal(legacy.value.vin, null);
+  }
 
   const invalidPayloads = [
     { ...validPayload, consent: false },
     { ...validPayload, contactMethod: "Telegram" },
+    { ...validPayload, requestKind: "purchase" },
     { ...validPayload, source: "admin" },
     { ...validPayload, phone: "+374 1" },
     { ...validPayload, preferredDate: "2026-11-09" },
     { ...validPayload, preferredDate: "2026-02-30" },
     { ...validPayload, preferredTime: "midnight" },
+    { ...validPayload, lotId: "x".repeat(161) },
+    { ...validPayload, vin: "VIN\u0000VALUE" },
     { ...validPayload, status: "closed" },
   ];
   for (const payload of invalidPayloads) {
@@ -169,6 +192,7 @@ test("a new lead is rate checked and inserted with a server-only whitelist", asy
     id: storedLeadId,
     created_at: "2026-11-10T08:30:01.000Z",
     submission_hash: "placeholder",
+    submission_hash_version: 2,
   };
   const calls: FetchCall[] = [];
   const dynamicFetch = (async (input: URL | RequestInfo, init?: RequestInit) => {
@@ -201,18 +225,26 @@ test("a new lead is rate checked and inserted with a server-only whitelist", asy
     "consent_at",
     "consent_version",
     "contact_method",
+    "lot_id",
     "name",
     "note",
     "phone",
     "preferred_date",
     "preferred_time",
+    "request_kind",
     "source",
     "submission_hash",
+    "submission_hash_version",
     "vehicle_id",
     "vehicle_label",
+    "vin",
   ]);
   assert.equal(insertBody.consent_version, "contact-consent-v1");
   assert.equal(insertBody.consent_at, fixedNow.toISOString());
+  assert.equal(insertBody.request_kind, "full_calculation");
+  assert.equal(insertBody.lot_id, "70010001");
+  assert.equal(insertBody.vin, "1HGCM82633A004352");
+  assert.equal(insertBody.submission_hash_version, 2);
   assert.match(String(insertBody.submission_hash), /^[a-f0-9]{64}$/);
   assert.equal("status" in insertBody, false);
   assert.equal("id" in insertBody, false);
@@ -229,6 +261,7 @@ test("same-payload retries return the stored receipt after abuse control", async
       id: storedLeadId,
       created_at: "2026-11-10T08:30:01.000Z",
       submission_hash: hash,
+      submission_hash_version: 2,
     }]),
   ]);
 
@@ -244,6 +277,61 @@ test("same-payload retries return the stored receipt after abuse control", async
   assert.match(calls[0].url, /consume_lead_submission_limit/);
 });
 
+test("legacy v1 rows keep their original idempotency hash contract", async () => {
+  const validated = validateLeadSubmission(validPayload, fixedNow);
+  assert.equal(validated.ok, true);
+  if (!validated.ok) return;
+  const legacyHash = await submissionHash(validated.value, runtimeCrypto, 1);
+  assert.equal(
+    legacyHash,
+    "708e3e965d6f4d0e4380b68a809938a68cfe0cf90768c7e9a0500e2b4c57636e",
+  );
+  const { fetch: mockFetch } = sequenceFetch([
+    json(true),
+    json([{
+      id: storedLeadId,
+      created_at: "2026-11-10T08:30:01.000Z",
+      submission_hash: legacyHash,
+      submission_hash_version: 1,
+    }]),
+  ]);
+
+  const response = await handlerWith(mockFetch)(request());
+
+  assert.equal(response.status, 200);
+  assert.equal((await response.json() as { duplicate: boolean }).duplicate, true);
+});
+
+test("v2 idempotency rejects changed request-kind or vehicle context", async () => {
+  const validated = validateLeadSubmission(validPayload, fixedNow);
+  assert.equal(validated.ok, true);
+  if (!validated.ok) return;
+  const hash = await submissionHash(validated.value, runtimeCrypto, 2);
+  for (const changed of [
+    { lotId: "different-lot" },
+    { vin: "JH4KA9650MC012345" },
+    { requestKind: "consultation" },
+  ]) {
+    const { fetch: mockFetch } = sequenceFetch([
+      json(true),
+      json([{
+        id: storedLeadId,
+        created_at: "2026-11-10T08:30:01.000Z",
+        submission_hash: hash,
+        submission_hash_version: 2,
+      }]),
+    ]);
+
+    const response = await handlerWith(mockFetch)(request({
+      ...validPayload,
+      ...changed,
+    }));
+
+    assert.equal(response.status, 409);
+    assert.deepEqual(await response.json(), { error: "idempotency_conflict" });
+  }
+});
+
 test("a changed payload under an existing idempotency key is rejected", async () => {
   const { fetch: mockFetch, calls } = sequenceFetch([
     json(true),
@@ -251,6 +339,7 @@ test("a changed payload under an existing idempotency key is rejected", async ()
       id: storedLeadId,
       created_at: "2026-11-10T08:30:01.000Z",
       submission_hash: "f".repeat(64),
+      submission_hash_version: 2,
     }]),
   ]);
 
@@ -274,6 +363,7 @@ test("a concurrent duplicate resolves to the original receipt", async () => {
       id: storedLeadId,
       created_at: "2026-11-10T08:30:01.000Z",
       submission_hash: hash,
+      submission_hash_version: 2,
     }]),
   ]);
 

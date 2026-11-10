@@ -3,13 +3,16 @@ import type { ChangeEvent, FormEvent } from "react";
 import { CalendarBlank, Car, Check, CheckCircle, Phone, SpinnerGap, WhatsappLogo } from "@phosphor-icons/react";
 import {
   LEAD_CONTACT_METHOD_LABELS,
+  LEAD_REQUEST_KIND_LABELS,
   type LeadContactMethod,
+  type LeadRequestKind,
+  type LeadSource,
   type LeadSubmissionReceipt,
+  type LeadVehicleContext,
   type PublicLeadSubmission,
 } from "../../../domain/lead";
 import type { Vehicle } from "../../../domain/vehicle";
 import { getPublicLeadErrorMessage } from "../../../infrastructure/supabase/publicLeadRepository";
-import type { ConsultationSource } from "../shared/types";
 import { Button } from "../shared/Button";
 import { Modal } from "../shared/Modal";
 import { formFieldClasses } from "../shared/styles";
@@ -30,10 +33,12 @@ interface ConsultationFormState {
 type ConsultationErrors = Partial<Record<keyof ConsultationFormState, string>>;
 
 interface ConsultationModalProps {
-  selectedVehicle: Vehicle | null;
+  selectedVehicle?: Vehicle | null;
+  vehicleContext?: LeadVehicleContext | null;
+  requestKind?: LeadRequestKind;
   onClose: () => void;
   onSubmitLead: (payload: PublicLeadSubmission) => Promise<LeadSubmissionReceipt>;
-  source?: ConsultationSource;
+  source?: LeadSource;
 }
 
 const initialForm: ConsultationFormState = { name: "", phone: "", method: "phone", date: "", time: "10:00–13:00", note: "", consent: false };
@@ -50,7 +55,24 @@ function createClientRequestId(): string {
   return `${value.slice(0, 8)}-${value.slice(8, 12)}-${value.slice(12, 16)}-${value.slice(16, 20)}-${value.slice(20)}`;
 }
 
-export function ConsultationModal({ selectedVehicle, onClose, onSubmitLead, source = "website" }: ConsultationModalProps) {
+function inventoryVehicleContext(vehicle: Vehicle | null | undefined): LeadVehicleContext | null {
+  if (!vehicle) return null;
+  return {
+    vehicleId: vehicle.id,
+    vehicleLabel: `${vehicle.year} ${vehicle.make} ${vehicle.model}`,
+    lotId: null,
+    vin: null,
+  };
+}
+
+export function ConsultationModal({
+  selectedVehicle,
+  vehicleContext,
+  requestKind = "consultation",
+  onClose,
+  onSubmitLead,
+  source = "website",
+}: ConsultationModalProps) {
   const [form, setForm] = useState<ConsultationFormState>(initialForm);
   const [errors, setErrors] = useState<ConsultationErrors>({});
   const [status, setStatus] = useState<ConsultationStatus>("idle");
@@ -63,12 +85,18 @@ export function ConsultationModal({ selectedVehicle, onClose, onSubmitLead, sour
   const phoneRef = useRef<HTMLInputElement | null>(null);
   const consentRef = useRef<HTMLInputElement | null>(null);
   const today = localDateInputValue();
-  const selectedVehicleText = selectedVehicle ? `${selectedVehicle.year} ${selectedVehicle.make} ${selectedVehicle.model}` : "Անհատական ընտրություն";
+  const resolvedVehicle = vehicleContext ?? inventoryVehicleContext(selectedVehicle);
+  const selectedVehicleText = resolvedVehicle?.vehicleLabel ?? "Անհատական ընտրություն";
+  const isCalculation = requestKind === "full_calculation";
   const whatsappMessage = encodeURIComponent([
-    "Բարև, Hovex Motors։ Ցանկանում եմ խորհրդատվություն ամրագրել։",
+    isCalculation
+      ? "Բարև, Hovex Motors։ Ցանկանում եմ ստանալ մեքենայի ամբողջական հաշվարկը։"
+      : "Բարև, Hovex Motors։ Ցանկանում եմ խորհրդատվություն ամրագրել։",
     `Անուն՝ ${form.name}`,
     `Հեռախոս՝ ${form.phone}`,
     `Հետաքրքրող մեքենա՝ ${selectedVehicleText}`,
+    resolvedVehicle?.lotId ? `Lot ID՝ ${resolvedVehicle.lotId}` : null,
+    resolvedVehicle?.vin ? `VIN՝ ${resolvedVehicle.vin}` : null,
     `Կապի եղանակ՝ ${LEAD_CONTACT_METHOD_LABELS[form.method]}`,
     form.date ? `Նախընտրելի օր՝ ${form.date}` : null,
     `Ժամային միջակայք՝ ${form.time}`,
@@ -122,8 +150,11 @@ export function ConsultationModal({ selectedVehicle, onClose, onSubmitLead, sour
         name: form.name.trim(),
         phone: form.phone.trim(),
         contactMethod: form.method,
-        vehicleId: selectedVehicle?.id ?? null,
+        requestKind,
+        vehicleId: resolvedVehicle?.vehicleId ?? null,
         vehicleLabel: selectedVehicleText,
+        lotId: resolvedVehicle?.lotId ?? null,
+        vin: resolvedVehicle?.vin ?? null,
         preferredDate: form.date,
         preferredTime: form.time,
         note: form.note.trim(),
@@ -148,7 +179,10 @@ export function ConsultationModal({ selectedVehicle, onClose, onSubmitLead, sour
           <h3 ref={successHeadingRef} className="mt-[18px] mb-2 text-2xl outline-none" tabIndex={-1}>Շնորհակալություն, {form.name}</h3>
           <p className="mx-auto mt-0 mb-5 max-w-[500px] text-xs leading-[1.65] text-[var(--ink-soft)]">{receipt?.duplicate ? "Ձեր հարցումն արդեն ստացել էինք․ այն կրկին չի գրանցվել։" : "Ձեր հարցումն անվտանգ ստացել ենք։ Hovex Motors-ի մասնագետը կկապվի ձեր նշած եղանակով։"} Ցանկության դեպքում կարող եք նաև գրել WhatsApp-ով կամ զանգահարել մեզ։</p>
           <div className="mx-auto flex min-h-11 max-w-[470px] items-center justify-between gap-5 border-t border-[var(--border)] text-left text-[10px] [&_span]:text-right"><strong>Կապի եղանակ</strong><span>{LEAD_CONTACT_METHOD_LABELS[form.method]}</span></div>
-          {selectedVehicle ? <div className="mx-auto flex min-h-11 max-w-[470px] items-center justify-between gap-5 border-t border-[var(--border)] text-left text-[10px] [&_span]:text-right"><strong>Ընտրված մեքենա</strong><span>{selectedVehicleText}</span></div> : null}
+          <div className="mx-auto flex min-h-11 max-w-[470px] items-center justify-between gap-5 border-t border-[var(--border)] text-left text-[10px] [&_span]:text-right"><strong>Հարցման տեսակ</strong><span>{LEAD_REQUEST_KIND_LABELS[requestKind]}</span></div>
+          {resolvedVehicle ? <div className="mx-auto flex min-h-11 max-w-[470px] items-center justify-between gap-5 border-t border-[var(--border)] text-left text-[10px] [&_span]:text-right"><strong>Ընտրված մեքենա</strong><span>{selectedVehicleText}</span></div> : null}
+          {resolvedVehicle?.lotId ? <div className="mx-auto flex min-h-11 max-w-[470px] items-center justify-between gap-5 border-t border-[var(--border)] text-left text-[10px] [&_span]:text-right"><strong>Lot ID</strong><span>{resolvedVehicle.lotId}</span></div> : null}
+          {resolvedVehicle?.vin ? <div className="mx-auto flex min-h-11 max-w-[470px] items-center justify-between gap-5 border-t border-[var(--border)] text-left text-[10px] [&_span]:text-right"><strong>VIN</strong><span>{resolvedVehicle.vin}</span></div> : null}
           <a className={classNames("mt-[23px] inline-flex min-h-12 cursor-pointer items-center justify-center gap-[9px] rounded-xl border border-transparent bg-[var(--yellow)] px-[21px] leading-[1.15] font-bold text-[var(--ink)] transition-[background,transform] duration-150 hover:-translate-y-px hover:bg-[var(--yellow-hover)]")} href={whatsappUrl} target="_blank" rel="noreferrer"><WhatsappLogo size={20} weight="bold" /><span>Ուղարկել WhatsApp-ով</span></a>
           <a className="mt-[13px] flex items-center justify-center gap-2 text-xs font-bold" href={`tel:${phoneHref}`}><Phone size={18} weight="fill" /> Զանգահարել {phoneDisplay}</a>
         </div>
@@ -157,11 +191,11 @@ export function ConsultationModal({ selectedVehicle, onClose, onSubmitLead, sour
   }
 
   return (
-    <Modal title="Ամրագրել անվճար խորհրդատվություն" onClose={onClose} locked={status === "submitting"}>
+    <Modal title={isCalculation ? "Ստանալ ամբողջական հաշվարկ" : "Ամրագրել անվճար խորհրդատվություն"} onClose={onClose} locked={status === "submitting"}>
       <form className="p-6" onSubmit={(event) => void submit(event)} noValidate aria-busy={status === "submitting"}>
         <fieldset className="m-0 min-w-0 border-0 p-0" disabled={status === "submitting"}>
-        <p className="mt-0 mb-[17px] text-[13px] leading-[1.65] text-[var(--ink-soft)]">Թողեք ձեր տվյալները, և Hovex Motors-ի մասնագետը կօգնի ճշտել մեքենան ու ամբողջական հաշվարկը։</p>
-        {selectedVehicle ? <div className="mb-[17px] flex items-center gap-[11px] rounded-[11px] bg-[var(--yellow-pale)] px-3.5 py-3"><Car size={21} weight="fill" /><span><small className="block text-[10px] text-[#76653a]">Ընտրված տարբերակ</small><strong className="mt-0.5 block text-xs">{selectedVehicle.year} {selectedVehicle.make} {selectedVehicle.model}</strong></span></div> : null}
+        <p className="mt-0 mb-[17px] text-[13px] leading-[1.65] text-[var(--ink-soft)]">{isCalculation ? "Թողեք ձեր տվյալները, և Hovex Motors-ի մասնագետը կպատրաստի մեքենայի, աճուրդի, տեղափոխման և ներմուծման ամբողջական նախնական հաշվարկը։" : "Թողեք ձեր տվյալները, և Hovex Motors-ի մասնագետը կօգնի ճշտել մեքենան ու հաջորդ քայլերը։"}</p>
+        {resolvedVehicle ? <div className="mb-[17px] flex items-start gap-[11px] rounded-[11px] bg-[var(--yellow-pale)] px-3.5 py-3"><Car className="mt-0.5 shrink-0" size={21} weight="fill" /><span className="min-w-0"><small className="block text-[10px] text-[#76653a]">Ընտրված տարբերակ</small><strong className="mt-0.5 block text-xs">{selectedVehicleText}</strong>{resolvedVehicle.lotId || resolvedVehicle.vin ? <small className="mt-1 block break-words text-[9px] leading-[1.5] text-[#76653a]">{resolvedVehicle.lotId ? `Lot ID՝ ${resolvedVehicle.lotId}` : null}{resolvedVehicle.lotId && resolvedVehicle.vin ? " · " : null}{resolvedVehicle.vin ? `VIN՝ ${resolvedVehicle.vin}` : null}</small> : null}</span></div> : null}
         <div className="mb-[13px] grid grid-cols-2 gap-[13px] max-[800px]:grid-cols-1 max-[800px]:gap-0">
           <label className={classNames(formFieldClasses, errors.name && "[&_input]:!border-[#be3128] [&_small]:!text-[#a51f18]")}><span>Անուն *</span><input ref={nameRef} autoFocus autoComplete="name" value={form.name} onChange={update("name")} maxLength={100} placeholder="Ինչպե՞ս դիմենք ձեզ" aria-invalid={Boolean(errors.name)} aria-describedby={errors.name ? "consult-name-error" : undefined} />{errors.name ? <small id="consult-name-error" role="alert">{errors.name}</small> : null}</label>
           <label className={classNames(formFieldClasses, errors.phone && "[&_input]:!border-[#be3128] [&_small]:!text-[#a51f18]")}><span>Հեռախոսահամար *</span><input ref={phoneRef} type="tel" autoComplete="tel" value={form.phone} onChange={update("phone")} maxLength={32} placeholder="+374 __ ___ ___" inputMode="tel" aria-invalid={Boolean(errors.phone)} aria-describedby={errors.phone ? "consult-phone-error" : undefined} />{errors.phone ? <small id="consult-phone-error" role="alert">{errors.phone}</small> : null}</label>

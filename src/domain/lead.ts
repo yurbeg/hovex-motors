@@ -8,6 +8,8 @@ export type LeadContactMethod =
 
 export type LeadSource = "website" | "ai-assistant" | "auction-catalog";
 
+export type LeadRequestKind = "consultation" | "full_calculation";
+
 export const LEAD_CONTACT_METHOD_LABELS: Readonly<Record<LeadContactMethod, string>> = {
   phone: "Հեռախոսազանգ",
   whatsapp: "WhatsApp",
@@ -15,17 +17,28 @@ export const LEAD_CONTACT_METHOD_LABELS: Readonly<Record<LeadContactMethod, stri
   showroom_visit: "Այցելություն սրահ",
 };
 
+export const LEAD_REQUEST_KIND_LABELS: Readonly<Record<LeadRequestKind, string>> = {
+  consultation: "Խորհրդատվություն",
+  full_calculation: "Ամբողջական հաշվարկ",
+};
+
+export interface LeadVehicleContext {
+  vehicleId: string | null;
+  vehicleLabel: string;
+  lotId: string | null;
+  vin: string | null;
+}
+
 /**
  * The only shape accepted by the public lead-submission boundary.
  * Server-owned fields such as status and timestamps are deliberately absent.
  */
-export interface PublicLeadSubmission {
+export interface PublicLeadSubmission extends LeadVehicleContext {
   clientRequestId: string;
   name: string;
   phone: string;
   contactMethod: LeadContactMethod;
-  vehicleId: string | null;
-  vehicleLabel: string;
+  requestKind: LeadRequestKind;
   preferredDate: string;
   preferredTime: string;
   note: string;
@@ -39,13 +52,12 @@ export interface LeadSubmissionReceipt {
   duplicate: boolean;
 }
 
-export interface Lead {
+export interface Lead extends LeadVehicleContext {
   id: string;
   name: string;
   phone: string;
   method: LeadContactMethod;
-  vehicleId: string | null;
-  vehicleLabel: string;
+  requestKind: LeadRequestKind;
   date: string;
   time: string;
   note: string;

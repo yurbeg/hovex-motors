@@ -1,4 +1,4 @@
-import type { Lead } from "../../../domain/lead";
+import { LEAD_REQUEST_KIND_LABELS, type Lead } from "../../../domain/lead";
 import { leadStatus } from "../shared/statuses";
 import { leadContactMethodLabel } from "./leadPresentation";
 
@@ -10,11 +10,14 @@ function escapeCsv(value: unknown): string {
 
 export function buildLeadsCsv(leads: Lead[]): string {
   const rows = [
-    ["Անուն", "Հեռախոս", "Մեքենա", "Կապի եղանակ", "Օր", "Ժամ", "Կարգավիճակ", "Մեկնաբանություն", "Ստացվել է"],
+    ["Անուն", "Հեռախոս", "Հարցման տեսակ", "Մեքենա", "Լոտ ID", "VIN", "Կապի եղանակ", "Օր", "Ժամ", "Կարգավիճակ", "Մեկնաբանություն", "Ստացվել է"],
     ...leads.map((lead) => [
       lead.name,
       lead.phone,
+      LEAD_REQUEST_KIND_LABELS[lead.requestKind],
       lead.vehicleLabel,
+      lead.lotId,
+      lead.vin,
       leadContactMethodLabel(lead.method),
       lead.date,
       lead.time,

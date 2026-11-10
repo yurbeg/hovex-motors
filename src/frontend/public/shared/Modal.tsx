@@ -55,6 +55,17 @@ export function Modal({ title, children, onClose, size = "medium", locked = fals
     };
   }, []);
 
+  useEffect(() => {
+    const closeOnEscape = (event: KeyboardEvent): void => {
+      if (event.key !== "Escape" || locked) return;
+      event.preventDefault();
+      onClose();
+    };
+
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [locked, onClose]);
+
   return (
     <div className="fixed inset-0 z-[100] grid place-items-center overflow-y-auto bg-[rgba(11,11,10,0.7)] p-8 max-[800px]:place-items-end max-[800px]:p-3" onMouseDown={(event: ReactMouseEvent<HTMLDivElement>) => event.target === event.currentTarget && !locked && onClose()}>
       <section ref={dialogRef} tabIndex={-1} className={classNames("flex max-h-[calc(100vh_-_64px)] flex-col overflow-hidden rounded-[20px] bg-[var(--surface)] shadow-[0_28px_90px_rgba(0,0,0,0.38)] max-[800px]:max-h-[calc(100dvh_-_24px)] max-[800px]:w-full max-[800px]:rounded-[18px_18px_12px_12px]", modalSizeClasses[size])} role="dialog" aria-modal="true" aria-labelledby={titleId}>

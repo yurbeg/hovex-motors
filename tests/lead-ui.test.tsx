@@ -14,8 +14,11 @@ const lead: Lead = {
   name: "Անի",
   phone: "+374 99 123 456",
   method: "video_call",
+  requestKind: "full_calculation",
   vehicleId: null,
-  vehicleLabel: "Անհատական ընտրություն",
+  vehicleLabel: "2024 Toyota Camry",
+  lotId: "=70010001",
+  vin: "1HGCM82633A004352",
   date: "2026-11-12",
   time: "10:00–13:00",
   note: "=HYPERLINK(\"https://example.test\")",
@@ -75,6 +78,9 @@ test("admin lead views present canonical values and lock status while saving", (
   assert.match(table, /Տեսազանգ/);
   assert.doesNotMatch(table, /ԴԵՄՈ/);
   assert.match(drawer, /Աճուրդների կատալոգ/);
+  assert.match(drawer, /Ամբողջական հաշվարկ/);
+  assert.match(drawer, /=70010001/);
+  assert.match(drawer, /1HGCM82633A004352/);
   assert.match(drawer, /<select[^>]*disabled=""/);
 });
 
@@ -85,6 +91,9 @@ test("lead CSV exports labels and neutralizes spreadsheet formulas", () => {
   ]);
 
   assert.match(csv, /Տեսազանգ/);
+  assert.match(csv, /Ամբողջական հաշվարկ/);
+  assert.match(csv, /"'=70010001"/);
+  assert.match(csv, /1HGCM82633A004352/);
   assert.match(csv, /"'=HYPERLINK/);
   assert.match(csv, /"'\t=1\+1"/);
   assert.match(csv, /"'\+374 99 123 456"/);

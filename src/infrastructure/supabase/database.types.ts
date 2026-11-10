@@ -1,6 +1,7 @@
 import type { VehicleInventoryStatus, VehicleStatus } from "../../domain/vehicle";
 import type {
   LeadContactMethod,
+  LeadRequestKind,
   LeadSource,
   LeadStatus,
 } from "../../domain/lead";
@@ -8,6 +9,7 @@ import type {
 export type { VehicleInventoryStatus, VehicleStatus } from "../../domain/vehicle";
 export type {
   LeadContactMethod,
+  LeadRequestKind,
   LeadSource,
   LeadStatus,
 } from "../../domain/lead";
@@ -90,11 +92,15 @@ export type LeadRow = {
   id: string;
   client_request_id: string;
   submission_hash: string;
+  submission_hash_version: 1 | 2;
   name: string;
   phone: string;
   contact_method: LeadContactMethod;
+  request_kind: LeadRequestKind;
   vehicle_id: string | null;
   vehicle_label: string;
+  lot_id: string | null;
+  vin: string | null;
   preferred_date: string | null;
   preferred_time: string;
   note: string;
@@ -110,11 +116,15 @@ export type LeadInsert = {
   id?: string;
   client_request_id: string;
   submission_hash: string;
+  submission_hash_version?: 1 | 2;
   name: string;
   phone: string;
   contact_method: LeadContactMethod;
+  request_kind?: LeadRequestKind;
   vehicle_id?: string | null;
   vehicle_label?: string;
+  lot_id?: string | null;
+  vin?: string | null;
   preferred_date?: string | null;
   preferred_time?: string;
   note?: string;

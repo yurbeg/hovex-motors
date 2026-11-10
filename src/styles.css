@@ -94,6 +94,12 @@ textarea:focus-visible {
   from { opacity: 0; transform: translateY(10px); }
 }
 
+@media (max-width: 1080px) {
+  body.auction-product-page {
+    padding-bottom: calc(72px + env(safe-area-inset-bottom));
+  }
+}
+
 @media (max-width: 800px) {
   html {
     scroll-padding-top: 76px;

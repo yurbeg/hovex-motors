@@ -1,5 +1,9 @@
 import { Car, Phone, SpinnerGap, WhatsappLogo } from "@phosphor-icons/react";
-import type { Lead, LeadStatus } from "../../../domain/lead";
+import {
+  LEAD_REQUEST_KIND_LABELS,
+  type Lead,
+  type LeadStatus,
+} from "../../../domain/lead";
 import { AdminDrawer } from "../components/AdminDrawer";
 import { classNames } from "../shared/classNames";
 import { formatDate, safePhone } from "../shared/formatters";
@@ -60,6 +64,11 @@ export function RequestDetailsDrawer({ lead, onClose, onStatusChange, pending }:
             <Car size={22} weight="fill" />
             <span className="grid"><small className="text-[8px] text-[#817c74]">Ընտրված մեքենա</small><strong className="text-[10px] text-[#292722]">{lead.vehicleLabel || "Անհատական ընտրություն"}</strong></span>
           </div>
+          <dl className={classNames(detailListClasses, "mt-3")}>
+            <div><dt>Հարցման տեսակ</dt><dd>{LEAD_REQUEST_KIND_LABELS[lead.requestKind]}</dd></div>
+            {lead.lotId ? <div><dt>Լոտ ID</dt><dd>{lead.lotId}</dd></div> : null}
+            {lead.vin ? <div><dt>VIN</dt><dd>{lead.vin}</dd></div> : null}
+          </dl>
         </section>
         <section className={detailSectionClasses}>
           <h3>Նախընտրելի ժամ</h3>

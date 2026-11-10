@@ -1,6 +1,7 @@
 import type {
   Lead,
   LeadContactMethod,
+  LeadRequestKind,
   LeadSource,
   LeadStatus,
 } from "../../domain/lead";
@@ -12,8 +13,11 @@ export type AdminLeadRow = Pick<
   | "name"
   | "phone"
   | "contact_method"
+  | "request_kind"
   | "vehicle_id"
   | "vehicle_label"
+  | "lot_id"
+  | "vin"
   | "preferred_date"
   | "preferred_time"
   | "note"
@@ -35,6 +39,10 @@ const leadSources = new Set<LeadSource>([
   "website",
   "ai-assistant",
   "auction-catalog",
+]);
+const requestKinds = new Set<LeadRequestKind>([
+  "consultation",
+  "full_calculation",
 ]);
 const leadStatuses = new Set<LeadStatus>([
   "new",
@@ -103,6 +111,11 @@ export function mapLeadRow(value: unknown): Lead {
     throw new Error("Lead row has an invalid source");
   }
 
+  const requestKind = requiredText(row, "request_kind");
+  if (!requestKinds.has(requestKind as LeadRequestKind)) {
+    throw new Error("Lead row has an invalid request_kind");
+  }
+
   const status = requiredText(row, "status");
   if (!leadStatuses.has(status as LeadStatus)) {
     throw new Error("Lead row has an invalid status");
@@ -118,8 +131,11 @@ export function mapLeadRow(value: unknown): Lead {
     name: requiredText(row, "name"),
     phone: requiredText(row, "phone"),
     method: method as LeadContactMethod,
+    requestKind: requestKind as LeadRequestKind,
     vehicleId: nullableText(row, "vehicle_id"),
     vehicleLabel: requiredText(row, "vehicle_label"),
+    lotId: nullableText(row, "lot_id"),
+    vin: nullableText(row, "vin"),
     date: preferredDate ?? "",
     time: requiredText(row, "preferred_time", true),
     note: requiredText(row, "note", true),

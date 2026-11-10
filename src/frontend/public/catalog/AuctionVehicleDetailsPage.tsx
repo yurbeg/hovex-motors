@@ -4,17 +4,21 @@ import {
   CalendarBlank,
   ClockCounterClockwise,
   MapPin,
-  Phone,
   WarningCircle,
-  WhatsappLogo,
 } from "@phosphor-icons/react";
 import type { AuctionCatalogLot } from "../../../domain/auctionCatalog";
-import { auctionLotDisplayName } from "../../../domain/auctionCatalog";
+import {
+  auctionLotDisplayName,
+  auctionLotLeadContext,
+} from "../../../domain/auctionCatalog";
+import type { LeadRequestKind } from "../../../domain/lead";
 import { loadAuctionCatalogLot } from "../../../infrastructure/supabase/auctionCatalogRepository";
+import { submitPublicLead } from "../../../infrastructure/supabase/publicLeadRepository";
+import { ConsultationModal } from "../consultation/ConsultationModal";
 import { PublicFooter } from "../layout/PublicFooter";
 import { PublicHeader } from "../layout/PublicHeader";
 import { pageShellClasses } from "../shared/styles";
-import { classNames, phoneDisplay, phoneHref } from "../shared/utils";
+import { classNames, phoneHref } from "../shared/utils";
 import {
   AUCTION_VALUE_UNAVAILABLE,
   formatAuctionDate,
@@ -24,6 +28,7 @@ import {
   formatCharacteristicValue,
 } from "./auctionCatalogFormatters";
 import { AuctionGallery } from "./AuctionGallery";
+import { AuctionProductActions } from "./AuctionProductActions";
 import { CatalogMobileActionBar } from "./CatalogMobileActionBar";
 
 type DetailState = "loading" | "ready" | "not-found" | "error";
@@ -63,6 +68,7 @@ export function AuctionVehicleDetailsPage({ lotId }: { lotId: string }) {
   const [lot, setLot] = useState<AuctionCatalogLot | null>(null);
   const [state, setState] = useState<DetailState>("loading");
   const [reloadToken, setReloadToken] = useState(0);
+  const [requestKind, setRequestKind] = useState<LeadRequestKind | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -84,6 +90,19 @@ export function AuctionVehicleDetailsPage({ lotId }: { lotId: string }) {
       controller.abort();
     };
   }, [lotId, reloadToken]);
+
+  useEffect(() => {
+    document.body.classList.add("auction-product-page");
+    return () => document.body.classList.remove("auction-product-page");
+  }, []);
+
+  useEffect(() => {
+    if (requestKind === null) return undefined;
+    document.body.classList.add("modal-open");
+    return () => {
+      document.body.classList.remove("modal-open");
+    };
+  }, [requestKind]);
 
   useEffect(() => {
     const previousTitle = document.title;
@@ -131,8 +150,7 @@ export function AuctionVehicleDetailsPage({ lotId }: { lotId: string }) {
   }
 
   const name = auctionLotDisplayName(lot);
-  const whatsappText = encodeURIComponent(`Բարև, Hovex Motors։ Խնդրում եմ օգնել ստուգել Copart լոտ ${lot.lotNumber || lot.providerLotId}՝ ${name}։`);
-  const whatsappUrl = `https://wa.me/37433344366?text=${whatsappText}`;
+  const leadContext = auctionLotLeadContext(lot);
   const specs: Array<[string, string]> = [
     ["Տարեթիվ", lot.year?.toString() || AUCTION_VALUE_UNAVAILABLE],
     ["Մակնիշ", lot.make || AUCTION_VALUE_UNAVAILABLE],
@@ -160,10 +178,12 @@ export function AuctionVehicleDetailsPage({ lotId }: { lotId: string }) {
           <a className="inline-flex min-h-10 items-center gap-2 text-xs font-bold hover:underline" href="/catalog"><ArrowLeft size={18} weight="bold" aria-hidden="true" /> Վերադառնալ կատալոգ</a>
         </div>
 
-        <section className={classNames(pageShellClasses, "grid grid-cols-[1.35fr_0.65fr] items-start gap-7 max-[1080px]:grid-cols-1")}>
-          <AuctionGallery lot={lot} />
+        <section className={classNames(pageShellClasses, "grid grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)] items-start gap-7 max-[1080px]:grid-cols-1")}>
+          <div className="min-w-0 [grid-column:1] [grid-row:1]">
+            <AuctionGallery lot={lot} />
+          </div>
 
-          <aside className="overflow-hidden rounded-[18px] border border-[var(--border)] bg-white shadow-[var(--shadow-sm)]">
+          <aside className="sticky top-24 self-start overflow-hidden rounded-[18px] border border-[var(--border)] bg-white shadow-[var(--shadow-sm)] [grid-column:2] [grid-row:1/span_2] max-[1080px]:static max-[1080px]:[grid-column:1] max-[1080px]:[grid-row:2]">
             <div className="border-b border-[var(--border)] p-6 max-[800px]:p-5">
               <p className="m-0 text-[10px] font-black tracking-[0.06em] text-[#8b6b00] uppercase">Copart · լոտ {lot.lotNumber || lot.providerLotId}</p>
               <h1 className="mt-2 mb-0 text-[clamp(27px,3vw,38px)] leading-[1.2] font-black">{name}</h1>
@@ -189,37 +209,35 @@ export function AuctionVehicleDetailsPage({ lotId }: { lotId: string }) {
 
             <p className="mx-6 mt-0 mb-5 flex items-start gap-2 rounded-[11px] bg-[#fff2e5] p-3 text-[10px] leading-[1.55] text-[#874600] max-[800px]:mx-5"><WarningCircle className="mt-px shrink-0" size={18} weight="fill" aria-hidden="true" />Ընթացիկ խաղադրույքը, վաճառողի պահուստը կամ աճուրդից հետո գրանցված վերջին առաջարկը հաստատված վերջնական գնման արժեք չեն։ «Գնել հիմա» գինը նույնպես չի ներառում աճուրդի վճարները, առաքումը և ներմուծման ծախսերը։</p>
 
-            <div className="grid gap-2.5 border-t border-[var(--border)] p-6 max-[800px]:p-5">
-              <a className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[var(--yellow)] px-4 text-sm font-bold hover:bg-[var(--yellow-hover)]" href={whatsappUrl} target="_blank" rel="noreferrer"><WhatsappLogo size={20} weight="bold" aria-hidden="true" /> Ստուգել լոտը Hovex-ի հետ</a>
-              <a className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-[var(--border)] px-4 text-sm font-bold hover:border-[var(--ink)]" href={`tel:${phoneHref}`}><Phone size={19} weight="fill" aria-hidden="true" /> {phoneDisplay}</a>
-            </div>
+            <AuctionProductActions context={leadContext} onRequest={setRequestKind} />
           </aside>
-        </section>
 
-        <section className={classNames(pageShellClasses, "mt-8 grid grid-cols-[1fr_0.55fr] gap-7 max-[1080px]:grid-cols-1")} aria-labelledby="lot-specifications-title">
-          <div className="rounded-[18px] border border-[var(--border)] bg-white p-6 max-[800px]:p-5">
-            <h2 className="m-0 text-2xl" id="lot-specifications-title">Մեքենայի բնութագրերը</h2>
-            <dl className="mt-5 mb-0 grid grid-cols-2 gap-x-8 max-[700px]:grid-cols-1 [&>div]:grid [&>div]:min-h-12 [&>div]:grid-cols-[0.9fr_1.1fr] [&>div]:items-center [&>div]:gap-4 [&>div]:border-t [&>div]:border-[var(--border)] [&>div]:py-2.5 [&_dt]:text-[11px] [&_dt]:text-[var(--muted)] [&_dd]:m-0 [&_dd]:break-words [&_dd]:text-[11px] [&_dd]:font-bold">
-              {specs.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}
-              {extraCharacteristics.map(([label, value], index) => <div key={`${label}-${index}`}><dt>{label}</dt><dd>{value}</dd></div>)}
-            </dl>
-          </div>
+          <div className="mt-1 grid gap-7 [grid-column:1] [grid-row:2] max-[1080px]:[grid-row:3]" aria-labelledby="lot-specifications-title">
+            <div className="rounded-[18px] border border-[var(--border)] bg-white p-6 max-[800px]:p-5">
+              <h2 className="m-0 text-2xl" id="lot-specifications-title">Մեքենայի բնութագրերը</h2>
+              <dl className="mt-5 mb-0 grid grid-cols-2 gap-x-8 max-[700px]:grid-cols-1 [&>div]:grid [&>div]:min-h-12 [&>div]:grid-cols-[0.9fr_1.1fr] [&>div]:items-center [&>div]:gap-4 [&>div]:border-t [&>div]:border-[var(--border)] [&>div]:py-2.5 [&_dt]:text-[11px] [&_dt]:text-[var(--muted)] [&_dd]:m-0 [&_dd]:break-words [&_dd]:text-[11px] [&_dd]:font-bold">
+                {specs.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}
+                {extraCharacteristics.map(([label, value], index) => <div key={`${label}-${index}`}><dt>{label}</dt><dd>{value}</dd></div>)}
+              </dl>
+            </div>
 
-          <div className="rounded-[18px] border border-[var(--border)] bg-white p-6 max-[800px]:p-5">
-            <h2 className="m-0 text-xl">Աճուրդի տվյալներ</h2>
-            <dl className="mt-5 mb-0 [&>div]:border-t [&>div]:border-[var(--border)] [&>div]:py-3 [&_dt]:text-[10px] [&_dt]:text-[var(--muted)] [&_dd]:mt-1 [&_dd]:mb-0 [&_dd]:break-words [&_dd]:text-[11px] [&_dd]:font-bold">
-              <div><dt>Աղբյուր</dt><dd>Copart · {lot.sourceSlug}</dd></div>
-              <div><dt>Լոտի համար</dt><dd>{lot.lotNumber || lot.providerLotId}</dd></div>
-              <div><dt>Գտնվելու վայր</dt><dd>{lot.location || AUCTION_VALUE_UNAVAILABLE}</dd></div>
-              <div><dt>Աճուրդի ամսաթիվ</dt><dd>{formatAuctionDateTime(lot.saleDate)}</dd></div>
-              <div><dt>Մատակարարի վերջին թարմացում</dt><dd>{formatAuctionDateTime(lot.providerUpdatedAt)}</dd></div>
-              <div><dt>Մեր բազա բեռնվել է</dt><dd>{formatAuctionDateTime(lot.fetchedAt)}</dd></div>
-            </dl>
+            <div className="rounded-[18px] border border-[var(--border)] bg-white p-6 max-[800px]:p-5">
+              <h2 className="m-0 text-xl">Աճուրդի տվյալներ</h2>
+              <dl className="mt-5 mb-0 [&>div]:border-t [&>div]:border-[var(--border)] [&>div]:py-3 [&_dt]:text-[10px] [&_dt]:text-[var(--muted)] [&_dd]:mt-1 [&_dd]:mb-0 [&_dd]:break-words [&_dd]:text-[11px] [&_dd]:font-bold">
+                <div><dt>Աղբյուր</dt><dd>Copart · {lot.sourceSlug}</dd></div>
+                <div><dt>Լոտի համար</dt><dd>{lot.lotNumber || lot.providerLotId}</dd></div>
+                <div><dt>Գտնվելու վայր</dt><dd>{lot.location || AUCTION_VALUE_UNAVAILABLE}</dd></div>
+                <div><dt>Աճուրդի ամսաթիվ</dt><dd>{formatAuctionDateTime(lot.saleDate)}</dd></div>
+                <div><dt>Մատակարարի վերջին թարմացում</dt><dd>{formatAuctionDateTime(lot.providerUpdatedAt)}</dd></div>
+                <div><dt>Մեր բազա բեռնվել է</dt><dd>{formatAuctionDateTime(lot.fetchedAt)}</dd></div>
+              </dl>
+            </div>
           </div>
         </section>
       </main>
       <PublicFooter />
-      <CatalogMobileActionBar detail />
+      <AuctionProductActions context={leadContext} onRequest={setRequestKind} variant="mobile" />
+      {requestKind ? <ConsultationModal vehicleContext={leadContext} requestKind={requestKind} source="auction-catalog" onClose={() => setRequestKind(null)} onSubmitLead={submitPublicLead} /> : null}
     </>
   );
 }

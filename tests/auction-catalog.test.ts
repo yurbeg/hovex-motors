@@ -4,7 +4,10 @@ import {
   auctionCatalogSearchFromState,
   auctionCatalogStateFromSearch,
 } from "../src/application/auctionCatalog";
-import { DEFAULT_AUCTION_CATALOG_FILTERS } from "../src/domain/auctionCatalog";
+import {
+  auctionLotLeadContext,
+  DEFAULT_AUCTION_CATALOG_FILTERS,
+} from "../src/domain/auctionCatalog";
 import {
   mapAuctionCatalogFacets,
   mapAuctionCatalogRow,
@@ -60,6 +63,36 @@ test("maps nullable prices and safe photo URLs without inventing zeroes", () => 
   assert.equal(lot.currency, "USD");
   assert.deepEqual(lot.photoUrls, ["https://images.example.test/1.jpg"]);
   assert.deepEqual(lot.characteristics, { keys: 2 });
+});
+
+test("builds submission-ready lot metadata from the customer-facing identifiers", () => {
+  const lot = mapAuctionCatalogRow({
+    ...row,
+    lot_number: " 99887766 ",
+    vin: " 1N4AL3AP8JC123456 ",
+  });
+
+  assert.deepEqual(auctionLotLeadContext(lot), {
+    vehicleId: "copart-123",
+    vehicleLabel: "2022 Test Car",
+    lotId: "99887766",
+    vin: "1N4AL3AP8JC123456",
+  });
+});
+
+test("falls back to the provider lot id and preserves an unavailable VIN as null", () => {
+  const lot = mapAuctionCatalogRow({
+    ...row,
+    lot_number: null,
+    vin: "   ",
+  });
+
+  assert.deepEqual(auctionLotLeadContext(lot), {
+    vehicleId: "copart-123",
+    vehicleLabel: "2022 Test Car",
+    lotId: "lot-123",
+    vin: null,
+  });
 });
 
 test("normalizes facet payloads and supports snake-case JSON keys", () => {

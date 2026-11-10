@@ -7,6 +7,8 @@ export const LEAD_CONTACT_METHODS = [
 
 export const LEAD_SOURCES = ["website", "ai-assistant", "auction-catalog"] as const;
 
+export const LEAD_REQUEST_KINDS = ["consultation", "full_calculation"] as const;
+
 export const LEAD_PREFERRED_TIMES = [
   "10:00–13:00",
   "13:00–16:00",
@@ -15,14 +17,19 @@ export const LEAD_PREFERRED_TIMES = [
 
 export type LeadContactMethod = typeof LEAD_CONTACT_METHODS[number];
 export type LeadSource = typeof LEAD_SOURCES[number];
+export type LeadRequestKind = typeof LEAD_REQUEST_KINDS[number];
+export type SubmissionHashVersion = 1 | 2;
 
 export type ValidatedLeadSubmission = {
   clientRequestId: string;
   name: string;
   phone: string;
   contactMethod: LeadContactMethod;
+  requestKind: LeadRequestKind;
   vehicleId: string | null;
   vehicleLabel: string;
+  lotId: string | null;
+  vin: string | null;
   preferredDate: string | null;
   preferredTime: string;
   note: string;
@@ -38,6 +45,7 @@ export type StoredLeadIdentity = {
   id: string;
   receivedAt: string;
   submissionHash: string;
+  submissionHashVersion: SubmissionHashVersion;
 };
 
 export type NewLeadRow = {
@@ -46,12 +54,16 @@ export type NewLeadRow = {
   name: string;
   phone: string;
   contact_method: LeadContactMethod;
+  request_kind: LeadRequestKind;
   vehicle_id: string | null;
   vehicle_label: string;
+  lot_id: string | null;
+  vin: string | null;
   preferred_date: string | null;
   preferred_time: string;
   note: string;
   source: LeadSource;
+  submission_hash_version: 2;
   consent_version: string;
   consent_at: string;
 };
@@ -61,8 +73,11 @@ const ALLOWED_REQUEST_KEYS = new Set([
   "name",
   "phone",
   "contactMethod",
+  "requestKind",
   "vehicleId",
   "vehicleLabel",
+  "lotId",
+  "vin",
   "preferredDate",
   "preferredTime",
   "note",
@@ -155,10 +170,21 @@ export function validateLeadSubmission(
   const contactMethod = isAllowedValue(LEAD_CONTACT_METHODS, input.contactMethod)
     ? input.contactMethod
     : null;
+  const requestKind = input.requestKind === undefined
+    ? "consultation"
+    : isAllowedValue(LEAD_REQUEST_KINDS, input.requestKind)
+      ? input.requestKind
+      : null;
   const vehicleId = input.vehicleId === undefined || input.vehicleId === null || input.vehicleId === ""
     ? null
     : cleanRequiredString(input.vehicleId, 1, 160);
   const vehicleLabel = cleanRequiredString(input.vehicleLabel, 1, 220);
+  const lotId = input.lotId === undefined || input.lotId === null || input.lotId === ""
+    ? null
+    : cleanRequiredString(input.lotId, 1, 160);
+  const vin = input.vin === undefined || input.vin === null || input.vin === ""
+    ? null
+    : cleanRequiredString(input.vin, 1, 64);
   const preferredDate = cleanPreferredDate(input.preferredDate, now);
   const preferredTime = cleanOptionalString(input.preferredTime, 40);
   const note = cleanNote(input.note);
@@ -172,8 +198,11 @@ export function validateLeadSubmission(
     || phoneDigits.length < 8
     || phoneDigits.length > 15
     || contactMethod === null
+    || requestKind === null
     || (input.vehicleId !== undefined && input.vehicleId !== null && input.vehicleId !== "" && vehicleId === null)
     || vehicleLabel === null
+    || (input.lotId !== undefined && input.lotId !== null && input.lotId !== "" && lotId === null)
+    || (input.vin !== undefined && input.vin !== null && input.vin !== "" && vin === null)
     || preferredDate === undefined
     || preferredTime === null
     || !isAllowedValue(LEAD_PREFERRED_TIMES, preferredTime)
@@ -191,8 +220,11 @@ export function validateLeadSubmission(
       name,
       phone,
       contactMethod,
+      requestKind,
       vehicleId,
       vehicleLabel,
+      lotId,
+      vin,
       preferredDate,
       preferredTime,
       note,
@@ -218,20 +250,38 @@ export async function sha256Hex(value: string, webCrypto: WebCrypto): Promise<st
 export async function submissionHash(
   submission: ValidatedLeadSubmission,
   webCrypto: WebCrypto,
+  version: SubmissionHashVersion = 2,
 ): Promise<string> {
-  const canonical = JSON.stringify([
-    "lead-submission-v1",
-    submission.name,
-    submission.phone,
-    submission.contactMethod,
-    submission.vehicleId,
-    submission.vehicleLabel,
-    submission.preferredDate,
-    submission.preferredTime,
-    submission.note,
-    submission.source,
-    submission.consent,
-  ]);
+  const canonical = version === 1
+    ? JSON.stringify([
+      "lead-submission-v1",
+      submission.name,
+      submission.phone,
+      submission.contactMethod,
+      submission.vehicleId,
+      submission.vehicleLabel,
+      submission.preferredDate,
+      submission.preferredTime,
+      submission.note,
+      submission.source,
+      submission.consent,
+    ])
+    : JSON.stringify([
+      "lead-submission-v2",
+      submission.name,
+      submission.phone,
+      submission.contactMethod,
+      submission.requestKind,
+      submission.vehicleId,
+      submission.vehicleLabel,
+      submission.lotId,
+      submission.vin,
+      submission.preferredDate,
+      submission.preferredTime,
+      submission.note,
+      submission.source,
+      submission.consent,
+    ]);
   return sha256Hex(canonical, webCrypto);
 }
 
@@ -313,6 +363,7 @@ function asStoredLead(value: unknown): StoredLeadIdentity | null {
     || !Number.isFinite(Date.parse(candidate.created_at))
     || typeof candidate.submission_hash !== "string"
     || !HASH_PATTERN.test(candidate.submission_hash)
+    || (candidate.submission_hash_version !== 1 && candidate.submission_hash_version !== 2)
   ) {
     return null;
   }
@@ -320,6 +371,7 @@ function asStoredLead(value: unknown): StoredLeadIdentity | null {
     id: candidate.id.toLowerCase(),
     receivedAt: new Date(candidate.created_at).toISOString(),
     submissionHash: candidate.submission_hash,
+    submissionHashVersion: candidate.submission_hash_version,
   };
 }
 
@@ -338,7 +390,7 @@ export class SupabaseLeadSubmissionRepository {
 
   async findByClientRequestId(clientRequestId: string): Promise<StoredLeadIdentity | null> {
     const query = new URLSearchParams({
-      select: "id,created_at,submission_hash",
+      select: "id,created_at,submission_hash,submission_hash_version",
       client_request_id: `eq.${clientRequestId}`,
       limit: "1",
     });
@@ -380,7 +432,7 @@ export class SupabaseLeadSubmissionRepository {
   async insert(row: NewLeadRow): Promise<StoredLeadIdentity | null> {
     const query = new URLSearchParams({
       on_conflict: "client_request_id",
-      select: "id,created_at,submission_hash",
+      select: "id,created_at,submission_hash,submission_hash_version",
     });
     const payload = await this.#request(
       `rest/v1/leads?${query}`,

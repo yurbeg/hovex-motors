@@ -6,9 +6,21 @@ const migrationUrl = new URL(
   "../supabase/migrations/202611100001_create_leads.sql",
   import.meta.url,
 );
+const vehicleContextMigrationUrl = new URL(
+  "../supabase/migrations/202611100002_lead_vehicle_context.sql",
+  import.meta.url,
+);
 
 async function migrationSql(): Promise<string> {
   return (await readFile(migrationUrl, "utf8"))
+    .replace(/--.*$/gm, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+}
+
+async function vehicleContextMigrationSql(): Promise<string> {
+  return (await readFile(vehicleContextMigrationUrl, "utf8"))
     .replace(/--.*$/gm, "")
     .replace(/\s+/g, " ")
     .trim()
@@ -54,4 +66,20 @@ test("lead abuse-control storage keeps only a hashed fingerprint", async () => {
   assert.match(sql, /if random\(\) < 0\.01 then delete from app_private\.lead_submission_limits/);
   assert.match(sql, /grant execute on function public\.consume_lead_submission_limit[^;]*to service_role/);
   assert.doesNotMatch(sql, /grant execute on function public\.consume_lead_submission_limit[^;]*to (?:anon|authenticated)/);
+});
+
+test("additive lead context migration preserves old Edge inserts and bounds metadata", async () => {
+  const sql = await vehicleContextMigrationSql();
+
+  assert.doesNotMatch(sql, /create table public\.leads/);
+  assert.match(sql, /alter table public\.leads/);
+  assert.match(sql, /add column request_kind text not null default 'consultation'/);
+  assert.match(sql, /request_kind in \('consultation', 'full_calculation'\)/);
+  assert.match(sql, /add column lot_id text/);
+  assert.match(sql, /char_length\(btrim\(lot_id\)\) between 1 and 160/);
+  assert.match(sql, /add column vin text/);
+  assert.match(sql, /char_length\(btrim\(vin\)\) between 1 and 64/);
+  assert.match(sql, /add column submission_hash_version smallint not null default 1/);
+  assert.match(sql, /submission_hash_version in \(1, 2\)/);
+  assert.doesNotMatch(sql, /alter column submission_hash_version set default 2/);
 });

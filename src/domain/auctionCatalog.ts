@@ -1,3 +1,5 @@
+import type { LeadVehicleContext } from "./lead";
+
 export const AUCTION_CATALOG_PAGE_SIZE = 24;
 
 export type AuctionCatalogSort =
@@ -109,4 +111,18 @@ export function auctionLotDisplayName(lot: AuctionCatalogLot): string {
     .join(" ")
     .trim();
   return structured || lot.title?.trim() || `Copart լոտ ${lot.lotNumber || lot.providerLotId}`;
+}
+
+/**
+ * Stable, submission-ready vehicle metadata for auction-catalog leads.
+ * The public lot number is preferred because it is the identifier customers
+ * see on the product page; the provider id is the reliable fallback.
+ */
+export function auctionLotLeadContext(lot: AuctionCatalogLot): LeadVehicleContext {
+  return {
+    vehicleId: lot.id,
+    vehicleLabel: auctionLotDisplayName(lot),
+    lotId: lot.lotNumber?.trim() || lot.providerLotId,
+    vin: lot.vin?.trim() || null,
+  };
 }

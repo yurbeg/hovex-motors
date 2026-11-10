@@ -18,8 +18,11 @@ const baseRow: AdminLeadRow = {
   name: "Անի Մկրտչյան",
   phone: "+374 95 123 456",
   contact_method: "whatsapp",
+  request_kind: "full_calculation",
   vehicle_id: "deepal-sl03-2025",
   vehicle_label: "2025 Deepal SL03 Sport",
+  lot_id: "70010001",
+  vin: "1HGCM82633A004352",
   preferred_date: "2026-11-12",
   preferred_time: "13:00–16:00",
   note: "Խնդրում եմ կապվել WhatsApp-ով։",
@@ -55,7 +58,10 @@ test("lists leads newest first, forwards abort, and maps DB names strictly", asy
       ...baseRow,
       id: "00000000-0000-4000-8000-000000000002",
       contact_method: "phone",
+      request_kind: "consultation",
       vehicle_id: null,
+      lot_id: null,
+      vin: null,
       preferred_date: null,
       source: "ai-assistant",
       status: "contacted",
@@ -78,7 +84,10 @@ test("lists leads newest first, forwards abort, and maps DB names strictly", asy
   assert.deepEqual(leads.map(({ id }) => id), [rows[1].id, rows[0].id]);
   assert.equal(leads[0].method, "phone");
   assert.equal(leads[0].source, "ai-assistant");
+  assert.equal(leads[0].requestKind, "consultation");
   assert.equal(leads[0].vehicleId, null);
+  assert.equal(leads[0].lotId, null);
+  assert.equal(leads[0].vin, null);
   assert.equal(leads[0].date, "");
   assert.equal(leads[0].consentVersion, "contact-consent-v1");
 });
@@ -133,11 +142,14 @@ test("reports an optimistic-concurrency conflict for a stale revision", async ()
 test("strict mapper rejects unexpected enums, malformed dates, and timestamps", () => {
   const malformedRows: unknown[] = [
     { ...baseRow, contact_method: "Telegram" },
+    { ...baseRow, request_kind: "purchase" },
     { ...baseRow, source: "unknown" },
     { ...baseRow, status: "deleted" },
     { ...baseRow, preferred_date: "2026-02-30" },
     { ...baseRow, created_at: "not-a-timestamp" },
     { ...baseRow, vehicle_id: "" },
+    { ...baseRow, lot_id: "" },
+    { ...baseRow, vin: "" },
   ];
 
   for (const row of malformedRows) {

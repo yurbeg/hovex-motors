@@ -189,7 +189,7 @@ export function createSubmitLeadHandler(options: SubmitLeadHandlerOptions) {
         fetch: runtimeFetch,
         timeoutMs,
       });
-      const hash = await submissionHash(validated.value, webCrypto);
+      const hash = await submissionHash(validated.value, webCrypto, 2);
       const fingerprint = await keyedAbuseFingerprint(request, rateLimitSecret, webCrypto);
       const allowed = await repository.consumeRateLimit(
         fingerprint,
@@ -207,7 +207,12 @@ export function createSubmitLeadHandler(options: SubmitLeadHandlerOptions) {
       // Rate-limit before any lead-table lookup so blocked callers cannot use
       // idempotency checks to create unbounded database read traffic.
       const existing = await repository.findByClientRequestId(validated.value.clientRequestId);
-      if (existing !== null) return sameSubmission(existing, hash);
+      if (existing !== null) {
+        const expectedHash = existing.submissionHashVersion === 1
+          ? await submissionHash(validated.value, webCrypto, 1)
+          : hash;
+        return sameSubmission(existing, expectedHash);
+      }
 
       const row: NewLeadRow = {
         client_request_id: validated.value.clientRequestId,
@@ -215,18 +220,22 @@ export function createSubmitLeadHandler(options: SubmitLeadHandlerOptions) {
         name: validated.value.name,
         phone: validated.value.phone,
         contact_method: validated.value.contactMethod,
+        request_kind: validated.value.requestKind,
         vehicle_id: validated.value.vehicleId,
         vehicle_label: validated.value.vehicleLabel,
+        lot_id: validated.value.lotId,
+        vin: validated.value.vin,
         preferred_date: validated.value.preferredDate,
         preferred_time: validated.value.preferredTime,
         note: validated.value.note,
         source: validated.value.source,
+        submission_hash_version: 2,
         consent_version: consentVersion,
         consent_at: now.toISOString(),
       };
       const inserted = await repository.insert(row);
       if (inserted !== null) {
-        if (inserted.submissionHash !== hash) {
+        if (inserted.submissionHashVersion !== 2 || inserted.submissionHash !== hash) {
           throw new LeadSubmissionRepositoryError("verify inserted lead", 200);
         }
         return jsonResponse({
@@ -242,7 +251,10 @@ export function createSubmitLeadHandler(options: SubmitLeadHandlerOptions) {
       if (concurrent === null) {
         throw new LeadSubmissionRepositoryError("resolve concurrent lead", 200);
       }
-      return sameSubmission(concurrent, hash);
+      const concurrentExpectedHash = concurrent.submissionHashVersion === 1
+        ? await submissionHash(validated.value, webCrypto, 1)
+        : hash;
+      return sameSubmission(concurrent, concurrentExpectedHash);
     } catch (error) {
       if (error instanceof LeadSubmissionRepositoryError) {
         return jsonResponse({ error: "lead_storage_unavailable" }, 503);
