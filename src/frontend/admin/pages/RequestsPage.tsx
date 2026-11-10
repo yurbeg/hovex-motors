@@ -57,7 +57,7 @@ export function RequestsPage({ leads, managers, now, loading, onOpenLead, onExpo
   return (
     <>
       <section className={pageHeadingClasses}>
-        <div className="min-w-0"><p className={eyebrowClasses}>Հաճախորդների հոսք</p><h1 className="mb-[7px] mt-1 text-[clamp(27px,2.4vw,36px)] leading-[1.15] tracking-[-0.035em] max-[700px]:text-2xl max-[430px]:text-[21px]">Խորհրդատվության հարցումներ</h1><span className="text-[13px] text-[#77726b]">{loading ? "Տվյալները բեռնվում են…" : `${leads.length} ընդհանուր · ${leads.filter((lead) => lead.status === "new").length} նոր · ${overdueCount} ուշացած`}</span></div>
+        <div className="min-w-0"><p className={eyebrowClasses}>Հաճախորդների հոսք</p><h1 className="mb-[7px] mt-1 text-[clamp(27px,2.4vw,36px)] leading-[1.15] tracking-[-0.035em] max-[700px]:text-2xl max-[430px]:text-[21px]">Խորհրդատվության հարցումներ</h1><span className="text-[13px] text-[var(--ink-soft)]">{loading ? "Տվյալները բեռնվում են…" : `${leads.length} ընդհանուր · ${leads.filter((lead) => lead.status === "new").length} նոր · ${overdueCount} ուշացած`}</span></div>
         <AdminButton className={pageHeadingButtonClasses} icon={DownloadSimple} variant="secondary" onClick={onExport} disabled={loading || !leads.length} aria-label="Ներբեռնել հարցումները CSV ձևաչափով">Ներբեռնել CSV</AdminButton>
       </section>
       <DataModeNotice scope="requests" />
@@ -67,7 +67,7 @@ export function RequestsPage({ leads, managers, now, loading, onOpenLead, onExpo
           <label className={filterClasses}><span>Կարգավիճակ</span><select value={status} onChange={(event) => setStatus(event.target.value as FilterStatus<LeadStatus>)} disabled={loading}><option value="all">Բոլորը</option>{Object.entries(leadStatus).map(([value, item]) => <option key={value} value={value}>{item.label}</option>)}</select></label>
           <label className={filterClasses}><span>Մենեջեր</span><select value={manager} onChange={(event) => setManager(event.target.value)} disabled={loading}><option value="all">Բոլորը</option><option value="unassigned">Չնշանակված</option>{managers.map((item) => <option key={item.id} value={item.id}>{item.displayName}{item.active ? "" : " (ոչ ակտիվ)"}</option>)}</select></label>
           <label className={filterClasses}><span>Ուշադրություն</span><select value={attention} onChange={(event) => setAttention(event.target.value as AttentionFilter)} disabled={loading}><option value="all">Բոլորը</option><option value="overdue">Ուշացած</option><option value="unassigned">Չնշանակված</option></select></label>
-          <span className="ml-auto text-[10px] text-[#817c74] max-[700px]:self-center">{loading ? "Բեռնվում է" : `Ցուցադրվում է ${filtered.length}`}</span>
+          <span className="ml-auto text-[10px] text-[var(--muted)] max-[700px]:self-center">{loading ? "Բեռնվում է" : `Ցուցադրվում է ${filtered.length}`}</span>
         </div>
         <RequestTable leads={filtered} managers={managers} now={now} onSelect={onOpenLead} loading={loading} />
       </section>

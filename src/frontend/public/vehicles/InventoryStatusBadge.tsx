@@ -7,15 +7,15 @@ const inventoryStatusConfig: Record<
 > = {
   available: {
     label: "Առկա",
-    tone: "border-[#c6e8ce] bg-[#e8f6eb] text-[#24733a]",
+    tone: "border-[var(--green-border)] bg-[var(--green-pale)] text-[var(--green-ink)]",
   },
   in_transit: {
     label: "Ճանապարհին",
-    tone: "border-[#c6deef] bg-[#e7f2fb] text-[#216d9f]",
+    tone: "border-[var(--blue-border)] bg-[var(--blue-pale)] text-[var(--blue-ink)]",
   },
   at_auction: {
     label: "Աճուրդում",
-    tone: "border-[#eadca8] bg-[#fff3c7] text-[#846500]",
+    tone: "border-[var(--yellow-border)] bg-[var(--yellow-pale)] text-[var(--yellow-ink)]",
   },
 };
 

@@ -43,7 +43,7 @@ export function AdminSidebar({
           >
             <Icon size={21} weight={view === id ? "fill" : "regular"} />
             <span>{label}</span>
-            {id === "requests" && newLeadCount ? <em className="ml-auto grid h-[23px] min-w-[23px] place-items-center rounded-full bg-[#ffc400] px-1.5 text-[11px] font-black not-italic text-[#11110f] max-[900px]:absolute max-[900px]:translate-x-[18px] max-[900px]:-translate-y-3.5 max-[700px]:translate-x-[15px] max-[700px]:-translate-y-[13px]">{newLeadCount}</em> : null}
+            {id === "requests" && newLeadCount ? <em className="ml-auto grid h-[23px] min-w-[23px] place-items-center rounded-full bg-[var(--yellow)] px-1.5 text-[11px] font-black not-italic text-[var(--on-yellow)] max-[900px]:absolute max-[900px]:translate-x-[18px] max-[900px]:-translate-y-3.5 max-[700px]:translate-x-[15px] max-[700px]:-translate-y-[13px]">{newLeadCount}</em> : null}
           </button>
         ))}
       </nav>

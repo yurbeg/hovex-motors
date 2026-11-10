@@ -66,9 +66,9 @@ export function AdminWorkspace({ admin, onSignOut }: AdminWorkspaceProps) {
   const { view, navigate } = useAdminNavigation(closeOverlays);
 
   useEffect(() => {
-    document.body.classList.add("bg-[#f5f2ec]", "text-[#11110f]");
+    document.body.classList.add("admin-mode");
     return () => {
-      document.body.classList.remove("bg-[#f5f2ec]", "text-[#11110f]");
+      document.body.classList.remove("admin-mode");
     };
   }, []);
 
@@ -136,7 +136,7 @@ export function AdminWorkspace({ admin, onSignOut }: AdminWorkspaceProps) {
       : "bg-[#36ad55]";
 
   return (
-    <div className="grid min-h-screen grid-cols-[252px_minmax(0,1fr)] bg-[radial-gradient(circle_at_92%_0%,rgba(255,196,0,0.08),transparent_28%),#f5f2ec] text-[#11110f] max-[900px]:block">
+    <div className="grid min-h-screen grid-cols-[252px_minmax(0,1fr)] bg-[radial-gradient(circle_at_92%_0%,rgba(255,196,0,0.08),transparent_28%),var(--paper)] text-[var(--ink)] max-[900px]:block">
       <AdminSidebar
         view={view}
         onNavigate={navigate}
@@ -157,15 +157,15 @@ export function AdminWorkspace({ admin, onSignOut }: AdminWorkspaceProps) {
           tabIndex={-1}
         >
           {vehiclesError ? (
-            <div className="mb-5 flex items-center justify-between gap-4 rounded-xl border border-[#efc9c1] bg-[#fff4f1] px-4 py-3 text-[10px] font-bold text-[#9c3424]" role="alert">
+            <div className="mb-5 flex items-center justify-between gap-4 rounded-xl border border-[var(--red-border)] bg-[var(--red-pale)] px-4 py-3 text-[10px] font-bold text-[var(--red-ink)]" role="alert">
               <span>{vehiclesError}</span>
-              <button className="shrink-0 cursor-pointer border-0 bg-transparent font-black text-[#6e251a] underline" type="button" onClick={() => void loadVehiclesFromSupabase()} disabled={vehiclesLoading || Boolean(pendingVehicleId)}>Կրկին փորձել</button>
+              <button className="shrink-0 cursor-pointer border-0 bg-transparent font-black text-[var(--red-ink)] underline" type="button" onClick={() => void loadVehiclesFromSupabase()} disabled={vehiclesLoading || Boolean(pendingVehicleId)}>Կրկին փորձել</button>
             </div>
           ) : null}
           {leadDataError ? (
-            <div className="mb-5 flex items-center justify-between gap-4 rounded-xl border border-[#efc9c1] bg-[#fff4f1] px-4 py-3 text-[10px] font-bold text-[#9c3424]" role="alert">
+            <div className="mb-5 flex items-center justify-between gap-4 rounded-xl border border-[var(--red-border)] bg-[var(--red-pale)] px-4 py-3 text-[10px] font-bold text-[var(--red-ink)]" role="alert">
               <span>{leadDataError}</span>
-              <button className="shrink-0 cursor-pointer border-0 bg-transparent font-black text-[#6e251a] underline" type="button" onClick={() => void Promise.all([loadLeadsFromSupabase(), loadManagersFromSupabase()])} disabled={leadsLoading || managersLoading || Boolean(pendingLeadId)}>Կրկին փորձել</button>
+              <button className="shrink-0 cursor-pointer border-0 bg-transparent font-black text-[var(--red-ink)] underline" type="button" onClick={() => void Promise.all([loadLeadsFromSupabase(), loadManagersFromSupabase()])} disabled={leadsLoading || managersLoading || Boolean(pendingLeadId)}>Կրկին փորձել</button>
             </div>
           ) : null}
           {view === "dashboard" ? <DashboardPage vehicles={vehicles} leads={leads} managers={managers} now={now} leadsLoading={leadsLoading || managersLoading} onNavigate={navigate} onOpenLead={openLead} onNewVehicle={() => { if (!vehiclesLoading && !pendingVehicleId) setEditorVehicle(null); }} vehicleActionsDisabled={vehiclesLoading || Boolean(pendingVehicleId)} /> : null}

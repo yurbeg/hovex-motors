@@ -158,7 +158,7 @@ export function VehicleEditorDrawer({
         <VehiclePreview form={form} imagePreviewUrl={imagePreviewUrl} />
         {submitError ? (
           <div
-            className="sticky top-0 z-10 mx-5 my-3 rounded-[10px] border border-[#efc9c1] bg-[#fff4f1] px-3.5 py-3 text-[9px] font-bold text-[#9c3424] shadow-[0_8px_24px_rgba(80,32,23,0.08)]"
+            className="sticky top-0 z-10 mx-5 my-3 rounded-[10px] border border-[var(--red-border)] bg-[var(--red-pale)] px-3.5 py-3 text-[9px] font-bold text-[var(--red-ink)] shadow-[0_8px_24px_rgba(80,32,23,0.08)]"
             role="alert"
             aria-live="assertive"
           >

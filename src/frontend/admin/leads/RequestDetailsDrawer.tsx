@@ -60,13 +60,13 @@ export function RequestDetailsDrawer({
         />
 
         <div className="grid grid-cols-2 gap-2.5 max-[430px]:grid-cols-1" aria-label="Արագ կապ">
-          <a className="flex min-h-[65px] items-center gap-2.5 rounded-xl border border-[#ddd8d0] bg-white p-[11px] text-[#2a2925]" href={`tel:${phone}`}>
-            <Phone className="text-[#8a6a00]" size={20} weight="fill" aria-hidden="true" />
-            <span className="grid min-w-0"><strong className="text-[10px]">Զանգահարել</strong><small className="overflow-hidden text-ellipsis text-[8px] text-[#817c74]">{lead.phone}</small></span>
+          <a className="flex min-h-[65px] items-center gap-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-[11px] text-[var(--ink)]" href={`tel:${phone}`}>
+            <Phone className="text-[var(--yellow-ink)]" size={20} weight="fill" aria-hidden="true" />
+            <span className="grid min-w-0"><strong className="text-[10px]">Զանգահարել</strong><small className="overflow-hidden text-ellipsis text-[8px] text-[var(--muted)]">{lead.phone}</small></span>
           </a>
-          <a className="flex min-h-[65px] items-center gap-2.5 rounded-xl border border-[#ddd8d0] bg-white p-[11px] text-[#2a2925]" href={`https://wa.me/${whatsapp}`} target="_blank" rel="noreferrer">
-            <WhatsappLogo className="text-[#238b43]" size={20} weight="fill" aria-hidden="true" />
-            <span className="grid min-w-0"><strong className="text-[10px]">WhatsApp</strong><small className="overflow-hidden text-ellipsis text-[8px] text-[#817c74]">Բացել զրույցը</small></span>
+          <a className="flex min-h-[65px] items-center gap-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-[11px] text-[var(--ink)]" href={`https://wa.me/${whatsapp}`} target="_blank" rel="noreferrer">
+            <WhatsappLogo className="text-[var(--green-ink)]" size={20} weight="fill" aria-hidden="true" />
+            <span className="grid min-w-0"><strong className="text-[10px]">WhatsApp</strong><small className="overflow-hidden text-ellipsis text-[8px] text-[var(--muted)]">Բացել զրույցը</small></span>
           </a>
         </div>
 
@@ -86,9 +86,9 @@ export function RequestDetailsDrawer({
         </section>
         <section className={detailSectionClasses}>
           <h3>Հետաքրքրություն</h3>
-          <div className="flex min-h-[58px] items-center gap-2.5 rounded-[10px] bg-[#f6f3ed] p-[11px] text-[#846600]">
+          <div className="flex min-h-[58px] items-center gap-2.5 rounded-[10px] bg-[var(--surface-soft)] p-[11px] text-[var(--yellow-ink)]">
             <Car size={22} weight="fill" aria-hidden="true" />
-            <span className="grid"><small className="text-[8px] text-[#817c74]">Ընտրված մեքենա</small><strong className="text-[10px] text-[#292722]">{lead.vehicleLabel || "Անհատական ընտրություն"}</strong></span>
+            <span className="grid"><small className="text-[8px] text-[var(--muted)]">Ընտրված մեքենա</small><strong className="text-[10px] text-[var(--ink)]">{lead.vehicleLabel || "Անհատական ընտրություն"}</strong></span>
           </div>
           <dl className={classNames(detailListClasses, "mt-3")}>
             <div><dt>Հարցման տեսակ</dt><dd>{LEAD_REQUEST_KIND_LABELS[lead.requestKind]}</dd></div>
@@ -105,7 +105,7 @@ export function RequestDetailsDrawer({
         </section>
         <section className={detailSectionClasses}>
           <h3>Հաճախորդի մեկնաբանություն</h3>
-          <p className="m-0 whitespace-pre-wrap text-[10px] leading-[1.65] text-[#5e5a54]">{lead.note || "Մեկնաբանություն չկա։"}</p>
+          <p className="m-0 whitespace-pre-wrap text-[10px] leading-[1.65] text-[var(--ink-soft)]">{lead.note || "Մեկնաբանություն չկա։"}</p>
         </section>
       </div>
     </AdminDrawer>

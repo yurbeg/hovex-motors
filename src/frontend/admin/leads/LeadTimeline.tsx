@@ -49,32 +49,32 @@ export function LeadTimeline({
   onRetry: () => void;
 }) {
   return (
-    <section className="rounded-[13px] border border-[#e0dcd4] bg-white p-4" aria-labelledby="lead-timeline-title">
+    <section className="rounded-[13px] border border-[var(--border)] bg-[var(--surface)] p-4" aria-labelledby="lead-timeline-title">
       <div className="mb-4 flex items-center justify-between gap-3">
         <h3 className="m-0 text-xs" id="lead-timeline-title">Գործողությունների պատմություն</h3>
-        {loading ? <SpinnerGap className="animate-spin text-[#806300] motion-reduce:animate-none" size={18} aria-label="Պատմությունը բեռնվում է" /> : null}
+        {loading ? <SpinnerGap className="animate-spin text-[var(--yellow-ink)] motion-reduce:animate-none" size={18} aria-label="Պատմությունը բեռնվում է" /> : null}
       </div>
       {error ? (
-        <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-[#fff2ef] p-2.5 text-[9px] font-bold text-[#9c3424]" role="alert">
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-[var(--red-pale)] p-2.5 text-[9px] font-bold text-[var(--red-ink)]" role="alert">
           <span>{error}</span>
-          <button className="cursor-pointer border-0 bg-transparent font-black text-[#772719] underline disabled:cursor-wait disabled:opacity-60" type="button" onClick={onRetry} disabled={loading}>Կրկին փորձել</button>
+          <button className="cursor-pointer border-0 bg-transparent font-black text-[var(--red-ink)] underline disabled:cursor-wait disabled:opacity-60" type="button" onClick={onRetry} disabled={loading}>Կրկին փորձել</button>
         </div>
       ) : null}
-      {!loading && !error && !activities.length ? <p className="m-0 text-[9px] text-[#68635c]">Գործողություններ դեռ չկան։</p> : null}
+      {!loading && !error && !activities.length ? <p className="m-0 text-[9px] text-[var(--ink-soft)]">Գործողություններ դեռ չկան։</p> : null}
       <ol className="m-0 grid list-none gap-0 p-0">
         {activities.map((activity, index) => (
           <li className="relative grid grid-cols-[30px_1fr] gap-2.5 pb-4 last:pb-0" key={activity.id}>
-            {index < activities.length - 1 ? <span className="absolute bottom-0 left-[14px] top-[29px] w-px bg-[#e4dfd6]" aria-hidden="true" /> : null}
-            <span className="relative z-[1] grid size-[29px] place-items-center rounded-full bg-[#fff2bc] text-[#806300]">
+            {index < activities.length - 1 ? <span className="absolute bottom-0 left-[14px] top-[29px] w-px bg-[var(--surface-muted)]" aria-hidden="true" /> : null}
+            <span className="relative z-[1] grid size-[29px] place-items-center rounded-full bg-[var(--yellow-pale)] text-[var(--yellow-ink)]">
               <ActivityIcon activity={activity} />
             </span>
             <div className="min-w-0 pt-0.5">
               <strong className="block text-[10px] leading-[1.45]">{activityText(activity)}</strong>
               {activity.type === "status_changed" && activity.fromStatus ? (
-                <span className="mt-0.5 block text-[8px] text-[#68635c]">{leadStatus[activity.fromStatus].label} → {activity.toStatus ? leadStatus[activity.toStatus].label : "—"}</span>
+                <span className="mt-0.5 block text-[8px] text-[var(--ink-soft)]">{leadStatus[activity.fromStatus].label} → {activity.toStatus ? leadStatus[activity.toStatus].label : "—"}</span>
               ) : null}
-              {activity.note ? <p className="mb-1 mt-1.5 break-words whitespace-pre-wrap rounded-lg bg-[#f6f3ed] p-2.5 text-[9px] leading-[1.55] text-[#45413b] [overflow-wrap:anywhere]">{activity.note}</p> : null}
-              <small className="mt-1 block text-[8px] text-[#6f6a63]">{activity.actorLabel} · {formatDate(activity.createdAt)}</small>
+              {activity.note ? <p className="mb-1 mt-1.5 break-words whitespace-pre-wrap rounded-lg bg-[var(--surface-soft)] p-2.5 text-[9px] leading-[1.55] text-[var(--ink)] [overflow-wrap:anywhere]">{activity.note}</p> : null}
+              <small className="mt-1 block text-[8px] text-[var(--ink-soft)]">{activity.actorLabel} · {formatDate(activity.createdAt)}</small>
             </div>
           </li>
         ))}

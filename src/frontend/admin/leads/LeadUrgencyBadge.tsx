@@ -33,7 +33,7 @@ export function LeadUrgencyBadge({ lead, now, className }: {
     <span
       className={classNames(
         "inline-flex min-h-7 w-fit items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 text-[9px] font-extrabold",
-        overdue ? "bg-[#fff0ed] text-[#a33b29]" : "bg-[#fff4c9] text-[#775d00]",
+        overdue ? "bg-[var(--red-pale)] text-[var(--red-ink)]" : "bg-[var(--yellow-pale)] text-[var(--yellow-ink)]",
         className,
       )}
       title={`${prefix}՝ ${formatDate(dueAt)}`}

@@ -66,7 +66,7 @@ export function DashboardPage({
         <div className="min-w-0">
           <p className={eyebrowClasses}>Այսօրվա պատկերը</p>
           <h1 className="mb-[7px] mt-1 text-[clamp(27px,2.4vw,36px)] leading-[1.15] tracking-[-0.035em] max-[700px]:text-2xl max-[430px]:text-[21px]">Բարի գալուստ Hovex Admin</h1>
-          <span className="text-[13px] text-[#77726b]">{formatLongDate(new Date())}</span>
+          <span className="text-[13px] text-[var(--ink-soft)]">{formatLongDate(new Date())}</span>
         </div>
         <AdminButton className={pageHeadingButtonClasses} icon={Plus} onClick={onNewVehicle} disabled={vehicleActionsDisabled} aria-label="Ավելացնել մեքենա">Ավելացնել մեքենա</AdminButton>
       </section>
@@ -81,7 +81,7 @@ export function DashboardPage({
         <section className={panelClasses}>
           <header className={panelHeaderClasses}>
             <div><p className={eyebrowClasses}>Վերջին ակտիվությունը</p><h2 className="mb-0 mt-1 text-lg leading-[1.2]">Վերջին հարցումները</h2></div>
-            <button type="button" className="inline-flex cursor-pointer items-center gap-[7px] border-0 bg-transparent text-[11px] font-extrabold text-[#6c5600] max-[430px]:text-[0px] [&>span]:text-[17px] max-[430px]:[&>span]:text-lg" onClick={() => onNavigate("requests")}>Դիտել բոլորը <span>→</span></button>
+            <button type="button" className="inline-flex cursor-pointer items-center gap-[7px] border-0 bg-transparent text-[11px] font-extrabold text-[var(--yellow-ink)] max-[430px]:text-[0px] [&>span]:text-[17px] max-[430px]:[&>span]:text-lg" onClick={() => onNavigate("requests")}>Դիտել բոլորը <span>→</span></button>
           </header>
           <RequestTable leads={recent} managers={managers} now={now} onSelect={onOpenLead} compact loading={leadsLoading} />
         </section>
@@ -93,15 +93,15 @@ export function DashboardPage({
             {statusCounts.map(({ status, count }) => {
               const percentage = vehicles.length ? Math.round((count / vehicles.length) * 100) : 0;
               return (
-                <div className="border-b border-[#eeeae3] py-3.5 last:border-b-0" key={status}>
+                <div className="border-b border-[var(--border)] py-3.5 last:border-b-0" key={status}>
                   <p className="mb-[9px] mt-0 flex items-center justify-between"><StatusBadge type="inventory" value={status} /><strong className="text-sm">{count}</strong></p>
-                  <span className="block h-[5px] overflow-hidden rounded-full bg-[#efede8]"><i className="block h-full rounded-[inherit] bg-[#ffc400]" style={{ width: `${percentage}%` }} /></span>
+                  <span className="block h-[5px] overflow-hidden rounded-full bg-[var(--surface-soft)]"><i className="block h-full rounded-[inherit] bg-[var(--yellow)]" style={{ width: `${percentage}%` }} /></span>
                 </div>
               );
             })}
           </div>
-          <button type="button" className="mx-5 mb-5 flex min-h-16 w-[calc(100%_-_40px)] cursor-pointer items-center gap-[11px] rounded-[11px] border border-[#e2ddd5] bg-[#f8f6f1] px-[13px] py-[11px] text-left max-[1180px]:mt-5 max-[1180px]:self-center [&>svg]:text-[#806300]" onClick={() => onNavigate("vehicles")}>
-            <Car size={20} weight="bold" /><span className="grid flex-1"><strong className="text-[10px]">Կառավարել առաջարկները</strong><small className="text-[8px] text-[#88837c]">Թարմացնել գտնվելու և հրապարակման վիճակը</small></span><span>→</span>
+          <button type="button" className="mx-5 mb-5 flex min-h-16 w-[calc(100%_-_40px)] cursor-pointer items-center gap-[11px] rounded-[11px] border border-[var(--border)] bg-[var(--surface-soft)] px-[13px] py-[11px] text-left max-[1180px]:mt-5 max-[1180px]:self-center [&>svg]:text-[var(--yellow-ink)]" onClick={() => onNavigate("vehicles")}>
+            <Car size={20} weight="bold" /><span className="grid flex-1"><strong className="text-[10px]">Կառավարել առաջարկները</strong><small className="text-[8px] text-[var(--muted)]">Թարմացնել գտնվելու և հրապարակման վիճակը</small></span><span>→</span>
           </button>
         </aside>
       </div>

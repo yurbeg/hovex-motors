@@ -118,7 +118,7 @@ export function AdminDrawer({
       <aside
         ref={drawerRef}
         className={classNames(
-          "flex h-full flex-col bg-white shadow-[-24px_0_70px_rgba(17,17,15,0.22)] [animation:admin-slide-in_220ms_ease_both] max-[700px]:w-full",
+          "flex h-full flex-col bg-[var(--surface)] shadow-[-24px_0_70px_rgba(17,17,15,0.22)] [animation:admin-slide-in_220ms_ease_both] max-[700px]:w-full",
           wide ? "w-[min(720px,100%)]" : "w-[min(470px,100%)]",
         )}
         role="dialog"
@@ -126,13 +126,13 @@ export function AdminDrawer({
         aria-labelledby={titleId}
         tabIndex={-1}
       >
-        <header className="flex min-h-[82px] items-center justify-between gap-4 border-b border-[#e5e1da] bg-white px-[22px] py-[17px]">
+        <header className="flex min-h-[82px] items-center justify-between gap-4 border-b border-[var(--border)] bg-[var(--surface)] px-[22px] py-[17px]">
           <div>
-            {eyebrow ? <p className="mb-[3px] mt-0 text-[9px] font-black uppercase tracking-[0.1em] text-[#8b6b00]">{eyebrow}</p> : null}
+            {eyebrow ? <p className="mb-[3px] mt-0 text-[9px] font-black uppercase tracking-[0.1em] text-[var(--yellow-ink)]">{eyebrow}</p> : null}
             <h2 className="m-0 text-[21px] leading-[1.2]" id={titleId}>{title}</h2>
           </div>
           <button
-            className="grid size-10 cursor-pointer place-items-center rounded-[10px] border border-[#dedad2] bg-white disabled:cursor-wait disabled:opacity-50"
+            className="grid size-10 cursor-pointer place-items-center rounded-[10px] border border-[var(--border)] bg-[var(--surface)] disabled:cursor-wait disabled:opacity-50"
             type="button"
             onClick={onClose}
             aria-label="Փակել"
@@ -141,7 +141,7 @@ export function AdminDrawer({
             <X size={22} weight="bold" />
           </button>
         </header>
-        <div className="min-h-0 flex-1 overflow-y-auto bg-[#f8f6f1]">{children}</div>
+        <div className="min-h-0 flex-1 overflow-y-auto bg-[var(--surface-soft)]">{children}</div>
       </aside>
     </div>
   );

@@ -24,17 +24,17 @@ export function VehicleBasicFields({ form, errors, update, disabled }: VehicleBa
       <div className="grid grid-cols-2 gap-3.5 max-[700px]:grid-cols-1">
         <label className={formLabelClasses}>
           <span>Մակնիշ *</span>
-          <input name="make" className={classNames(formControlClasses, errors.make && "border-[#c95540]")} autoFocus value={form.make} onChange={update("make")} placeholder="Kia" aria-invalid={Boolean(errors.make)} aria-describedby={errors.make ? "vehicle-editor-make-error" : undefined} />
+          <input name="make" className={classNames(formControlClasses, errors.make && "border-[var(--red-border)]")} autoFocus value={form.make} onChange={update("make")} placeholder="Kia" aria-invalid={Boolean(errors.make)} aria-describedby={errors.make ? "vehicle-editor-make-error" : undefined} />
           {errors.make ? <small id="vehicle-editor-make-error">{errors.make}</small> : null}
         </label>
         <label className={formLabelClasses}>
           <span>Մոդել *</span>
-          <input name="model" className={classNames(formControlClasses, errors.model && "border-[#c95540]")} value={form.model} onChange={update("model")} placeholder="Forte LXS" aria-invalid={Boolean(errors.model)} aria-describedby={errors.model ? "vehicle-editor-model-error" : undefined} />
+          <input name="model" className={classNames(formControlClasses, errors.model && "border-[var(--red-border)]")} value={form.model} onChange={update("model")} placeholder="Forte LXS" aria-invalid={Boolean(errors.model)} aria-describedby={errors.model ? "vehicle-editor-model-error" : undefined} />
           {errors.model ? <small id="vehicle-editor-model-error">{errors.model}</small> : null}
         </label>
         <label className={formLabelClasses}>
           <span>Տարեթիվ *</span>
-          <input name="year" className={classNames(formControlClasses, errors.year && "border-[#c95540]")} type="number" min="1990" max={new Date().getFullYear() + 2} value={form.year} onChange={update("year")} aria-invalid={Boolean(errors.year)} aria-describedby={errors.year ? "vehicle-editor-year-error" : undefined} />
+          <input name="year" className={classNames(formControlClasses, errors.year && "border-[var(--red-border)]")} type="number" min="1990" max={new Date().getFullYear() + 2} value={form.year} onChange={update("year")} aria-invalid={Boolean(errors.year)} aria-describedby={errors.year ? "vehicle-editor-year-error" : undefined} />
           {errors.year ? <small id="vehicle-editor-year-error">{errors.year}</small> : null}
         </label>
         <label className={formLabelClasses}>

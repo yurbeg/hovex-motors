@@ -20,7 +20,7 @@ export function VehicleEditorFooter({
   onArchive,
 }: VehicleEditorFooterProps) {
   return (
-    <div className="sticky bottom-0 mt-auto flex items-center justify-between gap-[15px] border-t border-[#ddd8d0] bg-[rgba(255,255,255,0.96)] px-5 py-4 backdrop-blur-[10px] max-[700px]:flex-col-reverse max-[700px]:items-stretch">
+    <div className="sticky bottom-0 mt-auto flex items-center justify-between gap-[15px] border-t border-[var(--border)] bg-[var(--surface-translucent)] px-5 py-4 backdrop-blur-[10px] max-[700px]:flex-col-reverse max-[700px]:items-stretch">
       {!isNew && vehicle && vehicle.status !== "archived"
         ? <AdminButton className="max-[700px]:w-full" type="button" icon={Archive} variant="danger" onClick={() => void onArchive(vehicle)} disabled={busy}>Արխիվացնել</AdminButton>
         : <span />}

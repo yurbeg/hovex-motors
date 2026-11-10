@@ -20,11 +20,11 @@ export function AuctionVehicleCard({ lot }: { lot: AuctionCatalogLot }) {
   const detailUrl = `/catalog/${encodeURIComponent(lot.id)}`;
 
   return (
-    <article className="group min-w-0 overflow-hidden rounded-[17px] border border-[var(--border)] bg-white shadow-[0_6px_24px_rgba(17,17,15,0.06)] transition-[transform,box-shadow] duration-150 hover:-translate-y-1 hover:shadow-[var(--shadow-sm)] motion-reduce:transition-none">
-      <a className="relative block h-[230px] overflow-hidden bg-[#ece8e0] max-[1240px]:h-[215px] max-[800px]:h-[245px]" href={detailUrl} aria-label={`${name} մանրամասները`}>
+    <article className="group min-w-0 overflow-hidden rounded-[17px] border border-[var(--border)] bg-[var(--surface)] shadow-[0_6px_24px_rgba(17,17,15,0.06)] transition-[transform,box-shadow] duration-150 hover:-translate-y-1 hover:shadow-[var(--shadow-sm)] motion-reduce:transition-none">
+      <a className="relative block h-[230px] overflow-hidden bg-[var(--media-surface)] max-[1240px]:h-[215px] max-[800px]:h-[245px]" href={detailUrl} aria-label={`${name} մանրամասները`}>
         <AuctionPhoto className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-[1.02] motion-reduce:transition-none" url={lot.photoUrls[0]} alt={name} />
         <span className="absolute top-3 left-3 rounded-full bg-[rgba(17,17,15,0.9)] px-2.5 py-2 text-[10px] leading-none font-black tracking-[0.05em] text-white">COPART</span>
-        {lot.status ? <span className="absolute top-3 right-3 max-w-[55%] truncate rounded-full bg-[rgba(255,255,255,0.94)] px-2.5 py-2 text-[10px] leading-none font-bold text-[var(--ink)]">{lot.status}</span> : null}
+        {lot.status ? <span className="absolute top-3 right-3 max-w-[55%] truncate rounded-full bg-[var(--surface-translucent)] px-2.5 py-2 text-[10px] leading-none font-bold text-[var(--ink)]">{lot.status}</span> : null}
       </a>
 
       <div className="p-[18px]">
@@ -33,7 +33,7 @@ export function AuctionVehicleCard({ lot }: { lot: AuctionCatalogLot }) {
           <a className="hover:underline" href={detailUrl}>{name}</a>
         </h3>
 
-        <div className="mt-3 grid grid-cols-2 gap-2 text-[11px] text-[var(--ink-soft)] max-[420px]:grid-cols-1 [&>span]:flex [&>span]:min-w-0 [&>span]:items-start [&>span]:gap-1.5 [&_svg]:mt-px [&_svg]:shrink-0 [&_svg]:text-[#8a7b57]">
+        <div className="mt-3 grid grid-cols-2 gap-2 text-[11px] text-[var(--ink-soft)] max-[420px]:grid-cols-1 [&>span]:flex [&>span]:min-w-0 [&>span]:items-start [&>span]:gap-1.5 [&_svg]:mt-px [&_svg]:shrink-0 [&_svg]:text-[var(--yellow-ink)]">
           <span><Gauge size={17} />{formatAuctionOdometer(lot.odometerValue, lot.odometerUnit)}</span>
           <span><WarningCircle size={17} />{lot.primaryDamage || "Վնասվածքը նշված չէ"}</span>
           <span><MapPin size={17} />{lot.location || "Վայրը նշված չէ"}</span>
@@ -41,10 +41,10 @@ export function AuctionVehicleCard({ lot }: { lot: AuctionCatalogLot }) {
         </div>
 
         <div className="mt-4 grid grid-cols-2 gap-2.5 max-[420px]:grid-cols-1">
-          <div className="rounded-xl border border-[#eadca8] bg-[var(--yellow-pale)] px-3 py-3">
-            <span className="block text-[10px] font-bold text-[#665a3d]">Ընթացիկ խաղադրույք</span>
+          <div className="rounded-xl border border-[var(--yellow-border)] bg-[var(--yellow-pale)] px-3 py-3">
+            <span className="block text-[10px] font-bold text-[var(--yellow-ink)]">Ընթացիկ խաղադրույք</span>
             <strong className="mt-1 block text-[17px] leading-[1.35]">{formatAuctionMoney(lot.currentBid, lot.currency)}</strong>
-            {lot.currentBidUpdatedAt ? <small className="mt-1 block text-[8px] leading-[1.4] text-[#76653a]">Թարմացված՝ {formatAuctionDateTime(lot.currentBidUpdatedAt)}</small> : null}
+            {lot.currentBidUpdatedAt ? <small className="mt-1 block text-[8px] leading-[1.4] text-[var(--yellow-ink)]">Թարմացված՝ {formatAuctionDateTime(lot.currentBidUpdatedAt)}</small> : null}
           </div>
           <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] px-3 py-3">
             <span className="block text-[10px] font-bold text-[var(--ink-soft)]">Գնել հիմա</span>

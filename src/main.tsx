@@ -1,7 +1,10 @@
 import React, { lazy, Suspense } from "react";
 import { createRoot } from "react-dom/client";
 import { resolveAppRoute } from "./app/routes";
+import { initializeTheme, useTheme } from "./frontend/theme/theme";
 import "./styles.css";
+
+initializeTheme();
 
 const appRoute = resolveAppRoute(window.location.pathname);
 const RootApp = appRoute === "admin"
@@ -20,9 +23,32 @@ const root = document.getElementById("root");
 
 if (!root) throw new Error("Hovex root element was not found");
 
+function AppLoadingFallback() {
+  const theme = useTheme();
+  const darkModeEnabled = theme === "dark";
+
+  return (
+    <div
+      role="status"
+      data-loading-theme={theme}
+      style={{
+        minHeight: "100vh",
+        display: "grid",
+        placeItems: "center",
+        background: darkModeEnabled ? "#11110f" : "#faf8f4",
+        color: darkModeEnabled ? "#f7f3eb" : "#11110f",
+        colorScheme: theme,
+        fontWeight: 700,
+      }}
+    >
+      Բեռնվում է…
+    </div>
+  );
+}
+
 createRoot(root).render(
   <React.StrictMode>
-    <Suspense fallback={<div role="status" style={{ minHeight: "100vh", display: "grid", placeItems: "center", background: "#faf8f4", fontWeight: 700 }}>Բեռնվում է…</div>}>
+    <Suspense fallback={<AppLoadingFallback />}>
       <RootApp />
     </Suspense>
   </React.StrictMode>,

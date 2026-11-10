@@ -18,17 +18,17 @@ export function VehiclePricingFields({ form, errors, update }: VehiclePricingFie
     <>
       <label className={formLabelClasses}>
         <span>Նվազագույն արժեք, $ *</span>
-        <input name="estimateMin" className={classNames(formControlClasses, errors.estimateMin && "border-[#c95540]")} type="number" min="0" step="100" value={form.estimateMin} onChange={update("estimateMin")} aria-invalid={Boolean(errors.estimateMin)} aria-describedby={errors.estimateMin ? "vehicle-editor-estimate-min-error" : undefined} />
+        <input name="estimateMin" className={classNames(formControlClasses, errors.estimateMin && "border-[var(--red-border)]")} type="number" min="0" step="100" value={form.estimateMin} onChange={update("estimateMin")} aria-invalid={Boolean(errors.estimateMin)} aria-describedby={errors.estimateMin ? "vehicle-editor-estimate-min-error" : undefined} />
         {errors.estimateMin ? <small id="vehicle-editor-estimate-min-error">{errors.estimateMin}</small> : null}
       </label>
       <label className={formLabelClasses}>
         <span>Առավելագույն արժեք, $ *</span>
-        <input name="estimateMax" className={classNames(formControlClasses, errors.estimateMax && "border-[#c95540]")} type="number" min="0" step="100" value={form.estimateMax} onChange={update("estimateMax")} aria-invalid={Boolean(errors.estimateMax)} aria-describedby={errors.estimateMax ? "vehicle-editor-estimate-max-error" : undefined} />
+        <input name="estimateMax" className={classNames(formControlClasses, errors.estimateMax && "border-[var(--red-border)]")} type="number" min="0" step="100" value={form.estimateMax} onChange={update("estimateMax")} aria-invalid={Boolean(errors.estimateMax)} aria-describedby={errors.estimateMax ? "vehicle-editor-estimate-max-error" : undefined} />
         {errors.estimateMax ? <small id="vehicle-editor-estimate-max-error">{errors.estimateMax}</small> : null}
       </label>
       <label className={formLabelClasses}>
         <span>Առավելագույն խաղադրույք, $ *</span>
-        <input name="maxBid" className={classNames(formControlClasses, errors.maxBid && "border-[#c95540]")} type="number" min="0" step="100" value={form.maxBid} onChange={update("maxBid")} aria-invalid={Boolean(errors.maxBid)} aria-describedby={errors.maxBid ? "vehicle-editor-max-bid-error" : undefined} />
+        <input name="maxBid" className={classNames(formControlClasses, errors.maxBid && "border-[var(--red-border)]")} type="number" min="0" step="100" value={form.maxBid} onChange={update("maxBid")} aria-invalid={Boolean(errors.maxBid)} aria-describedby={errors.maxBid ? "vehicle-editor-max-bid-error" : undefined} />
         {errors.maxBid ? <small id="vehicle-editor-max-bid-error">{errors.maxBid}</small> : null}
       </label>
       <label className={formLabelClasses}>

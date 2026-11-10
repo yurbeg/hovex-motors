@@ -51,13 +51,13 @@ function DetailMessage({ state, onRetry }: { state: DetailState; onRetry: () => 
   const notFound = state === "not-found";
   return (
     <main className={classNames(pageShellClasses, "grid min-h-[62vh] place-items-center py-16")}>
-      <div className="flex w-full max-w-[680px] flex-col items-center rounded-[20px] border border-[var(--border)] bg-white p-10 text-center shadow-[var(--shadow-sm)]" role={state === "error" ? "alert" : undefined}>
+      <div className="flex w-full max-w-[680px] flex-col items-center rounded-[20px] border border-[var(--border)] bg-[var(--surface)] p-10 text-center shadow-[var(--shadow-sm)]" role={state === "error" ? "alert" : undefined}>
         <span className="grid size-[68px] place-items-center rounded-full bg-[var(--yellow-pale)] text-[var(--ink)]"><WarningCircle size={35} weight="fill" aria-hidden="true" /></span>
         <h1 className="mt-5 mb-2 text-2xl">{notFound ? "Լոտը հասանելի չէ" : "Լոտը չբեռնվեց"}</h1>
         <p className="m-0 max-w-[560px] text-sm leading-[1.65] text-[var(--ink-soft)]">{notFound ? "Այն կարող է վաճառված կամ հեռացված լինել և այլևս ակտիվ կատալոգում չցուցադրվել։" : "Կատալոգի տվյալները հիմա հասանելի չեն։ Նախկին տվյալները չեն փոխարինվել, փորձեք կրկին մի փոքր ուշ։"}</p>
         <div className="mt-5 flex flex-wrap justify-center gap-3">
-          <a className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[10px] border border-[var(--ink)] bg-[var(--ink)] px-4 text-xs font-bold text-white" href="/catalog"><ArrowLeft size={17} weight="bold" aria-hidden="true" /> Վերադառնալ կատալոգ</a>
-          {!notFound ? <button className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-[10px] border border-[var(--border)] bg-white px-4 text-xs font-bold" type="button" onClick={onRetry}><ClockCounterClockwise size={17} weight="bold" aria-hidden="true" /> Կրկին փորձել</button> : null}
+          <a className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[10px] border border-[var(--ink)] bg-[var(--ink)] px-4 text-xs font-bold text-[var(--paper)]" href="/catalog"><ArrowLeft size={17} weight="bold" aria-hidden="true" /> Վերադառնալ կատալոգ</a>
+          {!notFound ? <button className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-[10px] border border-[var(--border)] bg-[var(--surface)] px-4 text-xs font-bold" type="button" onClick={onRetry}><ClockCounterClockwise size={17} weight="bold" aria-hidden="true" /> Կրկին փորձել</button> : null}
         </div>
       </div>
     </main>
@@ -125,10 +125,10 @@ export function AuctionVehicleDetailsPage({ lotId }: { lotId: string }) {
       <>
         <PublicHeader page="catalog" onConsultation={callHovex} />
         <main className={classNames(pageShellClasses, "py-10")} aria-busy="true">
-          <div className="h-6 w-44 animate-pulse rounded bg-[#e7e3dc] motion-reduce:animate-none" />
+          <div className="h-6 w-44 animate-pulse rounded bg-[var(--skeleton)] motion-reduce:animate-none" />
           <div className="mt-7 grid grid-cols-[1.35fr_0.65fr] gap-7 max-[1080px]:grid-cols-1">
-            <div className="h-[560px] animate-pulse rounded-[18px] bg-[#e7e3dc] motion-reduce:animate-none max-[800px]:h-[320px]" />
-            <div className="h-[500px] animate-pulse rounded-[18px] bg-[#e7e3dc] motion-reduce:animate-none" />
+            <div className="h-[560px] animate-pulse rounded-[18px] bg-[var(--skeleton)] motion-reduce:animate-none max-[800px]:h-[320px]" />
+            <div className="h-[500px] animate-pulse rounded-[18px] bg-[var(--skeleton)] motion-reduce:animate-none" />
           </div>
           <span className="sr-only" role="status">Լոտը բեռնվում է</span>
         </main>
@@ -183,9 +183,9 @@ export function AuctionVehicleDetailsPage({ lotId }: { lotId: string }) {
             <AuctionGallery lot={lot} />
           </div>
 
-          <aside className="sticky top-24 self-start overflow-hidden rounded-[18px] border border-[var(--border)] bg-white shadow-[var(--shadow-sm)] [grid-column:2] [grid-row:1/span_2] max-[1080px]:static max-[1080px]:[grid-column:1] max-[1080px]:[grid-row:2]">
+          <aside className="sticky top-24 self-start overflow-hidden rounded-[18px] border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-sm)] [grid-column:2] [grid-row:1/span_2] max-[1080px]:static max-[1080px]:[grid-column:1] max-[1080px]:[grid-row:2]">
             <div className="border-b border-[var(--border)] p-6 max-[800px]:p-5">
-              <p className="m-0 text-[10px] font-black tracking-[0.06em] text-[#8b6b00] uppercase">Copart · լոտ {lot.lotNumber || lot.providerLotId}</p>
+              <p className="m-0 text-[10px] font-black tracking-[0.06em] text-[var(--yellow-ink)] uppercase">Copart · լոտ {lot.lotNumber || lot.providerLotId}</p>
               <h1 className="mt-2 mb-0 text-[clamp(27px,3vw,38px)] leading-[1.2] font-black">{name}</h1>
               <div className="mt-4 flex flex-wrap gap-2 text-[10px] font-bold">
                 {lot.status ? <span className="rounded-full bg-[var(--surface-soft)] px-3 py-2">{lot.status}</span> : null}
@@ -195,10 +195,10 @@ export function AuctionVehicleDetailsPage({ lotId }: { lotId: string }) {
             </div>
 
             <div className="grid grid-cols-2 gap-3 p-6 max-[480px]:grid-cols-1 max-[800px]:p-5">
-              <div className="rounded-[13px] border border-[#eadca8] bg-[var(--yellow-pale)] p-4">
-                <span className="block text-[11px] font-bold text-[#665a3d]">Ընթացիկ խաղադրույք</span>
+              <div className="rounded-[13px] border border-[var(--yellow-border)] bg-[var(--yellow-pale)] p-4">
+                <span className="block text-[11px] font-bold text-[var(--yellow-ink)]">Ընթացիկ խաղադրույք</span>
                 <strong className="mt-1 block text-[24px] leading-[1.25]">{formatAuctionMoney(lot.currentBid, lot.currency)}</strong>
-                {lot.currentBidUpdatedAt ? <small className="mt-2 block text-[9px] leading-[1.45] text-[#76653a]">Թարմացված՝ {formatAuctionDateTime(lot.currentBidUpdatedAt)}</small> : null}
+                {lot.currentBidUpdatedAt ? <small className="mt-2 block text-[9px] leading-[1.45] text-[var(--yellow-ink)]">Թարմացված՝ {formatAuctionDateTime(lot.currentBidUpdatedAt)}</small> : null}
               </div>
               <div className="rounded-[13px] border border-[var(--border)] bg-[var(--surface-soft)] p-4">
                 <span className="block text-[11px] font-bold text-[var(--ink-soft)]">Գնել հիմա</span>
@@ -207,13 +207,13 @@ export function AuctionVehicleDetailsPage({ lotId }: { lotId: string }) {
               </div>
             </div>
 
-            <p className="mx-6 mt-0 mb-5 flex items-start gap-2 rounded-[11px] bg-[#fff2e5] p-3 text-[10px] leading-[1.55] text-[#874600] max-[800px]:mx-5"><WarningCircle className="mt-px shrink-0" size={18} weight="fill" aria-hidden="true" />Ընթացիկ խաղադրույքը, վաճառողի պահուստը կամ աճուրդից հետո գրանցված վերջին առաջարկը հաստատված վերջնական գնման արժեք չեն։ «Գնել հիմա» գինը նույնպես չի ներառում աճուրդի վճարները, առաքումը և ներմուծման ծախսերը։</p>
+            <p className="mx-6 mt-0 mb-5 flex items-start gap-2 rounded-[11px] bg-[var(--orange-pale)] p-3 text-[10px] leading-[1.55] text-[var(--orange-ink)] max-[800px]:mx-5"><WarningCircle className="mt-px shrink-0" size={18} weight="fill" aria-hidden="true" />Ընթացիկ խաղադրույքը, վաճառողի պահուստը կամ աճուրդից հետո գրանցված վերջին առաջարկը հաստատված վերջնական գնման արժեք չեն։ «Գնել հիմա» գինը նույնպես չի ներառում աճուրդի վճարները, առաքումը և ներմուծման ծախսերը։</p>
 
             <AuctionProductActions context={leadContext} onRequest={setRequestKind} />
           </aside>
 
           <div className="mt-1 grid gap-7 [grid-column:1] [grid-row:2] max-[1080px]:[grid-row:3]" aria-labelledby="lot-specifications-title">
-            <div className="rounded-[18px] border border-[var(--border)] bg-white p-6 max-[800px]:p-5">
+            <div className="rounded-[18px] border border-[var(--border)] bg-[var(--surface)] p-6 max-[800px]:p-5">
               <h2 className="m-0 text-2xl" id="lot-specifications-title">Մեքենայի բնութագրերը</h2>
               <dl className="mt-5 mb-0 grid grid-cols-2 gap-x-8 max-[700px]:grid-cols-1 [&>div]:grid [&>div]:min-h-12 [&>div]:grid-cols-[0.9fr_1.1fr] [&>div]:items-center [&>div]:gap-4 [&>div]:border-t [&>div]:border-[var(--border)] [&>div]:py-2.5 [&_dt]:text-[11px] [&_dt]:text-[var(--muted)] [&_dd]:m-0 [&_dd]:break-words [&_dd]:text-[11px] [&_dd]:font-bold">
                 {specs.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}
@@ -221,7 +221,7 @@ export function AuctionVehicleDetailsPage({ lotId }: { lotId: string }) {
               </dl>
             </div>
 
-            <div className="rounded-[18px] border border-[var(--border)] bg-white p-6 max-[800px]:p-5">
+            <div className="rounded-[18px] border border-[var(--border)] bg-[var(--surface)] p-6 max-[800px]:p-5">
               <h2 className="m-0 text-xl">Աճուրդի տվյալներ</h2>
               <dl className="mt-5 mb-0 [&>div]:border-t [&>div]:border-[var(--border)] [&>div]:py-3 [&_dt]:text-[10px] [&_dt]:text-[var(--muted)] [&_dd]:mt-1 [&_dd]:mb-0 [&_dd]:break-words [&_dd]:text-[11px] [&_dd]:font-bold">
                 <div><dt>Աղբյուր</dt><dd>Copart · {lot.sourceSlug}</dd></div>

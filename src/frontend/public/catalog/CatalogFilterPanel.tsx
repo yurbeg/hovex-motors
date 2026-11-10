@@ -42,14 +42,14 @@ export function CatalogFilterPanel({
 
   return (
     <section className={classNames(pageShellClasses, "relative z-[5] mt-6")} id="catalog-filters" aria-labelledby="catalog-filter-title">
-      <div className="rounded-[18px] border border-[var(--border)] bg-white p-5 shadow-[var(--shadow-sm)] max-[800px]:p-4">
+      <div className="rounded-[18px] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-sm)] max-[800px]:p-4">
         <div className="mb-4 flex items-center justify-between gap-4">
           <div>
-            <p className="m-0 flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.08em] text-[#8b6b00]"><SlidersHorizontal size={16} weight="bold" aria-hidden="true" /> Copart կատալոգ</p>
+            <p className="m-0 flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.08em] text-[var(--yellow-ink)]"><SlidersHorizontal size={16} weight="bold" aria-hidden="true" /> Copart կատալոգ</p>
             <h2 className="mt-1 mb-0 text-xl" id="catalog-filter-title">Գտեք համապատասխան լոտը</h2>
           </div>
           {hasActiveFilters ? (
-            <button className="inline-flex min-h-10 cursor-pointer items-center gap-1.5 border-0 bg-transparent px-2 text-[11px] font-bold text-[#6d675f]" type="button" onClick={() => onChange(DEFAULT_AUCTION_CATALOG_FILTERS)}>
+            <button className="inline-flex min-h-10 cursor-pointer items-center gap-1.5 border-0 bg-transparent px-2 text-[11px] font-bold text-[var(--ink-soft)]" type="button" onClick={() => onChange(DEFAULT_AUCTION_CATALOG_FILTERS)}>
               <ArrowCounterClockwise size={17} weight="bold" aria-hidden="true" /> Մաքրել
             </button>
           ) : null}
@@ -148,7 +148,7 @@ export function CatalogFilterPanel({
           </label>
         </div>
 
-        {facetsError ? <p className="mt-4 mb-0 rounded-[10px] border border-[#efcda9] bg-[#fff3e6] px-3.5 py-3 text-[11px] font-bold text-[#874600]" role="status">Ֆիլտրերի տարբերակները հիմա ամբողջությամբ չեն բեռնվել, բայց կատալոգի որոնումը շարունակում է աշխատել։</p> : null}
+        {facetsError ? <p className="mt-4 mb-0 rounded-[10px] border border-[var(--orange-border)] bg-[var(--orange-pale)] px-3.5 py-3 text-[11px] font-bold text-[var(--orange-ink)]" role="status">Ֆիլտրերի տարբերակները հիմա ամբողջությամբ չեն բեռնվել, բայց կատալոգի որոնումը շարունակում է աշխատել։</p> : null}
       </div>
     </section>
   );

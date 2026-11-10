@@ -11,10 +11,10 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const buttonVariantClasses: Record<ButtonVariant, string> = {
-  primary: "bg-[var(--yellow)] text-[var(--ink)] hover:bg-[var(--yellow-hover)]",
-  secondary: "bg-[var(--ink)] text-white hover:bg-[#2a2926]",
+  primary: "bg-[var(--yellow)] text-[var(--on-yellow)] hover:bg-[var(--yellow-hover)]",
+  secondary: "bg-[var(--ink)] text-[var(--paper)] hover:bg-[var(--ink-hover)]",
   ghost: "border-[var(--border)] bg-transparent text-[var(--ink)] hover:border-[var(--ink)] hover:bg-[var(--surface)]",
-  light: "bg-white text-[var(--ink)] hover:bg-[var(--yellow-pale)]",
+  light: "bg-white text-[#11110f] hover:bg-[#fff3ce]",
 };
 
 export function Button({ children, variant = "primary", className = "", icon: Icon, ...props }: ButtonProps) {

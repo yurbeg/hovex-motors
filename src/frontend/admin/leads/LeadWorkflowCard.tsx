@@ -79,10 +79,10 @@ export function LeadWorkflowCard({
   });
 
   return (
-    <section className="rounded-[13px] border border-[#d9d3c8] bg-white p-4 shadow-[0_8px_24px_rgba(29,26,20,0.04)]" aria-labelledby="lead-workflow-title">
+    <section className="rounded-[13px] border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[0_8px_24px_rgba(29,26,20,0.04)]" aria-labelledby="lead-workflow-title">
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="mb-1 mt-0 text-[9px] font-black uppercase tracking-[0.08em] text-[#806300]">Աշխատանքային հոսք</p>
+          <p className="mb-1 mt-0 text-[9px] font-black uppercase tracking-[0.08em] text-[var(--yellow-ink)]">Աշխատանքային հոսք</p>
           <h3 className="m-0 text-[14px]" id="lead-workflow-title">Արձագանք և պատասխանատու</h3>
         </div>
         <LeadUrgencyBadge lead={lead} now={now} />
@@ -95,7 +95,7 @@ export function LeadWorkflowCard({
             <li
               className={classNames(
                 "min-w-0 rounded-lg px-1.5 py-2 text-center text-[8px] font-extrabold",
-                active ? "bg-[#11110f] text-white" : "bg-[#f2efe9] text-[#77726b]",
+                active ? "bg-[#11110f] text-white" : "bg-[var(--surface-soft)] text-[var(--ink-soft)]",
               )}
               key={item}
               aria-current={active ? "step" : undefined}
@@ -108,7 +108,7 @@ export function LeadWorkflowCard({
 
       <div className="grid grid-cols-2 gap-3 max-[560px]:grid-cols-1">
         <label className="grid gap-1.5">
-          <span className="text-[9px] font-extrabold text-[#5f5b55]">Կարգավիճակ</span>
+          <span className="text-[9px] font-extrabold text-[var(--ink-soft)]">Կարգավիճակ</span>
           <select
             className={formControlClasses}
             value={status}
@@ -119,7 +119,7 @@ export function LeadWorkflowCard({
           </select>
         </label>
         <label className="grid gap-1.5">
-          <span className="text-[9px] font-extrabold text-[#5f5b55]">Պատասխանատու մենեջեր</span>
+          <span className="text-[9px] font-extrabold text-[var(--ink-soft)]">Պատասխանատու մենեջեր</span>
           <select className={formControlClasses} value={managerId} onChange={(event) => setManagerId(event.target.value)} disabled={pending}>
             <option value="">Չնշանակված</option>
             {lead.assignedManagerId && !assignedManager ? <option value={lead.assignedManagerId}>Անհայտ մենեջեր</option> : null}
@@ -131,7 +131,7 @@ export function LeadWorkflowCard({
           </select>
         </label>
         <label className="grid gap-1.5 max-[560px]:col-span-1">
-          <span className="text-[9px] font-extrabold text-[#5f5b55]">Հաջորդ գործողության ժամկետ</span>
+          <span className="text-[9px] font-extrabold text-[var(--ink-soft)]">Հաջորդ գործողության ժամկետ</span>
           <input
             className={formControlClasses}
             type="datetime-local"
@@ -139,12 +139,12 @@ export function LeadWorkflowCard({
             onChange={(event) => setNextAction(event.target.value)}
             disabled={pending || status === "closed"}
           />
-          {lead.status === "new" ? <small className="text-[8px] text-[#68635c]">Առաջին կապի SLA՝ {formatDate(lead.firstResponseDueAt)}</small> : null}
+          {lead.status === "new" ? <small className="text-[8px] text-[var(--ink-soft)]">Առաջին կապի SLA՝ {formatDate(lead.firstResponseDueAt)}</small> : null}
         </label>
         <div className="flex items-end gap-2 max-[560px]:flex-wrap">
           {myself && myself.id !== managerId ? (
             <button
-              className="inline-flex min-h-[43px] flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-[9px] border border-[#d8d4cc] bg-white px-3 text-[9px] font-extrabold"
+              className="inline-flex min-h-[43px] flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-[9px] border border-[var(--border)] bg-[var(--surface)] px-3 text-[9px] font-extrabold"
               type="button"
               onClick={() => setManagerId(myself.id)}
               disabled={pending}
@@ -152,7 +152,7 @@ export function LeadWorkflowCard({
               <UserPlus size={17} aria-hidden="true" /> Վերցնել ինձ վրա
             </button>
           ) : (
-            <span className="inline-flex min-h-[43px] flex-1 items-center gap-2 rounded-[9px] bg-[#f4f1eb] px-3 text-[9px] text-[#68635c]">
+            <span className="inline-flex min-h-[43px] flex-1 items-center gap-2 rounded-[9px] bg-[var(--surface-soft)] px-3 text-[9px] text-[var(--ink-soft)]">
               <UserCircle size={17} aria-hidden="true" /> {draftManager?.displayName || (managerId ? "Անհայտ մենեջեր" : "Պատասխանատու չկա")}
             </span>
           )}

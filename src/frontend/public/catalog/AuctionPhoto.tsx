@@ -18,7 +18,7 @@ export function AuctionPhotoPlaceholder({
 }) {
   return (
     <div
-      className={classNames("grid place-items-center bg-[#e9e5dd] text-[#7d776e]", className)}
+      className={classNames("grid place-items-center bg-[var(--media-surface)] text-[var(--ink-soft)]", className)}
       role="img"
       aria-label={label}
     >

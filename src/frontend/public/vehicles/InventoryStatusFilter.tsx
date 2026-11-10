@@ -51,8 +51,8 @@ export function InventoryStatusFilter({
               className={classNames(
                 "inline-flex min-h-11 shrink-0 cursor-pointer items-center gap-2 rounded-full border px-4 text-[12px] font-extrabold transition-[background-color,border-color,color,box-shadow] duration-150 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-[rgba(255,196,0,0.38)]",
                 active
-                  ? "border-[var(--ink)] bg-[var(--ink)] text-white shadow-[0_4px_14px_rgba(17,17,15,0.12)]"
-                  : "border-[var(--border)] bg-white text-[var(--ink)] hover:border-[#aaa49b] hover:bg-[var(--surface)]",
+                  ? "border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)] shadow-[0_4px_14px_rgba(17,17,15,0.12)]"
+                  : "border-[var(--border)] bg-[var(--surface)] text-[var(--ink)] hover:border-[var(--border-strong)] hover:bg-[var(--surface)]",
               )}
               key={option.value}
               type="button"
@@ -63,7 +63,7 @@ export function InventoryStatusFilter({
               <span
                 className={classNames(
                   "inline-grid min-w-6 place-items-center rounded-full px-1.5 py-0.5 text-[10px] leading-4 tabular-nums",
-                  active ? "bg-[var(--yellow)] text-[var(--ink)]" : "bg-[#eeebe5] text-[#625d55]",
+                  active ? "bg-[var(--yellow)] text-[var(--on-yellow)]" : "bg-[var(--surface-soft)] text-[var(--ink-soft)]",
                 )}
               >
                 {countFormatter.format(counts[option.value])}
