@@ -49,9 +49,9 @@ export function RequestTable({ leads, onSelect, managers = [], now = Date.now(),
             <th className={classNames(tableHeadClasses, compact && "sr-only")}><span className="sr-only">Բացել</span></th>
           </tr>
         </thead>
-        <tbody>
+        <tbody data-scroll-stagger>
           {leads.map((lead) => (
-            <tr className="cursor-pointer transition-colors hover:bg-[var(--yellow-pale)] [&:last-child>td]:border-b-0" key={lead.id} onClick={() => onSelect(lead)}>
+            <tr className="cursor-pointer transition-colors hover:bg-[var(--yellow-pale)] [&:last-child>td]:border-b-0" key={lead.id} onClick={() => onSelect(lead)} data-scroll-reveal="up">
               <td className={classNames(tableCellClasses, compact && "h-[69px] py-2.5", "[&>strong]:text-xs")} data-label="Հաճախորդ">
                 <strong>{lead.name}</strong><span>{lead.phone} · {leadContactMethodLabel(lead.method)}</span>
               </td>

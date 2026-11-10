@@ -56,12 +56,12 @@ export function RequestsPage({ leads, managers, now, loading, onOpenLead, onExpo
 
   return (
     <>
-      <section className={pageHeadingClasses}>
+      <section className={pageHeadingClasses} data-scroll-reveal="up">
         <div className="min-w-0"><p className={eyebrowClasses}>Հաճախորդների հոսք</p><h1 className="mb-[7px] mt-1 text-[clamp(27px,2.4vw,36px)] leading-[1.22] font-bold max-[700px]:text-2xl max-[430px]:text-[21px]">Խորհրդատվության հարցումներ</h1><span className="text-[13px] text-[var(--ink-soft)]">{loading ? "Տվյալները բեռնվում են…" : `${leads.length} ընդհանուր · ${leads.filter((lead) => lead.status === "new").length} նոր · ${overdueCount} ուշացած`}</span></div>
         <AdminButton className={pageHeadingButtonClasses} icon={DownloadSimple} variant="secondary" onClick={onExport} disabled={loading || !leads.length} aria-label="Ներբեռնել հարցումները CSV ձևաչափով">Ներբեռնել CSV</AdminButton>
       </section>
       <DataModeNotice scope="requests" />
-      <section className={panelClasses}>
+      <section className={panelClasses} data-scroll-reveal="up" data-scroll-delay="80">
         <div className={`${toolbarClasses} max-[1180px]:flex-wrap`}>
           <label className={`${searchClasses} max-[1180px]:w-full`}><MagnifyingGlass size={19} aria-hidden="true" /><span className="sr-only">Փնտրել հարցում</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Անուն, հեռախոս կամ մեքենա" disabled={loading} /></label>
           <label className={filterClasses}><span>Կարգավիճակ</span><select value={status} onChange={(event) => setStatus(event.target.value as FilterStatus<LeadStatus>)} disabled={loading}><option value="all">Բոլորը</option>{Object.entries(leadStatus).map(([value, item]) => <option key={value} value={value}>{item.label}</option>)}</select></label>

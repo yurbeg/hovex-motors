@@ -41,7 +41,7 @@ export function CatalogFilterPanel({
   ])].filter(Number.isFinite).sort((left, right) => right - left);
 
   return (
-    <section className={classNames(pageShellClasses, "relative z-[5] mt-6")} id="catalog-filters" aria-labelledby="catalog-filter-title">
+    <section className={classNames(pageShellClasses, "relative z-[5] mt-6")} id="catalog-filters" aria-labelledby="catalog-filter-title" data-scroll-reveal="up">
       <div className="rounded-[18px] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-sm)] max-[800px]:p-4">
         <div className="mb-4 flex items-center justify-between gap-4">
           <div>

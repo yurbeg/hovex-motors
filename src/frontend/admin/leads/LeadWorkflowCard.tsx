@@ -79,7 +79,7 @@ export function LeadWorkflowCard({
   });
 
   return (
-    <section className="rounded-[13px] border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[0_8px_24px_rgba(29,26,20,0.04)]" aria-labelledby="lead-workflow-title">
+    <section className="rounded-[13px] border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[0_8px_24px_rgba(29,26,20,0.04)]" aria-labelledby="lead-workflow-title" data-scroll-reveal="up">
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="mb-1 mt-0 text-[9px] font-black uppercase tracking-[0.08em] text-[var(--yellow-ink)]">Աշխատանքային հոսք</p>

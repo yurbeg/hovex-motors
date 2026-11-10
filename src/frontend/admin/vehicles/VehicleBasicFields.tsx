@@ -19,7 +19,7 @@ interface VehicleBasicFieldsProps {
 
 export function VehicleBasicFields({ form, errors, update, disabled }: VehicleBasicFieldsProps) {
   return (
-    <fieldset className={formFieldsetClasses} disabled={disabled}>
+    <fieldset className={formFieldsetClasses} disabled={disabled} data-scroll-reveal="up">
       <legend>Հիմնական տվյալներ</legend>
       <div className="grid grid-cols-2 gap-3.5 max-[700px]:grid-cols-1">
         <label className={formLabelClasses}>

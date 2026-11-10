@@ -20,7 +20,7 @@ export function AuctionVehicleCard({ lot }: { lot: AuctionCatalogLot }) {
   const detailUrl = `/catalog/${encodeURIComponent(lot.id)}`;
 
   return (
-    <article className="group min-w-0 overflow-hidden rounded-[17px] border border-[var(--border)] bg-[var(--surface)] shadow-[0_6px_24px_rgba(17,17,15,0.06)] transition-[transform,box-shadow] duration-150 hover:-translate-y-1 hover:shadow-[var(--shadow-sm)] motion-reduce:transition-none">
+    <article className="group min-w-0 overflow-hidden rounded-[17px] border border-[var(--border)] bg-[var(--surface)] shadow-[0_6px_24px_rgba(17,17,15,0.06)] transition-[transform,box-shadow] duration-150 hover:-translate-y-1 hover:shadow-[var(--shadow-sm)] motion-reduce:transition-none" data-scroll-reveal="up">
       <a className="relative block h-[230px] overflow-hidden bg-[var(--media-surface)] max-[1240px]:h-[215px] max-[800px]:h-[245px]" href={detailUrl} aria-label={`${name} մանրամասները`}>
         <AuctionPhoto className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-[1.02] motion-reduce:transition-none" url={lot.photoUrls[0]} alt={name} />
         <span className="absolute top-3 left-3 rounded-full bg-[rgba(17,17,15,0.9)] px-2.5 py-2 text-[10px] leading-none font-black tracking-[0.05em] text-white">COPART</span>

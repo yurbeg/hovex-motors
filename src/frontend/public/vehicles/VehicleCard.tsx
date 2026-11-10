@@ -20,7 +20,7 @@ export function VehicleCard({ vehicle, isCompared, onCompare, onConsultation }: 
   const vehicleName = `${vehicle.year} ${vehicle.make} ${vehicle.model}`;
 
   return (
-    <article className="group relative min-w-0 overflow-hidden rounded-[17px] border border-[var(--border)] bg-[var(--surface)] shadow-[0_6px_24px_rgba(17,17,15,0.06)] transition-[transform,box-shadow] duration-150 hover:-translate-y-1 hover:shadow-[var(--shadow-sm)] motion-reduce:transition-none">
+    <article className="group relative min-w-0 overflow-hidden rounded-[17px] border border-[var(--border)] bg-[var(--surface)] shadow-[0_6px_24px_rgba(17,17,15,0.06)] transition-[transform,box-shadow] duration-150 hover:-translate-y-1 hover:shadow-[var(--shadow-sm)] motion-reduce:transition-none" data-scroll-reveal="up">
       <a
         className="absolute inset-0 z-[1] rounded-[17px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--yellow)]"
         href={detailUrl}

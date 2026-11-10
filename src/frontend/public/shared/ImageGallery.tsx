@@ -147,7 +147,7 @@ export function ImageGallery({
       >
         <img
           key={`${activeImage}-${safeIndex}`}
-          className="h-[560px] w-full select-none object-contain max-[1240px]:h-[500px] max-[1080px]:h-[430px] max-[800px]:h-[320px]"
+          className="h-[560px] w-full select-none object-contain motion-safe:animate-[motion-gallery-image-in_360ms_cubic-bezier(0.22,1,0.36,1)_both] max-[1240px]:h-[500px] max-[1080px]:h-[430px] max-[800px]:h-[320px]"
           src={activeImage}
           alt={`${name}, լուսանկար ${safeIndex + 1}՝ ${galleryImages.length}-ից`}
           style={{ objectPosition: imagePosition }}
@@ -161,7 +161,7 @@ export function ImageGallery({
         {hasMultipleImages ? (
           <>
             <button
-              className="absolute top-1/2 left-3 grid size-11 -translate-y-1/2 cursor-pointer place-items-center rounded-full border border-[rgba(255,255,255,0.65)] bg-[rgba(17,17,15,0.82)] text-white shadow-[0_6px_20px_rgba(0,0,0,0.22)] backdrop-blur-sm hover:bg-[rgba(17,17,15,0.94)]"
+              className="absolute top-1/2 left-3 grid size-11 -translate-y-1/2 cursor-pointer place-items-center rounded-full border border-[rgba(255,255,255,0.65)] bg-[rgba(17,17,15,0.82)] text-white shadow-[0_6px_20px_rgba(0,0,0,0.22)] backdrop-blur-sm transition-[transform,background-color] duration-200 hover:-translate-y-1/2 hover:scale-105 hover:bg-[rgba(17,17,15,0.94)] active:scale-95 motion-reduce:transition-none"
               type="button"
               aria-label="Ցուցադրել նախորդ լուսանկարը"
               onClick={() => navigate(-1)}
@@ -169,7 +169,7 @@ export function ImageGallery({
               <CaretLeft size={22} weight="bold" aria-hidden="true" />
             </button>
             <button
-              className="absolute top-1/2 right-3 grid size-11 -translate-y-1/2 cursor-pointer place-items-center rounded-full border border-[rgba(255,255,255,0.65)] bg-[rgba(17,17,15,0.82)] text-white shadow-[0_6px_20px_rgba(0,0,0,0.22)] backdrop-blur-sm hover:bg-[rgba(17,17,15,0.94)]"
+              className="absolute top-1/2 right-3 grid size-11 -translate-y-1/2 cursor-pointer place-items-center rounded-full border border-[rgba(255,255,255,0.65)] bg-[rgba(17,17,15,0.82)] text-white shadow-[0_6px_20px_rgba(0,0,0,0.22)] backdrop-blur-sm transition-[transform,background-color] duration-200 hover:-translate-y-1/2 hover:scale-105 hover:bg-[rgba(17,17,15,0.94)] active:scale-95 motion-reduce:transition-none"
               type="button"
               aria-label="Ցուցադրել հաջորդ լուսանկարը"
               onClick={() => navigate(1)}
@@ -200,7 +200,7 @@ export function ImageGallery({
             <button
               ref={(element) => { thumbnailRefs.current[index] = element; }}
               className={classNames(
-                "h-[88px] w-[118px] shrink-0 snap-start cursor-pointer overflow-hidden rounded-[10px] border-2 bg-[var(--media-surface)] p-0 max-[800px]:h-[72px] max-[800px]:w-[96px]",
+                "h-[88px] w-[118px] shrink-0 snap-start cursor-pointer overflow-hidden rounded-[10px] border-2 bg-[var(--media-surface)] p-0 transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 motion-reduce:transition-none max-[800px]:h-[72px] max-[800px]:w-[96px]",
                 index === safeIndex
                   ? "border-[var(--yellow-hover)] shadow-[0_0_0_2px_rgba(255,196,0,0.2)]"
                   : "border-transparent hover:border-[var(--border-strong)]",

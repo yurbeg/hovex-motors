@@ -10,7 +10,7 @@ interface EmptyStateProps {
 
 export function EmptyState({ icon: IconComponent, title, text, action }: EmptyStateProps) {
   return (
-    <div className="flex min-h-[300px] flex-col items-center justify-center px-5 py-[50px] text-center">
+    <div className="flex min-h-[300px] flex-col items-center justify-center px-5 py-[50px] text-center" data-scroll-reveal="scale">
       <span className="grid size-[58px] place-items-center rounded-2xl bg-[var(--surface-soft)] text-[var(--ink-soft)]">
         <IconComponent size={28} weight="bold" />
       </span>

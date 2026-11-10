@@ -26,7 +26,7 @@ export function CatalogPagination({
   const pages = visiblePages(page, pageCount);
 
   return (
-    <nav className="mt-9 flex flex-wrap items-center justify-center gap-2" aria-label="Կատալոգի էջեր">
+    <nav className="mt-9 flex flex-wrap items-center justify-center gap-2" aria-label="Կատալոգի էջեր" data-scroll-reveal="up">
       <button className="inline-flex min-h-11 cursor-pointer items-center gap-1.5 rounded-[10px] border border-[var(--border)] bg-[var(--surface)] px-3 text-[11px] font-bold disabled:cursor-not-allowed disabled:opacity-45" type="button" disabled={disabled || page <= 1} onClick={() => onPageChange(page - 1)}>
         <CaretLeft size={17} weight="bold" aria-hidden="true" /> Նախորդ
       </button>

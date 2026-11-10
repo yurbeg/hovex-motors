@@ -14,7 +14,7 @@ interface StatCardProps {
 
 export function StatCard({ label, value, note, icon: IconComponent, tone = "ink" }: StatCardProps) {
   return (
-    <article className="grid min-w-0 grid-cols-[auto_1fr] rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[0_8px_28px_rgba(26,24,19,0.04)] [column-gap:13px] max-[700px]:block max-[700px]:p-3.5 max-[430px]:grid">
+    <article className="grid min-w-0 grid-cols-[auto_1fr] rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[0_8px_28px_rgba(26,24,19,0.04)] [column-gap:13px] max-[700px]:block max-[700px]:p-3.5 max-[430px]:grid" data-scroll-reveal="scale">
       <div className={classNames("row-span-3 grid size-11 place-items-center rounded-xl max-[700px]:mb-[13px] max-[700px]:size-[38px] max-[430px]:m-0", statToneClasses[tone])}>
         <IconComponent size={23} weight="bold" />
       </div>

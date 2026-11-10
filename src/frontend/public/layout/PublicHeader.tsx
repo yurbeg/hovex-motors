@@ -13,10 +13,18 @@ interface PublicHeaderProps {
 
 export function PublicHeader({ onConsultation, page = "home" }: PublicHeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const navTo = (id: string): void => {
     setMenuOpen(false);
     scrollToId(id);
   };
+
+  useEffect(() => {
+    const updateScrolledState = (): void => setScrolled(window.scrollY > 12);
+    updateScrolledState();
+    window.addEventListener("scroll", updateScrolledState, { passive: true });
+    return () => window.removeEventListener("scroll", updateScrolledState);
+  }, []);
 
   useEffect(() => {
     if (!menuOpen) return undefined;
@@ -28,9 +36,9 @@ export function PublicHeader({ onConsultation, page = "home" }: PublicHeaderProp
   }, [menuOpen]);
 
   return (
-    <header className="sticky top-0 z-40 h-20 border-b border-[var(--border)] bg-[var(--surface-translucent)] backdrop-blur-[14px] max-[1080px]:h-[72px] max-[800px]:h-16">
+    <header className={classNames("sticky top-0 z-40 h-20 border-b bg-[var(--surface-translucent)] backdrop-blur-[14px] transition-[border-color,box-shadow,background-color] duration-300 ease-out motion-reduce:transition-none max-[1080px]:h-[72px] max-[800px]:h-16", scrolled ? "border-[var(--border-strong)] shadow-[0_10px_32px_rgba(17,17,15,0.1)]" : "border-[var(--border)] shadow-none")} data-header-scrolled={scrolled || undefined}>
       <div className={classNames(pageShellClasses, "grid h-full grid-cols-[82px_1fr_auto] items-center gap-7 max-[1240px]:grid-cols-[72px_1fr_auto] max-[1240px]:gap-[18px] max-[1080px]:grid-cols-[64px_auto_1fr] max-[800px]:grid-cols-[54px_auto_1fr] max-[800px]:gap-2.5")}>
-        <a className="h-[62px] w-[62px] overflow-hidden rounded-[11px] bg-[#050505] shadow-[0_6px_18px_rgba(17,17,15,0.14)] max-[1080px]:h-[54px] max-[1080px]:w-[54px] max-[800px]:h-12 max-[800px]:w-12 max-[800px]:rounded-lg" href="/" aria-label="Hovex Motors — գլխավոր էջ">
+        <a className="h-[62px] w-[62px] overflow-hidden rounded-[11px] bg-[#050505] shadow-[0_6px_18px_rgba(17,17,15,0.14)] transition-transform duration-300 ease-out hover:scale-[1.035] motion-reduce:transition-none max-[1080px]:h-[54px] max-[1080px]:w-[54px] max-[800px]:h-12 max-[800px]:w-12 max-[800px]:rounded-lg" href="/" aria-label="Hovex Motors — գլխավոր էջ">
           <img className="h-full w-full object-contain" src="/assets/hovex/hovex-logo-instagram.jpg" alt="Hovex Motors" />
         </a>
         <button

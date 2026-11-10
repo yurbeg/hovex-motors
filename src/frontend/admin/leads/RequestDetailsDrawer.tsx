@@ -49,7 +49,7 @@ export function RequestDetailsDrawer({
 
   return (
     <AdminDrawer title={lead.name} eyebrow="Հարցման մանրամասներ" onClose={onClose} locked={pending} wide>
-      <div className="grid gap-[15px] p-5 max-[430px]:p-3.5 [&_h3]:mb-[13px] [&_h3]:mt-0 [&_h3]:text-xs">
+      <div className="grid gap-[15px] p-5 max-[430px]:p-3.5 [&_h3]:mb-[13px] [&_h3]:mt-0 [&_h3]:text-xs" data-scroll-stagger>
         <LeadWorkflowCard
           lead={lead}
           managers={managers}
@@ -59,7 +59,7 @@ export function RequestDetailsDrawer({
           onSave={onWorkflowSave}
         />
 
-        <div className="grid grid-cols-2 gap-2.5 max-[430px]:grid-cols-1" aria-label="Արագ կապ">
+        <div className="grid grid-cols-2 gap-2.5 max-[430px]:grid-cols-1" aria-label="Արագ կապ" data-scroll-reveal="up">
           <a className="flex min-h-[65px] items-center gap-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-[11px] text-[var(--ink)]" href={`tel:${phone}`}>
             <Phone className="text-[var(--yellow-ink)]" size={20} weight="fill" aria-hidden="true" />
             <span className="grid min-w-0"><strong className="text-[10px]">Զանգահարել</strong><small className="overflow-hidden text-ellipsis text-[8px] text-[var(--muted)]">{lead.phone}</small></span>
@@ -73,7 +73,7 @@ export function RequestDetailsDrawer({
         <LeadNoteComposer pending={pending} onAdd={onAddNote} />
         <LeadTimeline activities={activities} loading={activitiesLoading} error={activitiesError} onRetry={onRetryActivities} />
 
-        <section className={detailSectionClasses}>
+        <section className={detailSectionClasses} data-scroll-reveal="up">
           <h3>Հաճախորդ</h3>
           <dl className={detailListClasses}>
             <div><dt>Անուն</dt><dd>{lead.name}</dd></div>
@@ -84,7 +84,7 @@ export function RequestDetailsDrawer({
             <div><dt>Առաջին կապ</dt><dd>{lead.firstContactedAt ? formatDate(lead.firstContactedAt) : lead.status === "new" ? "Դեռ չի եղել" : "Տվյալ չկա"}</dd></div>
           </dl>
         </section>
-        <section className={detailSectionClasses}>
+        <section className={detailSectionClasses} data-scroll-reveal="up">
           <h3>Հետաքրքրություն</h3>
           <div className="flex min-h-[58px] items-center gap-2.5 rounded-[10px] bg-[var(--surface-soft)] p-[11px] text-[var(--yellow-ink)]">
             <Car size={22} weight="fill" aria-hidden="true" />
@@ -96,14 +96,14 @@ export function RequestDetailsDrawer({
             {lead.vin ? <div><dt>VIN</dt><dd>{lead.vin}</dd></div> : null}
           </dl>
         </section>
-        <section className={detailSectionClasses}>
+        <section className={detailSectionClasses} data-scroll-reveal="up">
           <h3>Նախընտրելի ժամ</h3>
           <dl className={detailListClasses}>
             <div><dt>Օր</dt><dd>{lead.date || "Չի նշվել"}</dd></div>
             <div><dt>Ժամ</dt><dd>{lead.time || "Ճկուն"}</dd></div>
           </dl>
         </section>
-        <section className={detailSectionClasses}>
+        <section className={detailSectionClasses} data-scroll-reveal="up">
           <h3>Հաճախորդի մեկնաբանություն</h3>
           <p className="m-0 whitespace-pre-wrap text-[10px] leading-[1.65] text-[var(--ink-soft)]">{lead.note || "Մեկնաբանություն չկա։"}</p>
         </section>

@@ -41,7 +41,7 @@ export function AdminLoginScreen({ client, onSession }: AdminLoginScreenProps) {
 
   return (
     <main className="grid min-h-screen place-items-center bg-[radial-gradient(circle_at_82%_12%,rgba(255,196,0,0.16),transparent_32%),var(--paper)] px-4 py-10 text-[var(--ink)]">
-      <section className="w-full max-w-[430px] overflow-hidden rounded-[22px] border border-[var(--border)] bg-[var(--surface)] shadow-[0_28px_80px_rgba(31,28,20,0.12)]">
+      <section className="w-full max-w-[430px] overflow-hidden rounded-[22px] border border-[var(--border)] bg-[var(--surface)] shadow-[0_28px_80px_rgba(31,28,20,0.12)]" data-scroll-reveal="scale">
         <header className="border-b border-[var(--border)] bg-[#11110f] px-7 py-7 text-white">
           <div className="mb-5 flex items-center gap-3">
             <img className="size-14 rounded-xl border border-[#39362f] object-contain" src="/assets/hovex/hovex-logo-instagram.jpg" alt="" />

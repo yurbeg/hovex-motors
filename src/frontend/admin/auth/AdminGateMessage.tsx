@@ -11,7 +11,7 @@ interface AdminGateMessageProps {
 export function AdminGateMessage({ title, text, action }: AdminGateMessageProps) {
   return (
     <main className="grid min-h-screen place-items-center bg-[var(--paper)] px-4 text-[var(--ink)]">
-      <section className="relative w-full max-w-[480px] rounded-[20px] border border-[var(--border)] bg-[var(--surface)] p-8 text-center shadow-[0_24px_70px_rgba(31,28,20,0.1)]">
+      <section className="relative w-full max-w-[480px] rounded-[20px] border border-[var(--border)] bg-[var(--surface)] p-8 text-center shadow-[0_24px_70px_rgba(31,28,20,0.1)]" data-scroll-reveal="scale">
         <ThemeToggle className="absolute right-4 top-4" />
         <span className="mx-auto mb-4 grid size-14 place-items-center rounded-2xl bg-[var(--yellow-pale)] text-[var(--yellow-ink)]">
           <LockKey size={27} weight="fill" />

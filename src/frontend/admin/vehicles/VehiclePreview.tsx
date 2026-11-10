@@ -16,7 +16,7 @@ export function VehiclePreview({
   const previewUrl = existingImageUrls[0] || selectedImagePreviewUrls[0] || "";
   const imageCount = existingImageUrls.length + selectedImagePreviewUrls.length;
   return (
-    <div className="m-5 grid grid-cols-[180px_1fr] gap-[17px] rounded-[14px] border border-[var(--border)] bg-[var(--surface)] p-3.5 max-[700px]:grid-cols-[128px_1fr] max-[430px]:grid-cols-1">
+    <div className="m-5 grid grid-cols-[180px_1fr] gap-[17px] rounded-[14px] border border-[var(--border)] bg-[var(--surface)] p-3.5 max-[700px]:grid-cols-[128px_1fr] max-[430px]:grid-cols-1" data-scroll-reveal="scale">
       <div className="relative h-[126px] overflow-hidden rounded-[10px] bg-[var(--media-surface)] max-[700px]:h-[104px] max-[430px]:h-[150px]">
         {previewUrl ? (
           <img

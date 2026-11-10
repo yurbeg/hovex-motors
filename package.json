@@ -10,6 +10,7 @@
     "preview": "vite preview",
     "test:admin": "node --import tsx --test tests/admin-store.test.ts tests/admin-vehicle-editor.test.ts tests/admin-inventory-ui.test.tsx",
     "test:assistant": "node --import tsx --test tests/assistant-service.test.ts",
+    "test:motion": "node --import tsx --test tests/scroll-reveal.test.tsx",
     "test:supabase": "node --import tsx --test tests/supabase-vehicles.test.ts tests/vehicle-gallery-sql-contract.test.ts tests/available-inventory-boundary-sql-contract.test.ts tests/listam-test-inventory-seed.test.ts",
     "test:admin-repository": "node --import tsx --test tests/admin-vehicle-repository.test.ts",
     "test:admin-image": "node --import tsx --test tests/admin-image-repository.test.ts",

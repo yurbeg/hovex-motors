@@ -49,7 +49,7 @@ export function LeadTimeline({
   onRetry: () => void;
 }) {
   return (
-    <section className="rounded-[13px] border border-[var(--border)] bg-[var(--surface)] p-4" aria-labelledby="lead-timeline-title">
+    <section className="rounded-[13px] border border-[var(--border)] bg-[var(--surface)] p-4" aria-labelledby="lead-timeline-title" data-scroll-reveal="up">
       <div className="mb-4 flex items-center justify-between gap-3">
         <h3 className="m-0 text-xs" id="lead-timeline-title">Գործողությունների պատմություն</h3>
         {loading ? <SpinnerGap className="animate-spin text-[var(--yellow-ink)] motion-reduce:animate-none" size={18} aria-label="Պատմությունը բեռնվում է" /> : null}
@@ -61,9 +61,9 @@ export function LeadTimeline({
         </div>
       ) : null}
       {!loading && !error && !activities.length ? <p className="m-0 text-[9px] text-[var(--ink-soft)]">Գործողություններ դեռ չկան։</p> : null}
-      <ol className="m-0 grid list-none gap-0 p-0">
+      <ol className="m-0 grid list-none gap-0 p-0" data-scroll-stagger>
         {activities.map((activity, index) => (
-          <li className="relative grid grid-cols-[30px_1fr] gap-2.5 pb-4 last:pb-0" key={activity.id}>
+          <li className="relative grid grid-cols-[30px_1fr] gap-2.5 pb-4 last:pb-0" key={activity.id} data-scroll-reveal="up">
             {index < activities.length - 1 ? <span className="absolute bottom-0 left-[14px] top-[29px] w-px bg-[var(--surface-muted)]" aria-hidden="true" /> : null}
             <span className="relative z-[1] grid size-[29px] place-items-center rounded-full bg-[var(--yellow-pale)] text-[var(--yellow-ink)]">
               <ActivityIcon activity={activity} />

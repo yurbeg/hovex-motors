@@ -76,12 +76,12 @@ export function VehiclesPage({
 
   return (
     <>
-      <section className={pageHeadingClasses}>
+      <section className={pageHeadingClasses} data-scroll-reveal="up">
         <div className="min-w-0"><p className={eyebrowClasses}>Հանրային առաջարկներ</p><h1 className="mb-[7px] mt-1 text-[clamp(27px,2.4vw,36px)] leading-[1.22] font-bold max-[700px]:text-2xl max-[430px]:text-[21px]">Մեքենաների կառավարում</h1><span className="text-[13px] text-[var(--ink-soft)]">{availableCount} առկա · {inTransitCount} ճանապարհին · {atAuctionCount} աճուրդում</span></div>
         <AdminButton className={pageHeadingButtonClasses} icon={Plus} onClick={onNew} disabled={mutationsLocked} aria-label="Ավելացնել մեքենա">Ավելացնել մեքենա</AdminButton>
       </section>
       <DataModeNotice scope="vehicles" />
-      <section className={panelClasses}>
+      <section className={panelClasses} data-scroll-reveal="up" data-scroll-delay="80">
         <div className={toolbarClasses}>
           <label className={searchClasses}><MagnifyingGlass size={19} /><span className="sr-only">Փնտրել մեքենա</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Մակնիշ, մոդել կամ տարեթիվ" /></label>
           <label className={filterClasses}><span>Տեսանելիություն</span><select value={status} onChange={(event) => setStatus(event.target.value as FilterStatus<VehicleStatus>)}><option value="all">Բոլորը</option>{Object.entries(vehicleStatus).map(([value, item]) => <option key={value} value={value}>{item.label}</option>)}</select></label>
@@ -94,9 +94,9 @@ export function VehiclesPage({
           <div className="w-full overflow-x-auto">
             <table className={tableClasses}>
               <thead><tr><th className={tableHeadClasses}>Մեքենա</th><th className={tableHeadClasses}>Գտնվելու վիճակ</th><th className={tableHeadClasses}>Գնային միջակայք</th><th className={tableHeadClasses}>Տեսանելիություն</th><th className={tableHeadClasses}>Գլխավոր էջ</th><th className={tableHeadClasses}>Թարմացվել է</th><th className={tableHeadClasses}><span className="sr-only">Գործողություններ</span></th></tr></thead>
-              <tbody>
+              <tbody data-scroll-stagger>
                 {filtered.map((vehicle) => (
-                  <tr className="transition-colors hover:bg-[var(--yellow-pale)] [&:last-child>td]:border-b-0" key={vehicle.id}>
+                  <tr className="transition-colors hover:bg-[var(--yellow-pale)] [&:last-child>td]:border-b-0" key={vehicle.id} data-scroll-reveal="up">
                     <td className={tableCellClasses} data-label="Մեքենա">
                       <div className="flex min-w-[245px] items-center gap-[11px] text-left max-[700px]:min-w-0"><img className="h-12 w-16 shrink-0 rounded-lg bg-[var(--surface-soft)] object-cover" src={vehicle.image} alt="" style={{ objectPosition: vehicle.imagePosition }} /><span className="grid min-w-0"><small className="text-[8px] not-italic text-[var(--muted)]">{vehicle.year} · {vehicle.body}</small><strong className="my-0.5 overflow-hidden text-ellipsis whitespace-nowrap text-[11px]">{vehicle.make} {vehicle.model}</strong><em className="text-[8px] not-italic text-[var(--muted)]">{vehicle.badge}</em></span></div>
                     </td>

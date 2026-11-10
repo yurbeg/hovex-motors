@@ -39,7 +39,7 @@ export function CatalogResults({
 }: CatalogResultsProps) {
   return (
     <section className={classNames(pageShellClasses, "pt-9 pb-16 max-[800px]:pt-7 max-[800px]:pb-12")} id="catalog-results" aria-busy={loading}>
-      <div className="mb-6 flex items-end justify-between gap-5 max-[800px]:items-start max-[560px]:flex-col max-[560px]:gap-3">
+      <div className="mb-6 flex items-end justify-between gap-5 max-[800px]:items-start max-[560px]:flex-col max-[560px]:gap-3" data-scroll-reveal="up">
         <div>
           <p className={eyebrowClasses}><span />Ակտիվ Copart լոտեր</p>
           <h2 className="m-0 text-[clamp(27px,3vw,38px)] leading-[1.26] font-bold">Հասանելի մեքենաներ</h2>
@@ -50,7 +50,7 @@ export function CatalogResults({
       </div>
 
       {error ? (
-        <div className="flex min-h-[330px] flex-col items-center justify-center rounded-[20px] border border-[var(--red-border)] bg-[var(--red-pale)] p-10 text-center" role="alert">
+        <div className="flex min-h-[330px] flex-col items-center justify-center rounded-[20px] border border-[var(--red-border)] bg-[var(--red-pale)] p-10 text-center" role="alert" data-scroll-reveal="scale">
           <span className="grid size-[68px] place-items-center rounded-full bg-[var(--red-pale)] text-[var(--red-ink)]"><WarningCircle size={35} weight="fill" aria-hidden="true" /></span>
           <h3 className="mt-5 mb-2 text-2xl">Կատալոգը հիմա չբեռնվեց</h3>
           <p className="m-0 max-w-[580px] text-sm leading-[1.65] text-[var(--ink-soft)]">{error}</p>
@@ -60,13 +60,13 @@ export function CatalogResults({
         <div role="status" aria-label="Copart մեքենաների կատալոգը բեռնվում է"><VehicleGridSkeleton count={6} /></div>
       ) : items.length ? (
         <>
-          <div className="grid grid-cols-3 gap-5 max-[1080px]:grid-cols-2 max-[800px]:grid-cols-1">
+          <div className="grid grid-cols-3 gap-5 max-[1080px]:grid-cols-2 max-[800px]:grid-cols-1" data-scroll-stagger>
             {items.map((lot) => <AuctionVehicleCard key={lot.id} lot={lot} />)}
           </div>
           <CatalogPagination page={page} pageCount={pageCount} onPageChange={onPageChange} />
         </>
       ) : (
-        <div className="flex min-h-[340px] flex-col items-center justify-center rounded-[20px] border border-dashed border-[var(--border-strong)] bg-[var(--surface)] p-10 text-center">
+        <div className="flex min-h-[340px] flex-col items-center justify-center rounded-[20px] border border-dashed border-[var(--border-strong)] bg-[var(--surface)] p-10 text-center" data-scroll-reveal="scale">
           <span className="grid size-[68px] place-items-center rounded-full bg-[var(--yellow-pale)]">
             {hasActiveFilters ? <MagnifyingGlass size={34} weight="bold" aria-hidden="true" /> : <Car size={34} weight="bold" aria-hidden="true" />}
           </span>

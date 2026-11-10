@@ -1,6 +1,7 @@
 import React, { lazy, Suspense } from "react";
 import { createRoot } from "react-dom/client";
 import { resolveAppRoute } from "./app/routes";
+import { initializeScrollReveal } from "./frontend/motion";
 import { initializeTheme, useTheme } from "./frontend/theme/theme";
 import "./styles.css";
 
@@ -53,7 +54,12 @@ function AppLoadingFallback() {
 createRoot(root).render(
   <React.StrictMode>
     <Suspense fallback={<AppLoadingFallback />}>
-      <RootApp />
+      <div className="min-h-screen motion-safe:animate-[motion-page-enter_420ms_cubic-bezier(0.22,1,0.36,1)_both]">
+        <RootApp />
+      </div>
     </Suspense>
   </React.StrictMode>,
 );
+
+const stopScrollReveal = initializeScrollReveal();
+if (import.meta.hot) import.meta.hot.dispose(stopScrollReveal);

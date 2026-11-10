@@ -41,7 +41,7 @@ export function VehiclePresentationFields({
   onMakeExistingImageCover,
 }: VehiclePresentationFieldsProps) {
   return (
-    <fieldset className={formFieldsetClasses} disabled={disabled}>
+    <fieldset className={formFieldsetClasses} disabled={disabled} data-scroll-reveal="up">
       <legend>Գին և ներկայացում</legend>
       <div className="grid grid-cols-2 gap-3.5 max-[700px]:grid-cols-1">
         <VehiclePricingFields form={form} errors={errors} update={update} />

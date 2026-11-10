@@ -13,7 +13,7 @@ interface ConsultationBannerProps {
 
 export function ConsultationBanner({ onConsultation, actionLabel = "Ամրագրել խորհրդատվություն", actionIcon = CalendarBlank }: ConsultationBannerProps) {
   return (
-    <section className={classNames(pageShellClasses, "my-[88px] grid min-h-[225px] grid-cols-[0.82fr_1.55fr_0.78fr] items-stretch overflow-hidden rounded-[22px] border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-sm)] max-[1240px]:grid-cols-[0.75fr_1.45fr_0.85fr] max-[1080px]:grid-cols-[0.8fr_1.2fr] max-[800px]:my-16 max-[800px]:grid-cols-1")} aria-labelledby="consultation-title">
+    <section className={classNames(pageShellClasses, "my-[88px] grid min-h-[225px] grid-cols-[0.82fr_1.55fr_0.78fr] items-stretch overflow-hidden rounded-[22px] border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-sm)] max-[1240px]:grid-cols-[0.75fr_1.45fr_0.85fr] max-[1080px]:grid-cols-[0.8fr_1.2fr] max-[800px]:my-16 max-[800px]:grid-cols-1")} aria-labelledby="consultation-title" data-scroll-reveal="scale">
       <div className="min-h-[225px] overflow-hidden max-[800px]:min-h-[260px] [&_img]:h-full [&_img]:w-full [&_img]:object-cover [&_img]:object-[50%_36%]"><img src="/assets/hovex/presenter-vehicle-choice.jpg" alt="Hovex Motors-ի մասնագետը մեքենաների ցուցասրահում" /></div>
       <div className="self-center px-[38px] py-[30px] max-[1240px]:px-7 max-[800px]:px-[21px] max-[800px]:py-[25px]">
         <p className={eyebrowClasses}><span />Իրական մարդ, հստակ պատասխաններ</p>

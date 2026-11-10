@@ -19,7 +19,7 @@ export function DataModeNotice({ scope }: { scope: DataNoticeScope }) {
         };
 
   return (
-    <div className="mb-[22px] flex items-center gap-[11px] rounded-xl border border-[var(--yellow-border)] bg-[var(--yellow-pale)] px-4 py-[13px] text-[var(--yellow-ink)] max-[700px]:items-start">
+    <div className="mb-[22px] flex items-center gap-[11px] rounded-xl border border-[var(--yellow-border)] bg-[var(--yellow-pale)] px-4 py-[13px] text-[var(--yellow-ink)] max-[700px]:items-start" data-scroll-reveal="up" data-scroll-delay="40">
       <Database size={20} weight="fill" aria-hidden="true" />
       <p className="m-0 flex flex-wrap gap-x-[9px] gap-y-[5px] text-[11px] max-[700px]:grid">
         <strong>{copy.title}</strong>

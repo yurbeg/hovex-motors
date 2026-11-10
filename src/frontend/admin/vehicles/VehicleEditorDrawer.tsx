@@ -182,7 +182,7 @@ export function VehicleEditorDrawer({
       wide
       locked={effectiveBusy}
     >
-      <form ref={formRef} className="flex min-h-full flex-col" onSubmit={submit} noValidate aria-busy={effectiveBusy}>
+      <form ref={formRef} className="flex min-h-full flex-col" onSubmit={submit} noValidate aria-busy={effectiveBusy} data-scroll-stagger>
         <VehiclePreview
           form={form}
           existingImageUrls={existingImages}

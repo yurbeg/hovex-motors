@@ -51,7 +51,7 @@ function DetailMessage({ state, onRetry }: { state: DetailState; onRetry: () => 
   const notFound = state === "not-found";
   return (
     <main className={classNames(pageShellClasses, "grid min-h-[62vh] place-items-center py-16")}>
-      <div className="flex w-full max-w-[680px] flex-col items-center rounded-[20px] border border-[var(--border)] bg-[var(--surface)] p-10 text-center shadow-[var(--shadow-sm)]" role={state === "error" ? "alert" : undefined}>
+      <div className="flex w-full max-w-[680px] flex-col items-center rounded-[20px] border border-[var(--border)] bg-[var(--surface)] p-10 text-center shadow-[var(--shadow-sm)]" role={state === "error" ? "alert" : undefined} data-scroll-reveal="scale">
         <span className="grid size-[68px] place-items-center rounded-full bg-[var(--yellow-pale)] text-[var(--ink)]"><WarningCircle size={35} weight="fill" aria-hidden="true" /></span>
         <h1 className="mt-5 mb-2 text-2xl">{notFound ? "Լոտը հասանելի չէ" : "Լոտը չբեռնվեց"}</h1>
         <p className="m-0 max-w-[560px] text-sm leading-[1.65] text-[var(--ink-soft)]">{notFound ? "Այն կարող է վաճառված կամ հեռացված լինել և այլևս ակտիվ կատալոգում չցուցադրվել։" : "Կատալոգի տվյալները հիմա հասանելի չեն։ Նախկին տվյալները չեն փոխարինվել, փորձեք կրկին մի փոքր ուշ։"}</p>
@@ -174,16 +174,16 @@ export function AuctionVehicleDetailsPage({ lotId }: { lotId: string }) {
     <>
       <PublicHeader page="catalog" onConsultation={callHovex} />
       <main className="pb-16">
-        <div className={classNames(pageShellClasses, "pt-7 pb-5")}>
+        <div className={classNames(pageShellClasses, "pt-7 pb-5")} data-scroll-reveal="up">
           <a className="inline-flex min-h-10 items-center gap-2 text-xs font-bold hover:underline" href="/catalog"><ArrowLeft size={18} weight="bold" aria-hidden="true" /> Վերադառնալ կատալոգ</a>
         </div>
 
         <section className={classNames(pageShellClasses, "grid grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)] items-start gap-7 max-[1080px]:grid-cols-1")}>
-          <div className="min-w-0 [grid-column:1] [grid-row:1]">
+          <div className="min-w-0 [grid-column:1] [grid-row:1]" data-scroll-reveal="left">
             <AuctionGallery lot={lot} />
           </div>
 
-          <aside className="sticky top-24 self-start overflow-hidden rounded-[18px] border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-sm)] [grid-column:2] [grid-row:1/span_2] max-[1080px]:static max-[1080px]:[grid-column:1] max-[1080px]:[grid-row:2]">
+          <aside className="sticky top-24 self-start overflow-hidden rounded-[18px] border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-sm)] [grid-column:2] [grid-row:1/span_2] max-[1080px]:static max-[1080px]:[grid-column:1] max-[1080px]:[grid-row:2]" data-scroll-reveal="right" data-scroll-delay="80">
             <div className="border-b border-[var(--border)] p-6 max-[800px]:p-5">
               <p className="m-0 text-[10px] font-black tracking-[0.06em] text-[var(--yellow-ink)] uppercase">Copart · լոտ {lot.lotNumber || lot.providerLotId}</p>
               <h1 className="mt-2 mb-0 text-[clamp(27px,3vw,38px)] leading-[1.26] font-bold">{name}</h1>
@@ -212,8 +212,8 @@ export function AuctionVehicleDetailsPage({ lotId }: { lotId: string }) {
             <AuctionProductActions context={leadContext} onRequest={setRequestKind} />
           </aside>
 
-          <div className="mt-1 grid gap-7 [grid-column:1] [grid-row:2] max-[1080px]:[grid-row:3]" aria-labelledby="lot-specifications-title">
-            <div className="rounded-[18px] border border-[var(--border)] bg-[var(--surface)] p-6 max-[800px]:p-5">
+          <div className="mt-1 grid gap-7 [grid-column:1] [grid-row:2] max-[1080px]:[grid-row:3]" aria-labelledby="lot-specifications-title" data-scroll-stagger>
+            <div className="rounded-[18px] border border-[var(--border)] bg-[var(--surface)] p-6 max-[800px]:p-5" data-scroll-reveal="up">
               <h2 className="m-0 text-2xl" id="lot-specifications-title">Մեքենայի բնութագրերը</h2>
               <dl className="mt-5 mb-0 grid grid-cols-2 gap-x-8 max-[700px]:grid-cols-1 [&>div]:grid [&>div]:min-h-12 [&>div]:grid-cols-[0.9fr_1.1fr] [&>div]:items-center [&>div]:gap-4 [&>div]:border-t [&>div]:border-[var(--border)] [&>div]:py-2.5 [&_dt]:text-[11px] [&_dt]:text-[var(--muted)] [&_dd]:m-0 [&_dd]:break-words [&_dd]:text-[11px] [&_dd]:font-bold">
                 {specs.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}
@@ -221,7 +221,7 @@ export function AuctionVehicleDetailsPage({ lotId }: { lotId: string }) {
               </dl>
             </div>
 
-            <div className="rounded-[18px] border border-[var(--border)] bg-[var(--surface)] p-6 max-[800px]:p-5">
+            <div className="rounded-[18px] border border-[var(--border)] bg-[var(--surface)] p-6 max-[800px]:p-5" data-scroll-reveal="up">
               <h2 className="m-0 text-xl">Աճուրդի տվյալներ</h2>
               <dl className="mt-5 mb-0 [&>div]:border-t [&>div]:border-[var(--border)] [&>div]:py-3 [&_dt]:text-[10px] [&_dt]:text-[var(--muted)] [&_dd]:mt-1 [&_dd]:mb-0 [&_dd]:break-words [&_dd]:text-[11px] [&_dd]:font-bold">
                 <div><dt>Աղբյուր</dt><dd>Copart · {lot.sourceSlug}</dd></div>

@@ -19,7 +19,7 @@ export function LeadNoteComposer({
   };
 
   return (
-    <section className="rounded-[13px] border border-[var(--border)] bg-[var(--surface)] p-4" aria-labelledby="internal-note-title">
+    <section className="rounded-[13px] border border-[var(--border)] bg-[var(--surface)] p-4" aria-labelledby="internal-note-title" data-scroll-reveal="up">
       <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
         <h3 className="m-0 text-xs" id="internal-note-title">Ներքին նշում</h3>
         <span className="text-[8px] font-bold text-[var(--yellow-ink)]">Հաճախորդը սա չի տեսնում</span>

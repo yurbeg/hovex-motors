@@ -43,6 +43,7 @@ function DetailMessage({ state, onRetry }: DetailMessageProps) {
       <div
         className="flex w-full max-w-[680px] flex-col items-center rounded-[20px] border border-[var(--border)] bg-[var(--surface)] p-10 text-center shadow-[var(--shadow-sm)] max-[600px]:p-7"
         role={state === "error" ? "alert" : undefined}
+        data-scroll-reveal="scale"
       >
         <span className="grid size-[68px] place-items-center rounded-full bg-[var(--yellow-pale)] text-[var(--yellow-ink)]">
           <WarningCircle size={35} weight="fill" aria-hidden="true" />
@@ -120,7 +121,7 @@ export function VehicleDetailsContent({
 
   return (
     <main className="pb-16">
-      <div className={classNames(pageShellClasses, "pt-7 pb-5")}>
+      <div className={classNames(pageShellClasses, "pt-7 pb-5")} data-scroll-reveal="up">
         <a className="inline-flex min-h-10 items-center gap-2 text-xs font-bold hover:underline" href="/#vehicles">
           <ArrowLeft size={18} weight="bold" aria-hidden="true" />
           Վերադառնալ մեքենաներին
@@ -134,11 +135,11 @@ export function VehicleDetailsContent({
       </div>
 
       <section className={classNames(pageShellClasses, "grid grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)] items-start gap-7 max-[1080px]:grid-cols-1")}>
-        <div className="min-w-0 [grid-column:1] [grid-row:1]">
+        <div className="min-w-0 [grid-column:1] [grid-row:1]" data-scroll-reveal="left">
           <ImageGallery images={images} name={name} imagePosition={vehicle.imagePosition} />
         </div>
 
-        <aside className="sticky top-24 self-start overflow-hidden rounded-[18px] border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-sm)] [grid-column:2] [grid-row:1/span_2] max-[1080px]:static max-[1080px]:[grid-column:1] max-[1080px]:[grid-row:2]">
+        <aside className="sticky top-24 self-start overflow-hidden rounded-[18px] border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-sm)] [grid-column:2] [grid-row:1/span_2] max-[1080px]:static max-[1080px]:[grid-column:1] max-[1080px]:[grid-row:2]" data-scroll-reveal="right" data-scroll-delay="80">
           <div className="border-b border-[var(--border)] p-6 max-[800px]:p-5">
             <p className="m-0 text-[10px] font-black tracking-[0.06em] text-[var(--yellow-ink)] uppercase">
               {vehicle.auction || "Hovex Motors"}
@@ -169,8 +170,8 @@ export function VehicleDetailsContent({
           <VehicleProductActions vehicle={vehicle} onRequest={onRequest} />
         </aside>
 
-        <div className="mt-1 grid gap-7 [grid-column:1] [grid-row:2] max-[1080px]:[grid-row:3]" aria-labelledby="vehicle-specifications-title">
-          <div className="rounded-[18px] border border-[var(--border)] bg-[var(--surface)] p-6 max-[800px]:p-5">
+        <div className="mt-1 grid gap-7 [grid-column:1] [grid-row:2] max-[1080px]:[grid-row:3]" aria-labelledby="vehicle-specifications-title" data-scroll-stagger>
+          <div className="rounded-[18px] border border-[var(--border)] bg-[var(--surface)] p-6 max-[800px]:p-5" data-scroll-reveal="up">
             <h2 className="m-0 text-2xl" id="vehicle-specifications-title">Մեքենայի բնութագրերը</h2>
             <dl className="mt-5 mb-0 grid grid-cols-2 gap-x-8 max-[700px]:grid-cols-1 [&>div]:grid [&>div]:min-h-12 [&>div]:grid-cols-[0.9fr_1.1fr] [&>div]:items-center [&>div]:gap-4 [&>div]:border-t [&>div]:border-[var(--border)] [&>div]:py-2.5 [&_dt]:text-[11px] [&_dt]:text-[var(--muted)] [&_dd]:m-0 [&_dd]:break-words [&_dd]:text-[11px] [&_dd]:font-bold">
               {specs.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}
@@ -182,7 +183,7 @@ export function VehicleDetailsContent({
             </div>
           </div>
 
-          <div className="rounded-[18px] border border-[var(--border)] bg-[var(--surface)] p-6 max-[800px]:p-5">
+          <div className="rounded-[18px] border border-[var(--border)] bg-[var(--surface)] p-6 max-[800px]:p-5" data-scroll-reveal="up">
             <div className="grid grid-cols-[0.8fr_1.2fr] gap-8 max-[700px]:grid-cols-1 max-[700px]:gap-4">
               <div>
                 <h2 className="m-0 text-xl">Ինչպես է ձևավորվում արժեքը</h2>

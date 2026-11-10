@@ -62,7 +62,7 @@ export function DashboardPage({
 
   return (
     <>
-      <section className={pageHeadingClasses}>
+      <section className={pageHeadingClasses} data-scroll-reveal="up">
         <div className="min-w-0">
           <p className={eyebrowClasses}>Այսօրվա պատկերը</p>
           <h1 className="mb-[7px] mt-1 text-[clamp(27px,2.4vw,36px)] leading-[1.22] font-bold max-[700px]:text-2xl max-[430px]:text-[21px]">Բարի գալուստ Hovex Admin</h1>
@@ -71,21 +71,21 @@ export function DashboardPage({
         <AdminButton className={pageHeadingButtonClasses} icon={Plus} onClick={onNewVehicle} disabled={vehicleActionsDisabled} aria-label="Ավելացնել մեքենա">Ավելացնել մեքենա</AdminButton>
       </section>
       <DataModeNotice scope="dashboard" />
-      <section className="mb-[22px] grid grid-cols-4 gap-4 max-[1180px]:grid-cols-2 max-[700px]:gap-2.5 max-[430px]:grid-cols-1" aria-label="Հիմնական ցուցանիշներ">
+      <section className="mb-[22px] grid grid-cols-4 gap-4 max-[1180px]:grid-cols-2 max-[700px]:gap-2.5 max-[430px]:grid-cols-1" aria-label="Հիմնական ցուցանիշներ" data-scroll-stagger>
         <StatCard label="Նոր հարցումներ" value={leadsLoading ? "…" : newLeads} note={leadsLoading ? "Տվյալները բեռնվում են" : "Սպասում են առաջին կապին"} icon={ChatCircleText} tone="blue" />
         <StatCard label="Ակտիվ առաջարկներ" value={published} note={`${vehicles.length} ընդհանուր մեքենայից`} icon={Car} tone="yellow" />
         <StatCard label="Առկա մեքենաներ" value={available} note={`${featured} ընտրյալ առաջարկ`} icon={Star} tone="ink" />
         <StatCard label="Ուշացած հարցումներ" value={leadsLoading ? "…" : overdueLeads} note={leadsLoading ? "Տվյալները բեռնվում են" : overdueLeads ? "Պահանջում են անհապաղ գործողություն" : "Ուշացած գործողություն չկա"} icon={WarningCircle} tone="orange" />
       </section>
-      <div className="grid grid-cols-[minmax(0,1.75fr)_minmax(280px,0.72fr)] items-start gap-5 max-[1180px]:grid-cols-1">
-        <section className={panelClasses}>
+      <div className="grid grid-cols-[minmax(0,1.75fr)_minmax(280px,0.72fr)] items-start gap-5 max-[1180px]:grid-cols-1" data-scroll-stagger>
+        <section className={panelClasses} data-scroll-reveal="left">
           <header className={panelHeaderClasses}>
             <div><p className={eyebrowClasses}>Վերջին ակտիվությունը</p><h2 className="mb-0 mt-1 text-lg leading-[1.2]">Վերջին հարցումները</h2></div>
             <button type="button" className="inline-flex cursor-pointer items-center gap-[7px] border-0 bg-transparent text-[11px] font-extrabold text-[var(--yellow-ink)] max-[430px]:text-[0px] [&>span]:text-[17px] max-[430px]:[&>span]:text-lg" onClick={() => onNavigate("requests")}>Դիտել բոլորը <span>→</span></button>
           </header>
           <RequestTable leads={recent} managers={managers} now={now} onSelect={onOpenLead} compact loading={leadsLoading} />
         </section>
-        <aside className={classNames(panelClasses, "max-[1180px]:grid max-[1180px]:grid-cols-2 max-[700px]:block")}>
+        <aside className={classNames(panelClasses, "max-[1180px]:grid max-[1180px]:grid-cols-2 max-[700px]:block")} data-scroll-reveal="right">
           <header className={classNames(panelHeaderClasses, "max-[1180px]:col-span-full")}>
             <div><p className={eyebrowClasses}>Կայքի բովանդակություն</p><h2 className="mb-0 mt-1 text-lg leading-[1.2]">Մեքենաների տեղաբաշխում</h2></div>
           </header>
