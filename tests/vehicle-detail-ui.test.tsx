@@ -51,7 +51,7 @@ test("vehicle detail content shows the ordered gallery, pricing, and specificati
   assert.match(html, /aria-label="Մեքենայի գործողություններ"/);
 });
 
-test("vehicle cards deep-link to the detail page and use the first ordered image", () => {
+test("the full vehicle card deep-links to the detail page without covering its actions", () => {
   const html = renderToStaticMarkup(
     <VehicleCard
       vehicle={{ ...vehicle, id: "car/id 1" }}
@@ -62,6 +62,10 @@ test("vehicle cards deep-link to the detail page and use the first ordered image
   );
 
   assert.match(html, /href="\/vehicles\/car%2Fid%201"/);
+  assert.match(html, /class="absolute inset-0 z-\[1\][^"]*"/);
+  assert.match(html, /aria-label="Բացել 2026 Test Car-ի մանրամասները"/);
+  assert.equal((html.match(/href="\/vehicles\/car%2Fid%201"/g) || []).length, 1);
+  assert.match(html, /<button[^>]*z-\[2\][^>]*>[^<]*<span>Խորհրդակցել<\/span>/);
   assert.match(html, /src="\/cover.jpg"/);
   assert.match(html, /Մանրամասներ/);
 });

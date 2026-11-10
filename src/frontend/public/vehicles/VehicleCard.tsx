@@ -17,15 +17,21 @@ interface VehicleCardProps {
 export function VehicleCard({ vehicle, isCompared, onCompare, onConsultation }: VehicleCardProps) {
   const detailUrl = vehicleDetailsPath(vehicle.id);
   const coverImage = vehicle.images[0] || vehicle.image;
+  const vehicleName = `${vehicle.year} ${vehicle.make} ${vehicle.model}`;
 
   return (
-    <article className="group min-w-0 overflow-hidden rounded-[17px] border border-[var(--border)] bg-[var(--surface)] shadow-[0_6px_24px_rgba(17,17,15,0.06)] transition-[transform,box-shadow] duration-150 hover:-translate-y-1 hover:shadow-[var(--shadow-sm)] motion-reduce:transition-none">
+    <article className="group relative min-w-0 overflow-hidden rounded-[17px] border border-[var(--border)] bg-[var(--surface)] shadow-[0_6px_24px_rgba(17,17,15,0.06)] transition-[transform,box-shadow] duration-150 hover:-translate-y-1 hover:shadow-[var(--shadow-sm)] motion-reduce:transition-none">
+      <a
+        className="absolute inset-0 z-[1] rounded-[17px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--yellow)]"
+        href={detailUrl}
+        aria-label={`Բացել ${vehicleName}-ի մանրամասները`}
+      >
+        <span className="sr-only">Բացել մեքենայի մանրամասները</span>
+      </a>
       <div className="relative h-[250px] overflow-hidden bg-[var(--surface-muted)] max-[1240px]:h-[225px] max-[800px]:h-[245px]">
-        <a className="block h-full" href={detailUrl} aria-label={`${vehicle.year} ${vehicle.make} ${vehicle.model} մանրամասները`}>
-          <img className="h-full w-full bg-[var(--media-surface)] object-contain transition-transform duration-300 group-hover:scale-[1.025] motion-reduce:transition-none" src={coverImage} alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`} style={{ objectPosition: vehicle.imagePosition }} loading="lazy" decoding="async" onError={handleVehicleImageError} />
-        </a>
-        {vehicle.badge.trim() ? <span className={classNames("absolute top-[13px] left-[13px] z-[2] rounded-full px-2.5 py-2 text-[11px] leading-none font-bold", vehicleBadgeToneClasses[vehicle.accent] ?? vehicleBadgeToneClasses.black)}>{vehicle.badge}</span> : null}
-        <InventoryStatusBadge className="absolute top-[13px] right-[13px] z-[2] max-w-[48%] overflow-hidden text-ellipsis shadow-[0_3px_12px_rgba(17,17,15,0.12)]" status={vehicle.inventoryStatus} />
+        <img className="h-full w-full bg-[var(--media-surface)] object-contain transition-transform duration-300 group-hover:scale-[1.025] motion-reduce:transition-none" src={coverImage} alt={vehicleName} style={{ objectPosition: vehicle.imagePosition }} loading="lazy" decoding="async" onError={handleVehicleImageError} />
+        {vehicle.badge.trim() ? <span className={classNames("pointer-events-none absolute top-[13px] left-[13px] z-[2] rounded-full px-2.5 py-2 text-[11px] leading-none font-bold", vehicleBadgeToneClasses[vehicle.accent] ?? vehicleBadgeToneClasses.black)}>{vehicle.badge}</span> : null}
+        <InventoryStatusBadge className="pointer-events-none absolute top-[13px] right-[13px] z-[2] max-w-[48%] overflow-hidden text-ellipsis shadow-[0_3px_12px_rgba(17,17,15,0.12)]" status={vehicle.inventoryStatus} />
         <button type="button" className={classNames("absolute right-[13px] bottom-[13px] z-[2] flex min-h-9 cursor-pointer items-center gap-1.5 rounded-full border border-[rgba(255,255,255,0.7)] bg-[rgba(17,17,15,0.86)] px-[11px] text-[11px] leading-none font-bold text-white", isCompared && "border-[var(--yellow)] bg-[var(--yellow)] text-[var(--on-yellow)]")} aria-pressed={isCompared} onClick={() => onCompare(vehicle.id)}>
           {isCompared ? <Check size={17} weight="bold" /> : <ArrowsLeftRight size={17} weight="bold" />}
           {isCompared ? "Ընտրված է" : "Համեմատել"}
@@ -33,7 +39,7 @@ export function VehicleCard({ vehicle, isCompared, onCompare, onConsultation }: 
       </div>
       <div className="p-[19px]">
         <div className="flex items-start justify-between gap-3 max-[420px]:flex-col [&_p]:m-0 [&_p]:mb-[3px] [&_p]:text-xs [&_p]:font-bold [&_p]:text-[var(--ink-soft)] [&_h3]:m-0 [&_h3]:text-xl [&_h3]:leading-[1.3]">
-          <div><p>{vehicle.year} • {vehicle.body}</p><h3><a className="hover:underline" href={detailUrl}>{vehicle.make} {vehicle.model}</a></h3></div>
+          <div><p>{vehicle.year} • {vehicle.body}</p><h3>{vehicle.make} {vehicle.model}</h3></div>
           <span className="inline-flex shrink-0 items-center gap-[5px] rounded-full bg-[var(--surface-soft)] px-[9px] py-[7px] text-[10px] font-bold text-[var(--ink-soft)] max-[420px]:self-start"><GasPump size={16} weight="fill" />{vehicle.fuel}</span>
         </div>
         <div className="mt-[15px] grid min-h-[57px] grid-cols-[0.8fr_1.2fr] gap-[9px] max-[800px]:min-h-0 max-[420px]:grid-cols-1 [&_span]:flex [&_span]:min-w-0 [&_span]:items-start [&_span]:gap-1.5 [&_span]:text-xs [&_span]:leading-[1.45] [&_span]:text-[var(--ink-soft)] [&_svg]:shrink-0 [&_svg]:text-[var(--yellow-ink)]">
@@ -46,8 +52,8 @@ export function VehicleCard({ vehicle, isCompared, onCompare, onConsultation }: 
           <small className="mt-1 text-[10px] leading-[1.4] text-[var(--yellow-ink)]">Վերջնական հաշվարկը հաստատում է մասնագետը</small>
         </div>
         <div className="mt-[15px] flex items-center justify-between gap-2.5">
-          <a className="inline-flex min-h-10 items-center gap-1.5 py-2 text-xs font-bold hover:underline" href={detailUrl}>Մանրամասներ <ArrowRight size={17} weight="bold" aria-hidden="true" /></a>
-          <Button className="min-h-10 rounded-[10px] px-3.5 text-xs" variant="secondary" onClick={() => onConsultation(vehicle.id)}>Խորհրդակցել</Button>
+          <span className="inline-flex min-h-10 items-center gap-1.5 py-2 text-xs font-bold group-hover:underline">Մանրամասներ <ArrowRight size={17} weight="bold" aria-hidden="true" /></span>
+          <Button className="relative z-[2] min-h-10 rounded-[10px] px-3.5 text-xs" variant="secondary" onClick={() => onConsultation(vehicle.id)}>Խորհրդակցել</Button>
         </div>
       </div>
     </article>
