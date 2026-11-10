@@ -3,3 +3,8 @@ project_id = "hovex-site"
 # Compatibility name: this Edge Function imports from AuctionsAPI.
 [functions.motorapis-sync]
 verify_jwt = false
+
+# Public lead intake performs its own strict validation, idempotency and abuse
+# controls before writing with a server-only Supabase key.
+[functions.submit-lead]
+verify_jwt = false

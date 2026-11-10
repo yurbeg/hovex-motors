@@ -1,6 +1,16 @@
 import type { VehicleInventoryStatus, VehicleStatus } from "../../domain/vehicle";
+import type {
+  LeadContactMethod,
+  LeadSource,
+  LeadStatus,
+} from "../../domain/lead";
 
 export type { VehicleInventoryStatus, VehicleStatus } from "../../domain/vehicle";
+export type {
+  LeadContactMethod,
+  LeadSource,
+  LeadStatus,
+} from "../../domain/lead";
 
 export type Json =
   | string
@@ -76,6 +86,48 @@ export type AdminUserInsert = {
 
 export type AdminUserUpdate = Partial<AdminUserInsert>;
 
+export type LeadRow = {
+  id: string;
+  client_request_id: string;
+  submission_hash: string;
+  name: string;
+  phone: string;
+  contact_method: LeadContactMethod;
+  vehicle_id: string | null;
+  vehicle_label: string;
+  preferred_date: string | null;
+  preferred_time: string;
+  note: string;
+  source: LeadSource;
+  status: LeadStatus;
+  consent_version: string;
+  consent_at: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type LeadInsert = {
+  id?: string;
+  client_request_id: string;
+  submission_hash: string;
+  name: string;
+  phone: string;
+  contact_method: LeadContactMethod;
+  vehicle_id?: string | null;
+  vehicle_label?: string;
+  preferred_date?: string | null;
+  preferred_time?: string;
+  note?: string;
+  source?: LeadSource;
+  status?: LeadStatus;
+  consent_version: string;
+  consent_at?: string;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type LeadUpdate = Partial<LeadInsert>;
+
 export type MotorapiCatalogRow = {
   id: string;
   provider_vehicle_id: number;
@@ -148,6 +200,12 @@ export interface Database {
         Update: VehicleUpdate;
         Relationships: [];
       };
+      leads: {
+        Row: LeadRow;
+        Insert: LeadInsert;
+        Update: LeadUpdate;
+        Relationships: [];
+      };
     };
     Views: {
       motorapi_catalog: {
@@ -156,6 +214,14 @@ export interface Database {
       };
     };
     Functions: {
+      consume_lead_submission_limit: {
+        Args: {
+          p_fingerprint: string;
+          p_limit?: number;
+          p_window_seconds?: number;
+        };
+        Returns: boolean;
+      };
       get_motorapi_catalog_facets: {
         Args: { p_make?: string | null };
         Returns: MotorapiCatalogFacetsRow[];

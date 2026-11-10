@@ -1,17 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
-  addLead,
-  getLeads,
   getVehicles,
   resetVehicles,
-  saveLeads,
   saveVehicles,
 } from "../src/adminStore";
 
-test("admin store supports inventory and lead workflows", () => {
+test("admin store supports the local demo inventory workflow", () => {
   const initialVehicles = resetVehicles();
-  const initialLeads = getLeads();
 
   try {
     assert.equal(initialVehicles.length, 7);
@@ -39,18 +35,7 @@ test("admin store supports inventory and lead workflows", () => {
     saveVehicles([{ ...legacyVehicle, id: "legacy-admin-vehicle" }]);
     assert.equal(getVehicles()[0].inventoryStatus, "at_auction");
 
-    const lead = addLead({
-      name: "Test Lead",
-      phone: "+374 99 000 000",
-      method: "WhatsApp",
-      date: "2026-11-10",
-      time: "10:00–13:00",
-      vehicleLabel: "Test Admin",
-    });
-    assert.equal(lead.status, "new");
-    assert.equal(getLeads()[0].name, "Test Lead");
   } finally {
     resetVehicles();
-    saveLeads(initialLeads);
   }
 });

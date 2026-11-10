@@ -1,8 +1,11 @@
 import type { Lead } from "../../../domain/lead";
 import { leadStatus } from "../shared/statuses";
+import { leadContactMethodLabel } from "./leadPresentation";
 
 function escapeCsv(value: unknown): string {
-  return `"${String(value ?? "").replaceAll('"', '""')}"`;
+  const text = String(value ?? "");
+  const safeText = /^\s*[=+\-@]/u.test(text) ? `'${text}` : text;
+  return `"${safeText.replaceAll('"', '""')}"`;
 }
 
 export function buildLeadsCsv(leads: Lead[]): string {
@@ -12,7 +15,7 @@ export function buildLeadsCsv(leads: Lead[]): string {
       lead.name,
       lead.phone,
       lead.vehicleLabel,
-      lead.method,
+      leadContactMethodLabel(lead.method),
       lead.date,
       lead.time,
       leadStatus[lead.status]?.label,

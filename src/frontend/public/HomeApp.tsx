@@ -9,7 +9,8 @@ import {
   type PublicInventoryFilter,
 } from "../../application/publicInventory";
 import type { Vehicle } from "../../domain/vehicle";
-import { addLead, getVehicles, subscribeVehicles } from "../../infrastructure/browser/adminStore";
+import { getVehicles, subscribeVehicles } from "../../infrastructure/browser/adminStore";
+import { submitPublicLead } from "../../infrastructure/supabase/publicLeadRepository";
 import { AiAssistant } from "./assistant/AiAssistant";
 import type { SearchCriteria, SearchState } from "./shared/types";
 import { DEFAULT_SEARCH_CRITERIA } from "./shared/types";
@@ -178,7 +179,7 @@ export function HomeApp() {
       <Notice message={interactions.notice} />
       {interactions.detailVehicle ? <VehicleDetailsModal vehicle={interactions.detailVehicle} onClose={() => interactions.setDetailVehicle(null)} onConsultation={interactions.openConsultation} isCompared={interactions.compared.includes(interactions.detailVehicle.id)} onCompare={interactions.toggleCompare} /> : null}
       {interactions.compareOpen ? <CompareModal items={interactions.comparedVehicles} onClose={() => interactions.setCompareOpen(false)} onRemove={interactions.removeCompareItem} onConsultation={interactions.openConsultation} /> : null}
-      {interactions.consultVehicleId !== undefined ? <ConsultationModal selectedVehicle={interactions.selectedConsultVehicle} onClose={interactions.closeConsultation} source={interactions.consultSource} onSubmitLead={addLead} /> : null}
+      {interactions.consultVehicleId !== undefined ? <ConsultationModal selectedVehicle={interactions.selectedConsultVehicle} onClose={interactions.closeConsultation} source={interactions.consultSource} onSubmitLead={submitPublicLead} /> : null}
     </>
   );
 }

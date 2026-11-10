@@ -13,6 +13,7 @@
     "test:supabase": "node --import tsx --test tests/supabase-vehicles.test.ts",
     "test:admin-repository": "node --import tsx --test tests/admin-vehicle-repository.test.ts",
     "test:admin-image": "node --import tsx --test tests/admin-image-repository.test.ts",
+    "test:leads": "node --import tsx --test tests/submit-lead-function.test.ts tests/public-lead-repository.test.ts tests/admin-lead-repository.test.ts tests/supabase-leads-contract.test.ts tests/lead-ui.test.tsx",
     "test:routes": "node --import tsx --test tests/app-route.test.ts",
     "test:public-inventory": "node --import tsx --test tests/public-inventory-filter.test.ts",
     "test:auction-catalog": "node --import tsx --test tests/auction-catalog.test.ts",
@@ -39,6 +40,7 @@
     "@types/node": "^26.6.6",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
+    "supabase": "3.1.0",
     "tailwindcss": "^4.3.4",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2"

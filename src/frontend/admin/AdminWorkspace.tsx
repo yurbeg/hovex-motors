@@ -4,8 +4,8 @@ import type { Vehicle } from "../../domain/vehicle";
 import type { AuthorizedAdmin } from "./auth/authTypes";
 import { AdminToast } from "./components/AdminToast";
 import { useAdminNavigation } from "./hooks/useAdminNavigation";
+import { useAdminLeads } from "./hooks/useAdminLeads";
 import { useAdminVehicles } from "./hooks/useAdminVehicles";
-import { useLocalLeads } from "./hooks/useLocalLeads";
 import { useToast } from "./hooks/useToast";
 import { AdminSidebar } from "./layout/AdminSidebar";
 import { AdminTopbar } from "./layout/AdminTopbar";
@@ -27,7 +27,14 @@ export function AdminWorkspace({ admin, onSignOut }: AdminWorkspaceProps) {
   const [editorBusy, setEditorBusy] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const { toast, notify } = useToast();
-  const { leads, updateLeadStatus } = useLocalLeads(notify);
+  const {
+    leads,
+    leadsLoading,
+    leadsError,
+    pendingLeadId,
+    loadLeadsFromSupabase,
+    changeLeadStatus,
+  } = useAdminLeads(notify);
   const {
     vehicles,
     vehiclesLoading,
@@ -40,10 +47,10 @@ export function AdminWorkspace({ admin, onSignOut }: AdminWorkspaceProps) {
     archiveVehicle,
   } = useAdminVehicles(notify);
   const closeOverlays = useCallback(() => {
-    if (pendingVehicleId || editorBusy) return;
+    if (pendingVehicleId || pendingLeadId || editorBusy) return;
     setEditorVehicle(undefined);
     setSelectedLead(null);
-  }, [editorBusy, pendingVehicleId]);
+  }, [editorBusy, pendingLeadId, pendingVehicleId]);
   const { view, navigate } = useAdminNavigation(closeOverlays);
 
   useEffect(() => {
@@ -53,6 +60,13 @@ export function AdminWorkspace({ admin, onSignOut }: AdminWorkspaceProps) {
     };
   }, []);
 
+  useEffect(() => {
+    setSelectedLead((current) => {
+      if (!current) return null;
+      return leads.find((lead) => lead.id === current.id) || current;
+    });
+  }, [leads]);
+
   const handleSaveVehicle = async (vehicle: VehicleSavePayload) => {
     if (await saveVehicle(vehicle)) setEditorVehicle(undefined);
   };
@@ -61,13 +75,15 @@ export function AdminWorkspace({ admin, onSignOut }: AdminWorkspaceProps) {
     if (await archiveVehicle(vehicle)) setEditorVehicle(undefined);
   };
 
-  const handleLeadStatus = (lead: Lead, status: LeadStatus) => {
-    if (updateLeadStatus(lead, status)) {
-      setSelectedLead((current) => current?.id === lead.id ? { ...current, status } : current);
+  const handleLeadStatus = async (lead: Lead, status: LeadStatus) => {
+    const saved = await changeLeadStatus(lead, status);
+    if (saved) {
+      setSelectedLead((current) => current?.id === lead.id ? saved : current);
     }
   };
 
   const exportLeads = () => {
+    if (leadsLoading || !leads.length) return;
     downloadLeadsCsv(leads);
     notify("CSV ֆայլը պատրաստ է");
   };
@@ -77,14 +93,16 @@ export function AdminWorkspace({ admin, onSignOut }: AdminWorkspaceProps) {
   };
 
   const newLeadCount = leads.filter((lead) => lead.status === "new").length;
-  const connectionLabel = vehiclesLoading
+  const dataLoading = vehiclesLoading || leadsLoading;
+  const dataError = vehiclesError || leadsError;
+  const connectionLabel = dataLoading
     ? "Supabase-ից բեռնվում է"
-    : vehiclesError
+    : dataError
       ? "Supabase կապի խնդիր"
       : "Supabase-ին միացված է";
-  const connectionDot = vehiclesLoading
+  const connectionDot = dataLoading
     ? "bg-[#dca900]"
-    : vehiclesError
+    : dataError
       ? "bg-[#c94b36]"
       : "bg-[#36ad55]";
 
@@ -115,8 +133,14 @@ export function AdminWorkspace({ admin, onSignOut }: AdminWorkspaceProps) {
               <button className="shrink-0 cursor-pointer border-0 bg-transparent font-black text-[#6e251a] underline" type="button" onClick={() => void loadVehiclesFromSupabase()} disabled={vehiclesLoading || Boolean(pendingVehicleId)}>Կրկին փորձել</button>
             </div>
           ) : null}
-          {view === "dashboard" ? <DashboardPage vehicles={vehicles} leads={leads} onNavigate={navigate} onOpenLead={setSelectedLead} onNewVehicle={() => { if (!vehiclesLoading && !pendingVehicleId) setEditorVehicle(null); }} vehicleActionsDisabled={vehiclesLoading || Boolean(pendingVehicleId)} /> : null}
-          {view === "requests" ? <RequestsPage leads={leads} onOpenLead={setSelectedLead} onExport={exportLeads} /> : null}
+          {leadsError ? (
+            <div className="mb-5 flex items-center justify-between gap-4 rounded-xl border border-[#efc9c1] bg-[#fff4f1] px-4 py-3 text-[10px] font-bold text-[#9c3424]" role="alert">
+              <span>{leadsError}</span>
+              <button className="shrink-0 cursor-pointer border-0 bg-transparent font-black text-[#6e251a] underline" type="button" onClick={() => void loadLeadsFromSupabase()} disabled={leadsLoading || Boolean(pendingLeadId)}>Կրկին փորձել</button>
+            </div>
+          ) : null}
+          {view === "dashboard" ? <DashboardPage vehicles={vehicles} leads={leads} leadsLoading={leadsLoading} onNavigate={navigate} onOpenLead={setSelectedLead} onNewVehicle={() => { if (!vehiclesLoading && !pendingVehicleId) setEditorVehicle(null); }} vehicleActionsDisabled={vehiclesLoading || Boolean(pendingVehicleId)} /> : null}
+          {view === "requests" ? <RequestsPage leads={leads} loading={leadsLoading} onOpenLead={setSelectedLead} onExport={exportLeads} /> : null}
           {view === "vehicles" ? <VehiclesPage vehicles={vehicles} onEdit={setEditorVehicle} onNew={() => setEditorVehicle(null)} onChangeStatus={changeVehicleStatus} onToggleFeatured={toggleFeatured} onRefresh={() => void loadVehiclesFromSupabase()} pendingVehicleId={pendingVehicleId} refreshing={vehiclesLoading} /> : null}
         </main>
       </div>
@@ -133,7 +157,7 @@ export function AdminWorkspace({ admin, onSignOut }: AdminWorkspaceProps) {
           busy={pendingVehicleId === (editorVehicle?.id || "__new__")}
         />
       ) : null}
-      {selectedLead ? <RequestDetailsDrawer lead={selectedLead} onClose={() => setSelectedLead(null)} onStatusChange={handleLeadStatus} /> : null}
+      {selectedLead ? <RequestDetailsDrawer lead={selectedLead} onClose={() => { if (!pendingLeadId) setSelectedLead(null); }} onStatusChange={(lead, status) => void handleLeadStatus(lead, status)} pending={pendingLeadId === selectedLead.id} /> : null}
       <AdminToast message={toast} />
     </div>
   );

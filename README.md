@@ -14,14 +14,17 @@ Frontend-ը կառուցված է React, TypeScript, Tailwind CSS 4 և Vite տե
 - մեքենաների մանրամասներ և համեմատություն,
 - Hovex AI օգնական՝ բյուջեով մեքենա ընտրելու և ներմուծման հարցերին պատասխանելու համար,
 - խորհրդատվության հայտ և WhatsApp փոխանցում,
-- `/admin` հասցեով Supabase Auth-ով պաշտպանված կառավարման վահանակ՝ մեքենաների համար,
+- `/admin` հասցեով Supabase Auth-ով պաշտպանված կառավարման վահանակ՝ մեքենաների և հարցումների համար,
 - desktop, tablet և mobile տարբերակներ։
 
 > Գլխավոր էջի ընտրված առաջարկների հասցված արժեքները demo գնահատականներ են։
 > `/catalog` էջում իրական աճուրդային տվյալներ հայտնվում են միայն AuctionsAPI-ի
 > հաջող ներմուծումից հետո և չեն ներկայացվում որպես վերջնական գնման արժեք։
 
-> Supabase-ը կարգավորելուց հետո admin վահանակի մեքենաները պահվում են PostgreSQL բազայում և համաժամեցվում են սարքերի միջև։ Հաճախորդների հարցումները դեռ ցուցադրական են ու պահվում են տվյալ դիտարկիչի `localStorage`-ում։
+> Supabase-ը կարգավորելուց հետո մեքենաներն ու հաճախորդների հարցումները պահվում են
+> PostgreSQL բազայում և համաժամեցվում են սարքերի միջև։ Հանրային browser-ը չի
+> կարող ուղղակի կարդալ կամ գրել հարցումների անձնական տվյալները․ նոր հայտերն
+> ընդունվում են միայն server-side Edge Function-ով։
 
 ## AuctionsAPI / Copart կենդանի կատալոգ
 
@@ -80,7 +83,46 @@ RLS իրավունքները հետևյալն են․
 
 - չմուտք գործած այցելու՝ միայն `published` մեքենաների ընթերցում,
 - սովորական authenticated օգտատեր՝ միայն `published` մեքենաների ընթերցում և ոչ մի write,
-- allowlist-ում գրանցված admin՝ բոլոր մեքենաների ընթերցում, ավելացում և խմբագրում։
+- allowlist-ում գրանցված admin՝ բոլոր մեքենաների ընթերցում, ավելացում և խմբագրում,
+- հաճախորդների հարցումների համար՝ anonymous/authenticated browser-ին ուղիղ
+  table access չկա, իսկ allowlist admin-ը կարող է միայն կարդալ հարցումները և
+  փոխել դրանց `status` դաշտը։
+
+## Իրական խորհրդատվության հարցումներ
+
+Հանրային form-ը հայտը ուղարկում է `submit-lead` Supabase Edge Function-ին։
+Function-ը whitelist-ով ստուգում է payload-ը, պահանջում է համաձայնություն,
+կիրառում է rate limit և նույն `client_request_id`-ով անվտանգ retry-ի դեպքում
+չի ստեղծում կրկնօրինակ։ Նույն id-ով փոխված payload-ը մերժվում է conflict-ով։
+
+1. Migration-ները կիրառեք filename-ի հերթականությամբ՝ ներառյալ
+   `supabase/migrations/202611100001_create_leads.sql`։
+2. Ստեղծեք առնվազն 32 նիշանոց առանձին rate-limit secret և պահեք այն միայն
+   Supabase Edge Function secrets-ում․
+
+   ```bash
+   supabase secrets set LEAD_RATE_LIMIT_SECRET="$(openssl rand -hex 32)"
+   ```
+
+3. Deploy արեք public endpoint-ը․
+
+   ```bash
+   supabase functions deploy submit-lead --no-verify-jwt
+   ```
+
+Hosted Supabase-ը function-ին տրամադրում է `SUPABASE_URL`-ը և server-side
+service credential-ը։ Տեղային/այլ միջավայրում սահմանեք `SUPABASE_SECRET_KEY`
+կամ legacy `SUPABASE_SERVICE_ROLE_KEY` միայն function-ի environment-ում։
+Optional կարգավորումներն են `LEAD_CONSENT_VERSION` (default՝
+`contact-consent-v1`), `LEAD_RATE_LIMIT_MAX_REQUESTS` (default՝ 5),
+`LEAD_RATE_LIMIT_WINDOW_SECONDS` (default՝ 900) և
+`LEAD_STORAGE_TIMEOUT_MS` (default՝ 8000)։ Ոչ մի server secret մի գրեք
+`VITE_*` փոփոխականում։
+
+Նախորդ prototype-ի `hovex.admin.leads.v1` localStorage գրառումները նոր հոսքը
+չի կարդում և ինքնաբերաբար չի տեղափոխում կամ ջնջում։ Եթե այդ browser-ում կան
+իրական հաճախորդների տվյալներ, production rollout-ից առաջ դրանք արտահանեք,
+վերահաստատեք Supabase-ում, ապա միայն մաքրեք հին key-ը։
 
 ## Տեղային գործարկում
 
@@ -103,6 +145,7 @@ npm run test:assistant
 npm run test:supabase
 npm run test:admin-repository
 npm run test:admin-image
+npm run test:leads
 npm run test:routes
 npm run test:sites
 ```

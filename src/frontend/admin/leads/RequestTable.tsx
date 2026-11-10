@@ -1,9 +1,10 @@
-import { ChatCircleText, Eye } from "@phosphor-icons/react";
+import { ChatCircleText, Eye, SpinnerGap } from "@phosphor-icons/react";
 import type { Lead } from "../../../domain/lead";
 import { EmptyState } from "../components/EmptyState";
 import { StatusBadge } from "../components/StatusBadge";
 import { classNames } from "../shared/classNames";
 import { formatDate } from "../shared/formatters";
+import { leadContactMethodLabel } from "./leadPresentation";
 import {
   rowActionClasses,
   tableCellClasses,
@@ -15,9 +16,19 @@ interface RequestTableProps {
   leads: Lead[];
   onSelect: (lead: Lead) => void;
   compact?: boolean;
+  loading?: boolean;
 }
 
-export function RequestTable({ leads, onSelect, compact = false }: RequestTableProps) {
+export function RequestTable({ leads, onSelect, compact = false, loading = false }: RequestTableProps) {
+  if (loading) {
+    return (
+      <div className="flex min-h-[220px] items-center justify-center gap-2 text-[11px] font-bold text-[#77726b]" role="status">
+        <SpinnerGap className="animate-spin motion-reduce:animate-none" size={21} aria-hidden="true" />
+        <span>Հարցումները բեռնվում են…</span>
+      </div>
+    );
+  }
+
   if (!leads.length) {
     return <EmptyState icon={ChatCircleText} title="Հարցումներ չկան" text="Նոր հարցումները կհայտնվեն այստեղ։" />;
   }
@@ -45,12 +56,11 @@ export function RequestTable({ leads, onSelect, compact = false }: RequestTableP
                 <strong>{lead.vehicleLabel || "Անհատական ընտրություն"}</strong><span>{lead.note || "Մեկնաբանություն չկա"}</span>
               </td>
               <td className={classNames(tableCellClasses, compact && "hidden h-[69px] py-2.5 max-[700px]:grid")} data-label="Նախընտրելի կապ">
-                <strong>{lead.method}</strong><span>{lead.date ? `${lead.date} · ${lead.time || ""}` : lead.time || "Ճկուն ժամ"}</span>
+                <strong>{leadContactMethodLabel(lead.method)}</strong><span>{lead.date ? `${lead.date} · ${lead.time || ""}` : lead.time || "Ճկուն ժամ"}</span>
               </td>
               <td className={classNames(tableCellClasses, compact && "hidden h-[69px] py-2.5 max-[700px]:grid")} data-label="Ստացվել է">
                 <span>{formatDate(lead.createdAt)}</span>
                 {lead.source === "ai-assistant" ? <small className="mt-1 block w-fit rounded bg-[#fff0a9] px-[5px] py-0.5 text-[7px] font-black tracking-[0.08em] text-[#775c00]">AI</small> : null}
-                {lead.demo ? <small className="mt-1 block w-fit rounded bg-[#f0ede7] px-[5px] py-0.5 text-[7px] font-black tracking-[0.08em] text-[#858078]">ԴԵՄՈ</small> : null}
               </td>
               <td className={classNames(tableCellClasses, compact && "h-[69px] py-2.5")} data-label="Կարգավիճակ">
                 <StatusBadge type="lead" value={lead.status} />

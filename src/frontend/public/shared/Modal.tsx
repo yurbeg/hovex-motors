@@ -10,6 +10,7 @@ interface ModalProps {
   children: ReactNode;
   onClose: () => void;
   size?: ModalSize;
+  locked?: boolean;
 }
 
 const modalSizeClasses: Record<ModalSize, string> = {
@@ -17,7 +18,7 @@ const modalSizeClasses: Record<ModalSize, string> = {
   large: "w-[min(1120px,100%)]",
 };
 
-export function Modal({ title, children, onClose, size = "medium" }: ModalProps) {
+export function Modal({ title, children, onClose, size = "medium", locked = false }: ModalProps) {
   const dialogRef = useRef<HTMLElement | null>(null);
   const titleId = useId();
 
@@ -55,9 +56,9 @@ export function Modal({ title, children, onClose, size = "medium" }: ModalProps)
   }, []);
 
   return (
-    <div className="fixed inset-0 z-[100] grid place-items-center overflow-y-auto bg-[rgba(11,11,10,0.7)] p-8 max-[800px]:place-items-end max-[800px]:p-3" onMouseDown={(event: ReactMouseEvent<HTMLDivElement>) => event.target === event.currentTarget && onClose()}>
+    <div className="fixed inset-0 z-[100] grid place-items-center overflow-y-auto bg-[rgba(11,11,10,0.7)] p-8 max-[800px]:place-items-end max-[800px]:p-3" onMouseDown={(event: ReactMouseEvent<HTMLDivElement>) => event.target === event.currentTarget && !locked && onClose()}>
       <section ref={dialogRef} tabIndex={-1} className={classNames("flex max-h-[calc(100vh_-_64px)] flex-col overflow-hidden rounded-[20px] bg-[var(--surface)] shadow-[0_28px_90px_rgba(0,0,0,0.38)] max-[800px]:max-h-[calc(100dvh_-_24px)] max-[800px]:w-full max-[800px]:rounded-[18px_18px_12px_12px]", modalSizeClasses[size])} role="dialog" aria-modal="true" aria-labelledby={titleId}>
-        <div className="flex min-h-[73px] items-center justify-between gap-5 border-b border-[var(--border)] py-4 pr-5 pl-[25px] max-[800px]:min-h-[65px] max-[800px]:p-[13px] max-[800px]:pl-[18px] [&_h2]:m-0 [&_h2]:text-[22px] [&_h2]:leading-[1.35] max-[800px]:[&_h2]:text-[17px] [&_button]:grid [&_button]:h-[42px] [&_button]:w-[42px] [&_button]:shrink-0 [&_button]:cursor-pointer [&_button]:place-items-center [&_button]:rounded-full [&_button]:border [&_button]:border-[var(--border)] [&_button]:bg-[var(--surface)]"><h2 id={titleId}>{title}</h2><button type="button" onClick={onClose} aria-label="Փակել"><X size={23} weight="bold" /></button></div>
+        <div className="flex min-h-[73px] items-center justify-between gap-5 border-b border-[var(--border)] py-4 pr-5 pl-[25px] max-[800px]:min-h-[65px] max-[800px]:p-[13px] max-[800px]:pl-[18px] [&_h2]:m-0 [&_h2]:text-[22px] [&_h2]:leading-[1.35] max-[800px]:[&_h2]:text-[17px] [&_button]:grid [&_button]:h-[42px] [&_button]:w-[42px] [&_button]:shrink-0 [&_button]:cursor-pointer [&_button]:place-items-center [&_button]:rounded-full [&_button]:border [&_button]:border-[var(--border)] [&_button]:bg-[var(--surface)]"><h2 id={titleId}>{title}</h2><button type="button" onClick={onClose} aria-label="Փակել" disabled={locked}><X size={23} weight="bold" /></button></div>
         <div className="overflow-y-auto">{children}</div>
       </section>
     </div>

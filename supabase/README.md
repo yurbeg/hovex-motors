@@ -22,9 +22,15 @@ defines the server-enforced authorization rules used by the browser app.
   AuctionsAPI vehicles searchable in the public catalog.
 - `migrations/202611090002_vehicle_inventory_status.sql` adds the independent
   available / in-transit / at-auction stage used by admin and public cards.
+- `migrations/202611100001_create_leads.sql` creates the protected consultation
+  lead store, consent/idempotency fields, admin read/status-only RLS, and the
+  private hashed rate-limit counter.
 - `functions/motorapis-sync/` is the legacy-named, server-only AuctionsAPI
   scheduled importer. Shared client, mapping, repository, and orchestration
   code lives in `functions/_shared/`.
+- `functions/submit-lead/` is the anonymous public intake boundary. It strictly
+  validates and normalizes the form, requires consent, rate-limits a keyed
+  network fingerprint, and performs idempotent server-only inserts.
 - `schedule-motorapis.example.sql` is the manual Vault + Cron setup template;
   its default schedule is hourly.
 - `seed.sql` inserts the demo vehicle catalog.
@@ -42,9 +48,22 @@ identify the project but do not bypass RLS.
 
 Never expose a `service_role` key, database password, provider secret, or admin
 password in a `VITE_*` variable, browser source, SQL example, or committed env
-file. Privileged future workloads should run in a server environment such as a
-Supabase Edge Function and keep their secrets in that environment's secret
-manager.
+file. Privileged workloads run in Supabase Edge Functions and keep their
+secrets in that environment's secret manager.
+
+`submit-lead` requires `LEAD_RATE_LIMIT_SECRET` with at least 32 characters
+and fails closed when it is absent. Generate and deploy it separately from
+browser configuration, then deploy the function without JWT verification:
+
+```bash
+supabase secrets set LEAD_RATE_LIMIT_SECRET="$(openssl rand -hex 32)"
+supabase functions deploy submit-lead --no-verify-jwt
+```
+
+The endpoint is intentionally anonymous, but it never receives a database
+service credential from the caller. It resolves the hosted server credential
+from `SUPABASE_SECRET_KEY`/`SUPABASE_SECRET_KEYS` or the legacy
+`SUPABASE_SERVICE_ROLE_KEY` inside the Edge environment.
 
 The AuctionsAPI function reads `AUCTIONSAPI_API_KEY` from Edge Function
 secrets. The operator CLI reads the provider key from an ignored
@@ -74,6 +93,13 @@ On a non-production Supabase project, verify that:
 - the allowlisted admin can read all vehicles, insert/update rows, and upload
   allowed image types under `vehicle-images/vehicles/`;
 - public image delivery works without granting public object mutation.
+- anonymous and ordinary authenticated clients cannot select, insert, update,
+  or delete `leads` directly;
+- `submit-lead` accepts a valid consented request, returns the same row for an
+  identical idempotent retry, rejects a changed payload under the same key,
+  and starts rejecting submissions after the configured rate limit;
+- the allowlisted admin can read lead rows and update `status`, but cannot
+  update contact/consent fields or delete a lead;
 - anonymous users can read `motorapi_catalog` and its facets but cannot read or
   mutate the normalized provider/sync tables;
 - the service role can claim only one active AuctionsAPI lease per source, and

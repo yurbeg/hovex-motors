@@ -7,9 +7,10 @@ trust boundaries:
   and can be inspected by a site visitor.
 - `supabase/` is backend configuration. Its migrations define PostgreSQL,
   Auth authorization, Row Level Security (RLS), and Storage policies.
-- `supabase/functions/` and `scripts/motorapis-sync.ts` are trusted server-side
-  AuctionsAPI import code. They may use provider and Supabase secret keys; none
-  of these modules are imported by the Vite browser entrypoint.
+- `supabase/functions/` contains trusted server-side Edge Functions, including
+  anonymous lead intake and the AuctionsAPI importer. Together with
+  `scripts/motorapis-sync.ts`, these modules may use server secrets; none are
+  imported by the Vite browser entrypoint.
 
 There is no always-on Node.js application server in this repository. Files under
 `src/infrastructure/supabase/` are browser-side adapters, not backend code.
@@ -74,22 +75,23 @@ paths directly.
   provider brand. AuctionsAPI pagination is mutable rather than a frozen
   snapshot, so an absent row never deactivates a stored lot; only an explicit
   `/archived-lots` event does.
-- Consultation leads: currently prototype-only browser `localStorage` data.
-  It is not shared between devices and must not be treated as production CRM
-  persistence.
+- Consultation leads: Supabase PostgreSQL is authoritative. The public browser
+  submits a strict DTO to `submit-lead`; it has no direct table privileges.
+  The Edge Function validates consent and fields, applies keyed rate limiting,
+  and inserts with an idempotency key. RLS allows the allowlisted admin to read
+  requests and update only their status.
 - Vehicle images: public Supabase Storage URLs, with mutation restricted by
   RLS to the allowlisted admin.
 - AI assistant: local demo logic by default. `VITE_ASSISTANT_API_URL` may point
   to a separately deployed server endpoint; that server is not implemented in
   this repository.
 
-The browser storage keys and custom events are compatibility contracts. Change
-them only with an explicit data migration:
+The remaining browser storage keys and custom events are compatibility
+contracts for demo vehicle fallback. Change them only with an explicit data
+migration:
 
 - `hovex.admin.vehicles.v1`
-- `hovex.admin.leads.v1`
 - `hovex:vehicles-changed`
-- `hovex:leads-changed`
 
 ## Authorization boundary
 
@@ -102,6 +104,9 @@ boundary. PostgreSQL and Storage RLS policies are authoritative:
   update them;
 - hard deletion is not granted; archiving is a status update;
 - vehicle image uploads and mutations require the same admin membership.
+- anonymous users cannot directly select or mutate lead rows;
+- the allowlisted admin can read leads and update only `status`; all lead PII
+  fields remain non-writable from the browser.
 
 The `admin_users` migration currently enforces one admin account through a
 singleton constraint. Supporting multiple admins requires a new migration,

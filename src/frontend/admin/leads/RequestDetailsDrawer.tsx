@@ -1,9 +1,10 @@
-import { Car, Phone, WhatsappLogo } from "@phosphor-icons/react";
+import { Car, Phone, SpinnerGap, WhatsappLogo } from "@phosphor-icons/react";
 import type { Lead, LeadStatus } from "../../../domain/lead";
 import { AdminDrawer } from "../components/AdminDrawer";
 import { classNames } from "../shared/classNames";
 import { formatDate, safePhone } from "../shared/formatters";
 import { leadStatus } from "../shared/statuses";
+import { leadContactMethodLabel, leadSourceLabel } from "./leadPresentation";
 import {
   detailListClasses,
   detailSectionClasses,
@@ -14,20 +15,24 @@ interface RequestDetailsDrawerProps {
   lead: Lead;
   onClose: () => void;
   onStatusChange: (lead: Lead, status: LeadStatus) => void;
+  pending: boolean;
 }
 
-export function RequestDetailsDrawer({ lead, onClose, onStatusChange }: RequestDetailsDrawerProps) {
+export function RequestDetailsDrawer({ lead, onClose, onStatusChange, pending }: RequestDetailsDrawerProps) {
   const phone = safePhone(lead.phone);
   const whatsapp = phone.replace(/^\+/, "");
 
   return (
-    <AdminDrawer title={lead.name} eyebrow="Հարցման մանրամասներ" onClose={onClose}>
+    <AdminDrawer title={lead.name} eyebrow="Հարցման մանրամասներ" onClose={onClose} locked={pending}>
       <div className="grid gap-[15px] p-5 [&_h3]:mb-[13px] [&_h3]:mt-0 [&_h3]:text-xs">
         <label className={classNames(detailSectionClasses, "flex items-center justify-between gap-4")}>
           <span className="text-[10px] font-extrabold">Կարգավիճակ</span>
-          <select className={classNames(formControlClasses, "max-w-[185px]")} value={lead.status} onChange={(event) => onStatusChange(lead, event.target.value as LeadStatus)}>
+          <span className="flex items-center gap-2">
+            {pending ? <SpinnerGap className="animate-spin text-[#8a6a00] motion-reduce:animate-none" size={18} aria-label="Պահվում է" /> : null}
+            <select className={classNames(formControlClasses, "max-w-[185px]")} value={lead.status} onChange={(event) => onStatusChange(lead, event.target.value as LeadStatus)} disabled={pending} aria-busy={pending}>
             {Object.entries(leadStatus).map(([value, item]) => <option key={value} value={value}>{item.label}</option>)}
-          </select>
+            </select>
+          </span>
         </label>
         <div className="grid grid-cols-2 gap-2.5 max-[430px]:grid-cols-1">
           <a className="flex min-h-[65px] items-center gap-2.5 rounded-xl border border-[#ddd8d0] bg-white p-[11px] text-[#2a2925]" href={`tel:${phone}`}>
@@ -44,9 +49,9 @@ export function RequestDetailsDrawer({ lead, onClose, onStatusChange }: RequestD
           <dl className={detailListClasses}>
             <div><dt>Անուն</dt><dd>{lead.name}</dd></div>
             <div><dt>Հեռախոս</dt><dd>{lead.phone}</dd></div>
-            <div><dt>Կապի եղանակ</dt><dd>{lead.method}</dd></div>
-            <div><dt>Աղբյուր</dt><dd>{lead.source === "ai-assistant" ? "Hovex AI օգնական" : "Կայք"}</dd></div>
-            <div><dt>Ստացվել է</dt><dd>{formatDate(lead.createdAt)} {lead.demo ? "· ԴԵՄՈ" : ""}</dd></div>
+            <div><dt>Կապի եղանակ</dt><dd>{leadContactMethodLabel(lead.method)}</dd></div>
+            <div><dt>Աղբյուր</dt><dd>{leadSourceLabel(lead.source)}</dd></div>
+            <div><dt>Ստացվել է</dt><dd>{formatDate(lead.createdAt)}</dd></div>
           </dl>
         </section>
         <section className={detailSectionClasses}>
