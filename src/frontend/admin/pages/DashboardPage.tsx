@@ -1,11 +1,11 @@
 import {
   Car,
   ChatCircleText,
-  Clock,
   Plus,
   Star,
+  WarningCircle,
 } from "@phosphor-icons/react";
-import type { Lead } from "../../../domain/lead";
+import { isLeadOverdue, type Lead, type LeadManager } from "../../../domain/lead";
 import type { Vehicle, VehicleInventoryStatus } from "../../../domain/vehicle";
 import { AdminButton } from "../components/AdminButton";
 import { DataModeNotice } from "../components/DataModeNotice";
@@ -27,6 +27,8 @@ import {
 interface DashboardPageProps {
   vehicles: Vehicle[];
   leads: Lead[];
+  managers: LeadManager[];
+  now: number;
   leadsLoading: boolean;
   onNavigate: (view: NavView) => void;
   onOpenLead: (lead: Lead) => void;
@@ -37,6 +39,8 @@ interface DashboardPageProps {
 export function DashboardPage({
   vehicles,
   leads,
+  managers,
+  now,
   leadsLoading,
   onNavigate,
   onOpenLead,
@@ -44,7 +48,7 @@ export function DashboardPage({
   vehicleActionsDisabled,
 }: DashboardPageProps) {
   const newLeads = leads.filter((lead) => lead.status === "new").length;
-  const waitingLeads = leads.filter((lead) => ["new", "contacted"].includes(lead.status)).length;
+  const overdueLeads = leads.filter((lead) => isLeadOverdue(lead, now)).length;
   const published = vehicles.filter((vehicle) => vehicle.status === "published").length;
   const featured = vehicles.filter((vehicle) => vehicle.featured && vehicle.status === "published").length;
   const available = vehicles.filter((vehicle) => vehicle.inventoryStatus === "available").length;
@@ -71,7 +75,7 @@ export function DashboardPage({
         <StatCard label="Նոր հարցումներ" value={leadsLoading ? "…" : newLeads} note={leadsLoading ? "Տվյալները բեռնվում են" : "Սպասում են առաջին կապին"} icon={ChatCircleText} tone="blue" />
         <StatCard label="Ակտիվ առաջարկներ" value={published} note={`${vehicles.length} ընդհանուր մեքենայից`} icon={Car} tone="yellow" />
         <StatCard label="Առկա մեքենաներ" value={available} note={`${featured} ընտրյալ առաջարկ`} icon={Star} tone="ink" />
-        <StatCard label="Կապի հերթում" value={leadsLoading ? "…" : waitingLeads} note={leadsLoading ? "Տվյալները բեռնվում են" : "Նոր կամ ընթացքի մեջ"} icon={Clock} tone="orange" />
+        <StatCard label="Ուշացած հարցումներ" value={leadsLoading ? "…" : overdueLeads} note={leadsLoading ? "Տվյալները բեռնվում են" : overdueLeads ? "Պահանջում են անհապաղ գործողություն" : "Ուշացած գործողություն չկա"} icon={WarningCircle} tone="orange" />
       </section>
       <div className="grid grid-cols-[minmax(0,1.75fr)_minmax(280px,0.72fr)] items-start gap-5 max-[1180px]:grid-cols-1">
         <section className={panelClasses}>
@@ -79,7 +83,7 @@ export function DashboardPage({
             <div><p className={eyebrowClasses}>Վերջին ակտիվությունը</p><h2 className="mb-0 mt-1 text-lg leading-[1.2]">Վերջին հարցումները</h2></div>
             <button type="button" className="inline-flex cursor-pointer items-center gap-[7px] border-0 bg-transparent text-[11px] font-extrabold text-[#6c5600] max-[430px]:text-[0px] [&>span]:text-[17px] max-[430px]:[&>span]:text-lg" onClick={() => onNavigate("requests")}>Դիտել բոլորը <span>→</span></button>
           </header>
-          <RequestTable leads={recent} onSelect={onOpenLead} compact loading={leadsLoading} />
+          <RequestTable leads={recent} managers={managers} now={now} onSelect={onOpenLead} compact loading={leadsLoading} />
         </section>
         <aside className={classNames(panelClasses, "max-[1180px]:grid max-[1180px]:grid-cols-2 max-[700px]:block")}>
           <header className={classNames(panelHeaderClasses, "max-[1180px]:col-span-full")}>

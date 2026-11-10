@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import type { Lead, LeadStatus } from "../../domain/lead";
+import type { Lead } from "../../domain/lead";
 import type { Vehicle } from "../../domain/vehicle";
 import type { AuthorizedAdmin } from "./auth/authTypes";
 import { AdminToast } from "./components/AdminToast";
@@ -29,12 +29,23 @@ export function AdminWorkspace({ admin, onSignOut }: AdminWorkspaceProps) {
   const { toast, notify } = useToast();
   const {
     leads,
+    managers,
+    activitiesByLeadId,
     leadsLoading,
+    managersLoading,
+    activitiesLoadingLeadId,
     leadsError,
+    managersError,
+    activitiesError,
     pendingLeadId,
     loadLeadsFromSupabase,
-    changeLeadStatus,
+    loadManagersFromSupabase,
+    loadLeadActivities,
+    stopWatchingLeadActivities,
+    saveLeadWorkflow,
+    addLeadNote,
   } = useAdminLeads(notify);
+  const [now, setNow] = useState(() => Date.now());
   const {
     vehicles,
     vehiclesLoading,
@@ -50,13 +61,24 @@ export function AdminWorkspace({ admin, onSignOut }: AdminWorkspaceProps) {
     if (pendingVehicleId || pendingLeadId || editorBusy) return;
     setEditorVehicle(undefined);
     setSelectedLead(null);
-  }, [editorBusy, pendingLeadId, pendingVehicleId]);
+    stopWatchingLeadActivities();
+  }, [editorBusy, pendingLeadId, pendingVehicleId, stopWatchingLeadActivities]);
   const { view, navigate } = useAdminNavigation(closeOverlays);
 
   useEffect(() => {
     document.body.classList.add("bg-[#f5f2ec]", "text-[#11110f]");
     return () => {
       document.body.classList.remove("bg-[#f5f2ec]", "text-[#11110f]");
+    };
+  }, []);
+
+  useEffect(() => {
+    const updateClock = () => setNow(Date.now());
+    const timer = window.setInterval(updateClock, 60_000);
+    document.addEventListener("visibilitychange", updateClock);
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", updateClock);
     };
   }, []);
 
@@ -75,16 +97,22 @@ export function AdminWorkspace({ admin, onSignOut }: AdminWorkspaceProps) {
     if (await archiveVehicle(vehicle)) setEditorVehicle(undefined);
   };
 
-  const handleLeadStatus = async (lead: Lead, status: LeadStatus) => {
-    const saved = await changeLeadStatus(lead, status);
+  const openLead = useCallback((lead: Lead) => {
+    setSelectedLead(lead);
+    void loadLeadActivities(lead.id);
+  }, [loadLeadActivities]);
+
+  const handleLeadWorkflow = async (lead: Lead, values: Parameters<typeof saveLeadWorkflow>[1]) => {
+    const saved = await saveLeadWorkflow(lead, values);
     if (saved) {
       setSelectedLead((current) => current?.id === lead.id ? saved : current);
     }
+    return saved;
   };
 
   const exportLeads = () => {
     if (leadsLoading || !leads.length) return;
-    downloadLeadsCsv(leads);
+    downloadLeadsCsv(leads, managers);
     notify("CSV ֆայլը պատրաստ է");
   };
 
@@ -93,8 +121,9 @@ export function AdminWorkspace({ admin, onSignOut }: AdminWorkspaceProps) {
   };
 
   const newLeadCount = leads.filter((lead) => lead.status === "new").length;
-  const dataLoading = vehiclesLoading || leadsLoading;
-  const dataError = vehiclesError || leadsError;
+  const dataLoading = vehiclesLoading || leadsLoading || managersLoading;
+  const leadDataError = leadsError || managersError;
+  const dataError = vehiclesError || leadDataError;
   const connectionLabel = dataLoading
     ? "Supabase-ից բեռնվում է"
     : dataError
@@ -133,14 +162,14 @@ export function AdminWorkspace({ admin, onSignOut }: AdminWorkspaceProps) {
               <button className="shrink-0 cursor-pointer border-0 bg-transparent font-black text-[#6e251a] underline" type="button" onClick={() => void loadVehiclesFromSupabase()} disabled={vehiclesLoading || Boolean(pendingVehicleId)}>Կրկին փորձել</button>
             </div>
           ) : null}
-          {leadsError ? (
+          {leadDataError ? (
             <div className="mb-5 flex items-center justify-between gap-4 rounded-xl border border-[#efc9c1] bg-[#fff4f1] px-4 py-3 text-[10px] font-bold text-[#9c3424]" role="alert">
-              <span>{leadsError}</span>
-              <button className="shrink-0 cursor-pointer border-0 bg-transparent font-black text-[#6e251a] underline" type="button" onClick={() => void loadLeadsFromSupabase()} disabled={leadsLoading || Boolean(pendingLeadId)}>Կրկին փորձել</button>
+              <span>{leadDataError}</span>
+              <button className="shrink-0 cursor-pointer border-0 bg-transparent font-black text-[#6e251a] underline" type="button" onClick={() => void Promise.all([loadLeadsFromSupabase(), loadManagersFromSupabase()])} disabled={leadsLoading || managersLoading || Boolean(pendingLeadId)}>Կրկին փորձել</button>
             </div>
           ) : null}
-          {view === "dashboard" ? <DashboardPage vehicles={vehicles} leads={leads} leadsLoading={leadsLoading} onNavigate={navigate} onOpenLead={setSelectedLead} onNewVehicle={() => { if (!vehiclesLoading && !pendingVehicleId) setEditorVehicle(null); }} vehicleActionsDisabled={vehiclesLoading || Boolean(pendingVehicleId)} /> : null}
-          {view === "requests" ? <RequestsPage leads={leads} loading={leadsLoading} onOpenLead={setSelectedLead} onExport={exportLeads} /> : null}
+          {view === "dashboard" ? <DashboardPage vehicles={vehicles} leads={leads} managers={managers} now={now} leadsLoading={leadsLoading || managersLoading} onNavigate={navigate} onOpenLead={openLead} onNewVehicle={() => { if (!vehiclesLoading && !pendingVehicleId) setEditorVehicle(null); }} vehicleActionsDisabled={vehiclesLoading || Boolean(pendingVehicleId)} /> : null}
+          {view === "requests" ? <RequestsPage leads={leads} managers={managers} now={now} loading={leadsLoading || managersLoading} onOpenLead={openLead} onExport={exportLeads} /> : null}
           {view === "vehicles" ? <VehiclesPage vehicles={vehicles} onEdit={setEditorVehicle} onNew={() => setEditorVehicle(null)} onChangeStatus={changeVehicleStatus} onToggleFeatured={toggleFeatured} onRefresh={() => void loadVehiclesFromSupabase()} pendingVehicleId={pendingVehicleId} refreshing={vehiclesLoading} /> : null}
         </main>
       </div>
@@ -157,7 +186,27 @@ export function AdminWorkspace({ admin, onSignOut }: AdminWorkspaceProps) {
           busy={pendingVehicleId === (editorVehicle?.id || "__new__")}
         />
       ) : null}
-      {selectedLead ? <RequestDetailsDrawer lead={selectedLead} onClose={() => { if (!pendingLeadId) setSelectedLead(null); }} onStatusChange={(lead, status) => void handleLeadStatus(lead, status)} pending={pendingLeadId === selectedLead.id} /> : null}
+      {selectedLead ? (
+        <RequestDetailsDrawer
+          lead={selectedLead}
+          managers={managers}
+          activities={activitiesByLeadId[selectedLead.id] || []}
+          activitiesLoading={activitiesLoadingLeadId === selectedLead.id}
+          activitiesError={activitiesError}
+          currentAuthUserId={admin.id}
+          now={now}
+          onClose={() => {
+            if (!pendingLeadId) {
+              setSelectedLead(null);
+              stopWatchingLeadActivities();
+            }
+          }}
+          onWorkflowSave={(values) => handleLeadWorkflow(selectedLead, values)}
+          onAddNote={(body) => addLeadNote(selectedLead.id, body)}
+          onRetryActivities={() => void loadLeadActivities(selectedLead.id)}
+          pending={pendingLeadId === selectedLead.id}
+        />
+      ) : null}
       <AdminToast message={toast} />
     </div>
   );

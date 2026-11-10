@@ -8,6 +8,9 @@ dist/
 # Supabase Edge Function secrets (also covered by the generic .env rules above)
 supabase/functions/.env
 
+# Operator-only SQL copies may contain Vault keys or account identifiers.
+supabase/*.local.sql
+
 # Supabase CLI link/cache state
 supabase/.temp/
 

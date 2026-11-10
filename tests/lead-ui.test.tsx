@@ -2,7 +2,14 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import type { Lead } from "../src/domain/lead";
+import {
+  canTransitionLeadStatus,
+  compareLeadPriority,
+  isLeadOverdue,
+  type Lead,
+  type LeadActivity,
+  type LeadManager,
+} from "../src/domain/lead";
 import { RequestDetailsDrawer } from "../src/frontend/admin/leads/RequestDetailsDrawer";
 import { RequestTable } from "../src/frontend/admin/leads/RequestTable";
 import { buildLeadsCsv } from "../src/frontend/admin/leads/exportLeadsCsv";
@@ -23,9 +30,41 @@ const lead: Lead = {
   time: "10:00–13:00",
   note: "=HYPERLINK(\"https://example.test\")",
   status: "new",
+  assignedManagerId: null,
+  firstResponseDueAt: "2026-11-10T08:15:00.000Z",
+  firstContactedAt: null,
+  nextActionAt: null,
   source: "auction-catalog",
   createdAt: "2026-11-10T08:00:00.000Z",
   updatedAt: "2026-11-10T08:00:00.000Z",
+};
+
+const manager: LeadManager = {
+  id: "5a989cd3-8b0a-486e-b853-ad5b3862408f",
+  authUserId: "a21a720a-5350-4a4c-8d11-61db3164a57c",
+  displayName: "Արամ",
+  email: "aram@example.com",
+  active: true,
+  createdAt: "2026-11-10T07:00:00.000Z",
+  updatedAt: "2026-11-10T07:00:00.000Z",
+};
+
+const activity: LeadActivity = {
+  id: "83c439ec-9478-465b-91e0-1ef7385f175d",
+  leadId: lead.id,
+  type: "note_added",
+  actorUserId: manager.authUserId,
+  actorLabel: manager.displayName,
+  fromStatus: null,
+  toStatus: null,
+  fromManagerId: null,
+  toManagerId: null,
+  fromManagerName: null,
+  toManagerName: null,
+  fromNextActionAt: null,
+  toNextActionAt: null,
+  note: "Կապվել վաղը։",
+  createdAt: "2026-11-10T08:30:00.000Z",
 };
 
 test("consultation form uses canonical contact codes and real submission copy", () => {
@@ -51,6 +90,8 @@ test("admin requests show a loading state instead of a false empty state", () =>
   const html = renderToStaticMarkup(
     <RequestsPage
       leads={[]}
+      managers={[]}
+      now={Date.parse("2026-11-10T09:00:00.000Z")}
       loading
       onOpenLead={() => {}}
       onExport={() => {}}
@@ -69,9 +110,17 @@ test("admin lead views present canonical values and lock status while saving", (
   const drawer = renderToStaticMarkup(
     <RequestDetailsDrawer
       lead={lead}
+      managers={[manager]}
+      activities={[activity]}
+      activitiesLoading={false}
+      activitiesError=""
+      currentAuthUserId={manager.authUserId || ""}
+      now={Date.parse("2026-11-10T09:00:00.000Z")}
       pending
       onClose={() => {}}
-      onStatusChange={() => {}}
+      onWorkflowSave={async () => null}
+      onAddNote={async () => null}
+      onRetryActivities={() => {}}
     />,
   );
 
@@ -81,14 +130,71 @@ test("admin lead views present canonical values and lock status while saving", (
   assert.match(drawer, /Ամբողջական հաշվարկ/);
   assert.match(drawer, /=70010001/);
   assert.match(drawer, /1HGCM82633A004352/);
+  assert.match(drawer, /Հաճախորդը սա չի տեսնում/);
+  assert.match(drawer, /Կապվել վաղը/);
+  assert.match(drawer, /Վերցնել ինձ վրա/);
   assert.match(drawer, /<select[^>]*disabled=""/);
+});
+
+test("lead urgency and workflow transitions prioritize actionable requests", () => {
+  const now = Date.parse("2026-11-10T09:00:00.000Z");
+  const fresh = { ...lead, id: "fresh", firstResponseDueAt: "2026-11-10T10:00:00.000Z" };
+  const assigned = { ...fresh, id: "assigned", assignedManagerId: manager.id };
+  const preciseDurationMarkup = renderToStaticMarkup(
+    <RequestTable
+      leads={[{ ...fresh, firstResponseDueAt: "2026-11-10T10:01:00.000Z" }]}
+      now={now}
+      onSelect={() => {}}
+    />,
+  );
+
+  assert.equal(isLeadOverdue(lead, now), true);
+  assert.equal(isLeadOverdue(lead, Date.parse(lead.firstResponseDueAt)), true);
+  assert.equal(isLeadOverdue(lead, Date.parse(lead.firstResponseDueAt) - 1), false);
+  assert.equal(isLeadOverdue({ ...lead, status: "contacted", nextActionAt: null }, now), false);
+  assert.equal(isLeadOverdue({ ...lead, status: "closed" }, now), false);
+  assert.equal(compareLeadPriority(lead, fresh, now) < 0, true);
+  assert.equal(compareLeadPriority(fresh, assigned, now) < 0, true);
+  assert.equal(canTransitionLeadStatus("new", "contacted"), true);
+  assert.equal(canTransitionLeadStatus("new", "closed"), true);
+  assert.equal(canTransitionLeadStatus("new", "booked"), false);
+  assert.equal(canTransitionLeadStatus("closed", "contacted"), true);
+  assert.match(preciseDurationMarkup, /Մինչև · 1 ժ 1 ր/);
+});
+
+test("requests summary and queue put overdue work ahead of newer assigned leads", () => {
+  const now = Date.parse("2026-11-10T09:00:00.000Z");
+  const assignedFresh = {
+    ...lead,
+    id: "assigned-fresh",
+    name: "Թարմ հարցում",
+    assignedManagerId: manager.id,
+    firstResponseDueAt: "2026-11-10T10:00:00.000Z",
+    createdAt: "2026-11-10T08:30:00.000Z",
+  };
+  const overdue = { ...lead, name: "Ուշացած հարցում" };
+  const html = renderToStaticMarkup(
+    <RequestsPage
+      leads={[assignedFresh, overdue]}
+      managers={[manager]}
+      now={now}
+      loading={false}
+      onOpenLead={() => {}}
+      onExport={() => {}}
+    />,
+  );
+
+  assert.match(html, /2 ընդհանուր · 2 նոր · 1 ուշացած/);
+  assert.ok(html.indexOf("Ուշացած հարցում") < html.indexOf("Թարմ հարցում"));
+  assert.match(html, /Չնշանակված/);
+  assert.match(html, /Արամ/);
 });
 
 test("lead CSV exports labels and neutralizes spreadsheet formulas", () => {
   const csv = buildLeadsCsv([
     lead,
-    { ...lead, id: "second", note: "\t=1+1" },
-  ]);
+    { ...lead, id: "second", assignedManagerId: manager.id, note: "\t=1+1" },
+  ], [manager], Date.parse("2026-11-10T09:00:00.000Z"));
 
   assert.match(csv, /Տեսազանգ/);
   assert.match(csv, /Ամբողջական հաշվարկ/);
@@ -97,4 +203,8 @@ test("lead CSV exports labels and neutralizes spreadsheet formulas", () => {
   assert.match(csv, /"'=HYPERLINK/);
   assert.match(csv, /"'\t=1\+1"/);
   assert.match(csv, /"'\+374 99 123 456"/);
+  assert.match(csv, /Չնշանակված/);
+  assert.match(csv, /Արամ/);
+  assert.match(csv, /Առաջին կապ/);
+  assert.match(csv, /Այո/);
 });

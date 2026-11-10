@@ -1,5 +1,6 @@
 import type { VehicleInventoryStatus, VehicleStatus } from "../../domain/vehicle";
 import type {
+  LeadActivityType,
   LeadContactMethod,
   LeadRequestKind,
   LeadSource,
@@ -8,6 +9,7 @@ import type {
 
 export type { VehicleInventoryStatus, VehicleStatus } from "../../domain/vehicle";
 export type {
+  LeadActivityType,
   LeadContactMethod,
   LeadRequestKind,
   LeadSource,
@@ -106,6 +108,10 @@ export type LeadRow = {
   note: string;
   source: LeadSource;
   status: LeadStatus;
+  assigned_manager_id: string | null;
+  first_response_due_at: string;
+  first_contacted_at: string | null;
+  next_action_at: string | null;
   consent_version: string;
   consent_at: string;
   created_at: string;
@@ -130,6 +136,10 @@ export type LeadInsert = {
   note?: string;
   source?: LeadSource;
   status?: LeadStatus;
+  assigned_manager_id?: string | null;
+  first_response_due_at?: string;
+  first_contacted_at?: string | null;
+  next_action_at?: string | null;
   consent_version: string;
   consent_at?: string;
   created_at?: string;
@@ -137,6 +147,66 @@ export type LeadInsert = {
 };
 
 export type LeadUpdate = Partial<LeadInsert>;
+
+export type LeadManagerRow = {
+  id: string;
+  auth_user_id: string | null;
+  display_name: string;
+  email: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type LeadManagerInsert = {
+  id?: string;
+  auth_user_id?: string | null;
+  display_name: string;
+  email?: string | null;
+  is_active?: boolean;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type LeadManagerUpdate = Partial<LeadManagerInsert>;
+
+export type LeadActivityRow = {
+  id: string;
+  lead_id: string;
+  activity_type: LeadActivityType;
+  actor_user_id: string | null;
+  actor_label: string;
+  from_status: LeadStatus | null;
+  to_status: LeadStatus | null;
+  from_manager_id: string | null;
+  to_manager_id: string | null;
+  from_manager_name: string | null;
+  to_manager_name: string | null;
+  from_next_action_at: string | null;
+  to_next_action_at: string | null;
+  note_body: string | null;
+  created_at: string;
+};
+
+export type LeadActivityInsert = {
+  id?: string;
+  lead_id: string;
+  activity_type: LeadActivityType;
+  actor_user_id?: string | null;
+  actor_label?: string;
+  from_status?: LeadStatus | null;
+  to_status?: LeadStatus | null;
+  from_manager_id?: string | null;
+  to_manager_id?: string | null;
+  from_manager_name?: string | null;
+  to_manager_name?: string | null;
+  from_next_action_at?: string | null;
+  to_next_action_at?: string | null;
+  note_body?: string | null;
+  created_at?: string;
+};
+
+export type LeadActivityUpdate = Partial<LeadActivityInsert>;
 
 export type MotorapiCatalogRow = {
   id: string;
@@ -216,6 +286,18 @@ export interface Database {
         Update: LeadUpdate;
         Relationships: [];
       };
+      lead_managers: {
+        Row: LeadManagerRow;
+        Insert: LeadManagerInsert;
+        Update: LeadManagerUpdate;
+        Relationships: [];
+      };
+      lead_activities: {
+        Row: LeadActivityRow;
+        Insert: LeadActivityInsert;
+        Update: LeadActivityUpdate;
+        Relationships: [];
+      };
     };
     Views: {
       motorapi_catalog: {
@@ -231,6 +313,23 @@ export interface Database {
           p_window_seconds?: number;
         };
         Returns: boolean;
+      };
+      update_lead_workflow: {
+        Args: {
+          p_lead_id: string;
+          p_expected_updated_at: string;
+          p_new_status: LeadStatus;
+          p_new_manager_id: string | null;
+          p_new_next_action_at: string | null;
+        };
+        Returns: LeadRow;
+      };
+      add_lead_note: {
+        Args: {
+          p_lead_id: string;
+          p_body: string;
+        };
+        Returns: LeadActivityRow;
       };
       get_motorapi_catalog_facets: {
         Args: { p_make?: string | null };

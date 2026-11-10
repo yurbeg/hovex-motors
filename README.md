@@ -85,8 +85,10 @@ RLS իրավունքները հետևյալն են․
 - սովորական authenticated օգտատեր՝ միայն `published` մեքենաների ընթերցում և ոչ մի write,
 - allowlist-ում գրանցված admin՝ բոլոր մեքենաների ընթերցում, ավելացում և խմբագրում,
 - հաճախորդների հարցումների համար՝ anonymous/authenticated browser-ին ուղիղ
-  table access չկա, իսկ allowlist admin-ը կարող է միայն կարդալ հարցումները և
-  փոխել դրանց `status` դաշտը։
+  table access չկա, իսկ allowlist admin-ը կարող է կարդալ հարցումները,
+  պատասխանատուներին ու անփոփոխելի պատմությունը։ Պատասխանատուի, կարգավիճակի և
+  հաջորդ գործողության փոփոխությունները, ինչպես նաև ներքին նշումները կատարվում
+  են միայն audit history ստեղծող սահմանափակ RPC-ներով։
 
 ## Իրական խորհրդատվության հարցումներ
 
@@ -96,7 +98,12 @@ Function-ը whitelist-ով ստուգում է payload-ը, պահանջում է
 չի ստեղծում կրկնօրինակ։ Նույն id-ով փոխված payload-ը մերժվում է conflict-ով։
 
 1. Migration-ները կիրառեք filename-ի հերթականությամբ՝ ներառյալ
-   `supabase/migrations/202611100001_create_leads.sql`։
+   `supabase/migrations/202611100001_create_leads.sql`,
+   `supabase/migrations/202611100002_lead_vehicle_context.sql` և
+   `supabase/migrations/202611100003_lead_response_workflow.sql`։ Վերջինս
+   ավելացնում է պատասխանատու մենեջերին, 30-րոպեանոց առաջին արձագանքի SLA-ն,
+   `new → contacted → booked → closed` workflow-ը, ներքին նշումներն ու
+   append-only պատմությունը։
 2. Ստեղծեք առնվազն 32 նիշանոց առանձին rate-limit secret և պահեք այն միայն
    Supabase Edge Function secrets-ում․
 
@@ -123,6 +130,12 @@ Optional կարգավորումներն են `LEAD_CONSENT_VERSION` (default՝
 չի կարդում և ինքնաբերաբար չի տեղափոխում կամ ջնջում։ Եթե այդ browser-ում կան
 իրական հաճախորդների տվյալներ, production rollout-ից առաջ դրանք արտահանեք,
 վերահաստատեք Supabase-ում, ապա միայն մաքրեք հին key-ը։
+
+Նոր հայտերի Telegram ծանուցումները առանձին scheduled Edge Function-ով են
+ուղարկվում և չեն պահում public form-ը Telegram-ի պատասխանի սպասման մեջ։
+Կարգավորման ամբողջ ընթացքը, server-only secret-երը և մեկ րոպեանոց Cron
+օրինակը նկարագրված են [`supabase/README.md`](./supabase/README.md)-ում և
+[`supabase/schedule-lead-notifications.example.sql`](./supabase/schedule-lead-notifications.example.sql)-ում։
 
 ## Տեղային գործարկում
 

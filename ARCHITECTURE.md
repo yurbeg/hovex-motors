@@ -78,8 +78,15 @@ paths directly.
 - Consultation leads: Supabase PostgreSQL is authoritative. The public browser
   submits a strict DTO to `submit-lead`; it has no direct table privileges.
   The Edge Function validates consent and fields, applies keyed rate limiting,
-  and inserts with an idempotency key. RLS allows the allowlisted admin to read
-  requests and update only their status.
+  and inserts with an idempotency key. A same-transaction trigger creates a
+  private notification outbox job. The server-key-authenticated
+  `process-lead-notifications` worker claims leased jobs and sends Telegram
+  alerts on a separate Cron schedule, so provider failure cannot discard or
+  delay the stored lead. RLS allows only the allowlisted admin to read
+  requests, managers, and immutable activity history. Workflow changes and
+  internal notes go through audited RPCs; workflow updates additionally use
+  optimistic concurrency. Direct lead row updates remain unavailable to the
+  browser.
 - Vehicle images: public Supabase Storage URLs, with mutation restricted by
   RLS to the allowlisted admin.
 - AI assistant: local demo logic by default. `VITE_ASSISTANT_API_URL` may point
@@ -105,8 +112,10 @@ boundary. PostgreSQL and Storage RLS policies are authoritative:
 - hard deletion is not granted; archiving is a status update;
 - vehicle image uploads and mutations require the same admin membership.
 - anonymous users cannot directly select or mutate lead rows;
-- the allowlisted admin can read leads and update only `status`; all lead PII
-  fields remain non-writable from the browser.
+- the allowlisted admin can read leads, managers, and activity history, then
+  use narrowly scoped RPCs to assign a manager, advance workflow status, set a
+  next action, or add an internal note; lead PII remains non-writable from the
+  browser and activity history is append-only.
 
 The `admin_users` migration currently enforces one admin account through a
 singleton constraint. Supporting multiple admins requires a new migration,

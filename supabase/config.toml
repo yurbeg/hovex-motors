@@ -8,3 +8,8 @@ verify_jwt = false
 # controls before writing with a server-only Supabase key.
 [functions.submit-lead]
 verify_jwt = false
+
+# Invoked only by the server-key-authenticated Cron schedule. The worker
+# claims durable outbox jobs before contacting Telegram.
+[functions.process-lead-notifications]
+verify_jwt = false

@@ -1,11 +1,14 @@
 import type {
   Lead,
+  LeadActivity,
+  LeadActivityType,
   LeadContactMethod,
+  LeadManager,
   LeadRequestKind,
   LeadSource,
   LeadStatus,
 } from "../../domain/lead";
-import type { LeadRow } from "./database.types";
+import type { LeadActivityRow, LeadManagerRow, LeadRow } from "./database.types";
 
 export type AdminLeadRow = Pick<
   LeadRow,
@@ -23,11 +26,18 @@ export type AdminLeadRow = Pick<
   | "note"
   | "source"
   | "status"
+  | "assigned_manager_id"
+  | "first_response_due_at"
+  | "first_contacted_at"
+  | "next_action_at"
   | "consent_version"
   | "consent_at"
   | "created_at"
   | "updated_at"
 >;
+
+export type AdminLeadManagerRow = LeadManagerRow;
+export type AdminLeadActivityRow = LeadActivityRow;
 
 const contactMethods = new Set<LeadContactMethod>([
   "phone",
@@ -49,6 +59,14 @@ const leadStatuses = new Set<LeadStatus>([
   "contacted",
   "booked",
   "closed",
+]);
+const leadActivityTypes = new Set<LeadActivityType>([
+  "created",
+  "status_changed",
+  "manager_assigned",
+  "manager_unassigned",
+  "next_action_changed",
+  "note_added",
 ]);
 
 function asRecord(value: unknown): Record<string, unknown> {
@@ -85,6 +103,22 @@ function requiredTimestamp(row: Record<string, unknown>, key: string): string {
     throw new Error(`Lead row has an invalid ${key}`);
   }
   return value;
+}
+
+function nullableTimestamp(row: Record<string, unknown>, key: string): string | null {
+  const value = nullableText(row, key);
+  if (value !== null && Number.isNaN(Date.parse(value))) {
+    throw new Error(`Lead row has an invalid ${key}`);
+  }
+  return value;
+}
+
+function nullableStatus(row: Record<string, unknown>, key: string): LeadStatus | null {
+  const value = nullableText(row, key);
+  if (value !== null && !leadStatuses.has(value as LeadStatus)) {
+    throw new Error(`Lead activity row has an invalid ${key}`);
+  }
+  return value as LeadStatus | null;
 }
 
 function isCalendarDate(value: string): boolean {
@@ -140,10 +174,59 @@ export function mapLeadRow(value: unknown): Lead {
     time: requiredText(row, "preferred_time", true),
     note: requiredText(row, "note", true),
     status: status as LeadStatus,
+    assignedManagerId: nullableText(row, "assigned_manager_id"),
+    firstResponseDueAt: requiredTimestamp(row, "first_response_due_at"),
+    firstContactedAt: nullableTimestamp(row, "first_contacted_at"),
+    nextActionAt: nullableTimestamp(row, "next_action_at"),
     source: source as LeadSource,
     consentVersion: requiredText(row, "consent_version"),
     consentAt: requiredTimestamp(row, "consent_at"),
     createdAt: requiredTimestamp(row, "created_at"),
     updatedAt: requiredTimestamp(row, "updated_at"),
+  };
+}
+
+export function mapLeadManagerRow(value: unknown): LeadManager {
+  const row = asRecord(value);
+  if (typeof row.is_active !== "boolean") {
+    throw new Error("Lead manager row has an invalid is_active");
+  }
+  return {
+    id: requiredText(row, "id"),
+    authUserId: nullableText(row, "auth_user_id"),
+    displayName: requiredText(row, "display_name"),
+    email: nullableText(row, "email"),
+    active: row.is_active,
+    createdAt: requiredTimestamp(row, "created_at"),
+    updatedAt: requiredTimestamp(row, "updated_at"),
+  };
+}
+
+export function mapLeadActivityRow(value: unknown): LeadActivity {
+  const row = asRecord(value);
+  const type = requiredText(row, "activity_type");
+  if (!leadActivityTypes.has(type as LeadActivityType)) {
+    throw new Error("Lead activity row has an invalid activity_type");
+  }
+  const note = nullableText(row, "note_body");
+  if (type === "note_added" && !note) {
+    throw new Error("Lead activity row has an invalid note_body");
+  }
+  return {
+    id: requiredText(row, "id"),
+    leadId: requiredText(row, "lead_id"),
+    type: type as LeadActivityType,
+    actorUserId: nullableText(row, "actor_user_id"),
+    actorLabel: requiredText(row, "actor_label"),
+    fromStatus: nullableStatus(row, "from_status"),
+    toStatus: nullableStatus(row, "to_status"),
+    fromManagerId: nullableText(row, "from_manager_id"),
+    toManagerId: nullableText(row, "to_manager_id"),
+    fromManagerName: nullableText(row, "from_manager_name"),
+    toManagerName: nullableText(row, "to_manager_name"),
+    fromNextActionAt: nullableTimestamp(row, "from_next_action_at"),
+    toNextActionAt: nullableTimestamp(row, "to_next_action_at"),
+    note,
+    createdAt: requiredTimestamp(row, "created_at"),
   };
 }
