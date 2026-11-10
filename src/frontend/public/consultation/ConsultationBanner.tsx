@@ -17,7 +17,7 @@ export function ConsultationBanner({ onConsultation, actionLabel = "Ամրագր
       <div className="min-h-[225px] overflow-hidden max-[800px]:min-h-[260px] [&_img]:h-full [&_img]:w-full [&_img]:object-cover [&_img]:object-[50%_36%]"><img src="/assets/hovex/presenter-vehicle-choice.jpg" alt="Hovex Motors-ի մասնագետը մեքենաների ցուցասրահում" /></div>
       <div className="self-center px-[38px] py-[30px] max-[1240px]:px-7 max-[800px]:px-[21px] max-[800px]:py-[25px]">
         <p className={eyebrowClasses}><span />Իրական մարդ, հստակ պատասխաններ</p>
-        <h2 className="m-0 text-[clamp(26px,2.4vw,35px)] leading-[1.22] font-black max-[800px]:text-[29px]" id="consultation-title">Որոշումը կայացրեք Hovex-ի մասնագետի հետ</h2>
+        <h2 className="m-0 text-[clamp(26px,2.4vw,35px)] leading-[1.28] font-bold max-[800px]:text-[29px]" id="consultation-title">Որոշումը կայացրեք Hovex-ի մասնագետի հետ</h2>
         <p className="my-[11px] mb-[15px] text-sm leading-[1.65] text-[var(--ink-soft)]">Քննարկեք ձեր բյուջեն, մեքենայի պատմությունը և ներմուծման ամբողջական հաշվարկը՝ մինչև որևէ պարտավորություն ստանձնելը։</p>
         <span className="flex items-center gap-2 text-[11px] font-bold"><i className="h-[9px] w-[9px] rounded-full bg-[var(--green)]" /> Հայտերը մշակվում են աշխատանքային ժամերին</span>
       </div>

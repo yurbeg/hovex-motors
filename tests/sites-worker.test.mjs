@@ -64,6 +64,29 @@ test("serves the app shell for a direct catalog route with query filters", async
   assert.deepEqual(calls, ["/catalog?make=Toyota", "/index.html"]);
 });
 
+test("serves the app shell for a direct curated vehicle detail route", async () => {
+  const calls = [];
+  const response = await worker.fetch(
+    new Request("https://example.test/vehicles/test-car-2026", {
+      headers: { accept: "text/html" },
+    }),
+    {
+      ASSETS: {
+        fetch: async (request) => {
+          const pathname = new URL(request.url).pathname;
+          calls.push(pathname);
+          return new Response(pathname === "/index.html" ? "app" : "missing", {
+            status: pathname === "/index.html" ? 200 : 404,
+          });
+        },
+      },
+    },
+  );
+
+  assert.equal(response.status, 200);
+  assert.deepEqual(calls, ["/vehicles/test-car-2026", "/index.html"]);
+});
+
 test("does not turn missing API or write requests into the app shell", async () => {
   for (const request of [
     new Request("https://example.test/api/missing", { headers: { accept: "application/json" } }),

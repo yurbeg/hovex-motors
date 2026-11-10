@@ -65,7 +65,7 @@ export function DashboardPage({
       <section className={pageHeadingClasses}>
         <div className="min-w-0">
           <p className={eyebrowClasses}>Այսօրվա պատկերը</p>
-          <h1 className="mb-[7px] mt-1 text-[clamp(27px,2.4vw,36px)] leading-[1.15] tracking-[-0.035em] max-[700px]:text-2xl max-[430px]:text-[21px]">Բարի գալուստ Hovex Admin</h1>
+          <h1 className="mb-[7px] mt-1 text-[clamp(27px,2.4vw,36px)] leading-[1.22] font-bold max-[700px]:text-2xl max-[430px]:text-[21px]">Բարի գալուստ Hovex Admin</h1>
           <span className="text-[13px] text-[var(--ink-soft)]">{formatLongDate(new Date())}</span>
         </div>
         <AdminButton className={pageHeadingButtonClasses} icon={Plus} onClick={onNewVehicle} disabled={vehicleActionsDisabled} aria-label="Ավելացնել մեքենա">Ավելացնել մեքենա</AdminButton>

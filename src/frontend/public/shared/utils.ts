@@ -19,6 +19,7 @@ export function formatUsd(value: number): string {
 }
 
 export function formatUsdRange(minimum: number, maximum: number): string {
+  if (minimum === maximum) return formatUsd(minimum);
   return `${formatUsd(minimum)}–${formatUsd(maximum).replace("$", "")}`;
 }
 

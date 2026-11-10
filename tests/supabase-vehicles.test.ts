@@ -18,11 +18,12 @@ const row = {
   estimate_max: 12000,
   max_bid: 8000,
   image: "/assets/test.jpg",
+  images: ["/assets/test.jpg", "/assets/test-side.jpg"],
   image_position: "50% 40%",
   badge: "Test",
   accent: "yellow",
   status: "published",
-  inventory_status: "at_auction",
+  inventory_status: "available",
   featured: true,
   sort_order: 2,
   created_at: "2026-11-05T00:00:00.000Z",
@@ -59,10 +60,50 @@ test("Supabase vehicle rows map explicitly to the frontend model", () => {
   assert.equal(vehicle.estimateMin, 10000);
   assert.equal(vehicle.estimateMax, 12000);
   assert.equal(vehicle.maxBid, 8000);
+  assert.deepEqual(vehicle.images, ["/assets/test.jpg", "/assets/test-side.jpg"]);
+  assert.equal(vehicle.image, vehicle.images[0]);
   assert.equal(vehicle.imagePosition, "50% 40%");
-  assert.equal(vehicle.inventoryStatus, "at_auction");
+  assert.equal(vehicle.inventoryStatus, "available");
   assert.equal(vehicle.sortOrder, 2);
   assert.equal(vehicle.updatedAt, "2026-11-05T01:00:00.000Z");
+});
+
+test("vehicle galleries recover legacy rows and normalize cover, duplicates, and unsafe URLs", () => {
+  const { images: _images, ...legacyRow } = row;
+
+  assert.deepEqual(mapVehicleRow(legacyRow).images, [row.image]);
+  assert.deepEqual(mapVehicleRow({ ...row, images: null }).images, [row.image]);
+  assert.deepEqual(mapVehicleRow({ ...row, images: [] }).images, [row.image]);
+
+  const normalized = mapVehicleRow({
+    ...row,
+    images: [
+      "/assets/secondary.jpg",
+      row.image,
+      "javascript:alert(1)",
+      "/assets/secondary.jpg",
+      "https://cdn.example.test/third.webp",
+    ],
+  });
+  assert.deepEqual(normalized.images, [
+    row.image,
+    "/assets/secondary.jpg",
+    "https://cdn.example.test/third.webp",
+  ]);
+  assert.equal(normalized.image, normalized.images[0]);
+
+  const bounded = mapVehicleRow({
+    ...row,
+    images: Array.from({ length: 20 }, (_, index) => `/assets/gallery-${index}.jpg`),
+  });
+  assert.equal(bounded.images.length, 12);
+  assert.equal(bounded.images[0], row.image);
+  assert.equal(bounded.images[11], "/assets/gallery-10.jpg");
+
+  assert.throws(
+    () => mapVehicleRow({ ...row, image: "javascript:alert(1)" }),
+    /invalid image/i,
+  );
 });
 
 test("Supabase vehicle rows accept only supported inventory statuses", () => {
@@ -99,12 +140,14 @@ test("a successful empty Supabase catalog remains empty", async () => {
   assert.equal(fallbackCalls, 0);
 });
 
-test("returns every published vehicle in stable featured, sort-order, and id order", async () => {
+test("returns only published available vehicles in stable featured, sort-order, and id order", async () => {
   const result = await loadPublicVehicles({
     fetchRows: async () => [
       { ...row, id: "regular-later", featured: false, sort_order: 4 },
       { ...row, id: "featured-zeta", featured: true, sort_order: 2 },
       { ...row, id: "archived-hidden", status: "archived", featured: true, sort_order: 0 },
+      { ...row, id: "transit-hidden", inventory_status: "in_transit", featured: true, sort_order: 0 },
+      { ...row, id: "auction-hidden", inventory_status: "at_auction", featured: true, sort_order: 0 },
       { ...row, id: "featured-alpha", featured: true, sort_order: 2 },
       { ...row, id: "regular-first", featured: false, sort_order: 1 },
       { ...row, id: "draft-hidden", status: "draft", featured: true, sort_order: 0 },
@@ -119,7 +162,9 @@ test("returns every published vehicle in stable featured, sort-order, and id ord
     "regular-first",
     "regular-later",
   ]);
-  assert.ok(result.items.every((vehicle) => vehicle.status === "published"));
+  assert.ok(result.items.every((vehicle) => (
+    vehicle.status === "published" && vehicle.inventoryStatus === "available"
+  )));
 });
 
 test("Supabase query failures preserve local demo vehicles", async () => {
@@ -127,6 +172,8 @@ test("Supabase query failures preserve local demo vehicles", async () => {
     fetchRows: async () => { throw new Error("offline"); },
     fallback: () => [
       { ...fallbackVehicle, id: "draft-local", status: "draft" },
+      { ...fallbackVehicle, id: "transit-local", inventoryStatus: "in_transit" },
+      { ...fallbackVehicle, id: "auction-local", inventoryStatus: "at_auction" },
       fallbackVehicle,
       { ...fallbackVehicle, id: "archived-local", status: "archived" },
     ],
@@ -144,7 +191,11 @@ test("malformed or unpublished remote rows never become public vehicles", async 
   assert.equal(malformed.source, "local-demo");
 
   const hidden = await loadPublicVehicles({
-    fetchRows: async () => [{ ...row, status: "draft" }],
+    fetchRows: async () => [
+      { ...row, id: "draft-hidden", status: "draft" },
+      { ...row, id: "transit-hidden", inventory_status: "in_transit" },
+      { ...row, id: "auction-hidden", inventory_status: "at_auction" },
+    ],
     fallback: () => [fallbackVehicle],
   });
   assert.equal(hidden.source, "supabase");

@@ -11,7 +11,8 @@ import {
   type PublicInventoryFilter,
 } from "../src/application/publicInventory";
 import type { Vehicle } from "../src/domain/vehicle";
-import { InventoryStatusFilter } from "../src/frontend/public/vehicles/InventoryStatusFilter";
+import { SearchResults } from "../src/frontend/public/home/SearchResults";
+import { DEFAULT_SEARCH_CRITERIA } from "../src/frontend/public/shared/types";
 
 function vehicle(
   id: string,
@@ -32,6 +33,7 @@ function vehicle(
     estimateMax: 12_000,
     maxBid: 8_000,
     image: "/test.jpg",
+    images: ["/test.jpg"],
     imagePosition: "50% 50%",
     badge: "",
     accent: "yellow",
@@ -142,21 +144,20 @@ test("counts each status from the complete published inventory", () => {
   assert.equal(filtered.length, 2);
 });
 
-test("renders all public inventory controls, counts, and active state", () => {
-  const html = renderToStaticMarkup(createElement(InventoryStatusFilter, {
-    value: "in_transit",
-    counts: {
-      all: 7,
-      available: 2,
-      in_transit: 2,
-      at_auction: 3,
-    },
-    onChange: () => {},
+test("home results present available inventory without the legacy status filter", () => {
+  const html = renderToStaticMarkup(createElement(SearchResults, {
+    results: [inventory[0]],
+    state: "idle",
+    criteria: DEFAULT_SEARCH_CRITERIA,
+    compared: [],
+    onCompare: () => {},
+    onConsultation: () => {},
+    onReset: () => {},
   }));
 
-  assert.match(html, /aria-label="Ֆիլտրել մեքենաներն ըստ գտնվելու վիճակի"/);
-  assert.match(html, />Բոլորը<\/span><span[^>]*>7<\/span>/);
-  assert.match(html, />Առկա<\/span><span[^>]*>2<\/span>/);
-  assert.match(html, /aria-pressed="true"[^>]*><span>Ճանապարհին<\/span><span[^>]*>2<\/span>/);
-  assert.match(html, />Աճուրդում<\/span><span[^>]*>3<\/span>/);
+  assert.match(html, /Hovex-ում առկա/);
+  assert.match(html, /Copart կատալոգը/);
+  assert.doesNotMatch(html, /Ֆիլտրել մեքենաներն ըստ գտնվելու վիճակի/);
+  assert.doesNotMatch(html, />Ճանապարհին</);
+  assert.doesNotMatch(html, />Աճուրդում</);
 });

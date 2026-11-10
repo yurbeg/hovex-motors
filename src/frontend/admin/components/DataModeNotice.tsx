@@ -5,8 +5,8 @@ type DataNoticeScope = "dashboard" | "requests" | "vehicles";
 export function DataModeNotice({ scope }: { scope: DataNoticeScope }) {
   const copy = scope === "vehicles"
     ? {
-        title: "Supabase մեքենաների բազա",
-        text: "Փոփոխությունները պահվում են ամպային բազայում և հրապարակված մեքենաներն անմիջապես հասանելի են հանրային կայքին։",
+        title: "Առկա մեքենաների բազա",
+        text: "Այստեղ ձեռքով ավելացվում են միայն առկա մեքենաները։ Աճուրդային մեքենաները ներմուծվում են առանձին Copart API կատալոգից։",
       }
     : scope === "requests"
       ? {

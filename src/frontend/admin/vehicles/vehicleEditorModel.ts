@@ -1,4 +1,5 @@
 import type { ChangeEvent } from "react";
+import { isSafeVehicleImageUrl, MAX_VEHICLE_IMAGES } from "../../../domain/vehicle";
 import type {
   Vehicle,
   VehicleInventoryStatus,
@@ -19,6 +20,7 @@ export interface VehicleEditorForm {
   estimateMax: number | string;
   maxBid: number | string;
   image: string;
+  images: string[];
   imagePosition: string;
   badge: string;
   accent: string;
@@ -45,6 +47,36 @@ export type VehicleFieldUpdater = (
   key: keyof VehicleEditorForm,
 ) => (event: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
 
+export const ADMIN_VEHICLE_MAX_IMAGES = MAX_VEHICLE_IMAGES;
+
+function uniqueImageUrls(values: readonly unknown[]): string[] {
+  const seen = new Set<string>();
+  const urls: string[] = [];
+  for (const value of values) {
+    if (typeof value !== "string") continue;
+    const url = value.trim();
+    if (!url || seen.has(url)) continue;
+    seen.add(url);
+    urls.push(url);
+  }
+  return urls;
+}
+
+/**
+ * Reconciles the legacy cover field with the ordered gallery. A differing
+ * legacy cover replaces the old cover while preserving secondary images.
+ */
+export function vehicleEditorImages(
+  form: Pick<VehicleEditorForm, "image" | "images">,
+): string[] {
+  const gallery = uniqueImageUrls(Array.isArray(form.images) ? form.images : []);
+  const cover = form.image.trim();
+  if (!cover) return gallery;
+  if (!gallery.length) return [cover];
+  if (gallery[0] === cover) return gallery;
+  return uniqueImageUrls([cover, ...gallery.slice(1)]);
+}
+
 const vehicleEditorValidationOrder = [
   "make",
   "model",
@@ -69,26 +101,36 @@ export const emptyVehicle: VehicleEditorForm = {
   mileage: "",
   fuel: "Բենզին",
   damage: "",
-  auction: "ԱՄՆ աճուրդ • ցուցադրական",
+  auction: "Hovex Motors • Երևան",
   estimateMin: "",
   estimateMax: "",
   maxBid: "",
-  image: "/assets/hovex/kia-forte-lxs.jpg",
+  image: "",
+  images: [],
   imagePosition: "50% 50%",
-  badge: "Նոր առաջարկ",
+  badge: "Առկա է",
   accent: "yellow",
   status: "draft",
-  inventoryStatus: "at_auction",
+  inventoryStatus: "available",
   featured: false,
 };
 
 export function createVehicleEditorForm(vehicle: Vehicle | null): VehicleEditorForm {
-  return { ...emptyVehicle, ...(vehicle ?? {}) };
+  const image = vehicle?.image?.trim() ?? "";
+  const images = uniqueImageUrls(
+    vehicle?.images?.length ? vehicle.images : image ? [image] : [],
+  );
+  return {
+    ...emptyVehicle,
+    ...(vehicle ?? {}),
+    image: images[0] ?? image,
+    images,
+  };
 }
 
 export function validateVehicleEditorForm(
   form: VehicleEditorForm,
-  hasSelectedImage: boolean,
+  selectedImageCount = 0,
 ): VehicleEditorErrors {
   const errors: VehicleEditorErrors = {};
   if (!form.make.trim()) errors.make = "Նշեք մակնիշը";
@@ -105,19 +147,30 @@ export function validateVehicleEditorForm(
   if (!(Number(form.maxBid) > 0)) {
     errors.maxBid = "Նշեք առավելագույն խաղադրույքը";
   }
-  if (!hasSelectedImage && !/^(https?:\/\/|\/)/i.test(form.image.trim())) {
-    errors.image = "Ընտրեք նկար կամ օգտագործեք /assets/... կամ https:// հասցե";
+  const images = vehicleEditorImages(form);
+  if (!images.length && selectedImageCount <= 0) {
+    errors.image = "Ընտրեք առնվազն մեկ նկար";
+  } else if (images.some((image) => !isSafeVehicleImageUrl(image))) {
+    errors.image = "Նկարի հասցեն պետք է սկսվի / կամ http:// կամ https://-ով";
+  } else if (images.length + selectedImageCount > ADMIN_VEHICLE_MAX_IMAGES) {
+    errors.image = `Կարելի է ավելացնել առավելագույնը ${ADMIN_VEHICLE_MAX_IMAGES} նկար`;
   }
   return errors;
 }
 
 export function toVehicleSavePayload(
   form: VehicleEditorForm,
-  image: string,
+  imageUrls: readonly string[],
 ): VehicleSavePayload {
+  const images = uniqueImageUrls(imageUrls);
   return {
     ...form,
-    image,
+    // The admin creates only vehicles that are already in Hovex inventory.
+    // Keep legacy statuses editable on existing records, but do not let a
+    // stale/hidden form control classify a newly created vehicle as auction.
+    inventoryStatus: form.id ? form.inventoryStatus : "available",
+    image: images[0] ?? "",
+    images,
     year: Number(form.year),
     estimateMin: Number(form.estimateMin),
     estimateMax: Number(form.estimateMax),

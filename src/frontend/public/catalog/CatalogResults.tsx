@@ -42,7 +42,7 @@ export function CatalogResults({
       <div className="mb-6 flex items-end justify-between gap-5 max-[800px]:items-start max-[560px]:flex-col max-[560px]:gap-3">
         <div>
           <p className={eyebrowClasses}><span />Ակտիվ Copart լոտեր</p>
-          <h2 className="m-0 text-[clamp(27px,3vw,38px)] leading-[1.2] font-black">Հասանելի մեքենաներ</h2>
+          <h2 className="m-0 text-[clamp(27px,3vw,38px)] leading-[1.26] font-bold">Հասանելի մեքենաներ</h2>
         </div>
         <span className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-[11px] font-bold" role="status" aria-live="polite" aria-atomic="true">
           {loading ? "Կատալոգը բեռնվում է" : `${total} ակտիվ լոտ`}

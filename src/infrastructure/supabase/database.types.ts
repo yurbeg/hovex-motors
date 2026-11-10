@@ -38,6 +38,7 @@ export type VehicleRow = {
   estimate_max: number;
   max_bid: number;
   image: string;
+  images: string[];
   image_position: string;
   badge: string;
   accent: string;
@@ -63,6 +64,7 @@ export type VehicleInsert = {
   estimate_max: number;
   max_bid: number;
   image: string;
+  images?: string[];
   image_position?: string;
   badge?: string;
   accent?: string;

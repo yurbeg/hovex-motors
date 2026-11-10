@@ -2,10 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import type { ChangeEvent, FormEvent } from "react";
 import type { Vehicle } from "../../../domain/vehicle";
 import {
-  ADMIN_IMAGE_ALLOWED_MIME_TYPES,
-  ADMIN_IMAGE_ERROR_MESSAGES,
-  ADMIN_IMAGE_MAX_BYTES,
-  uploadAdminVehicleImage,
+  uploadAdminVehicleImages,
+  validateAdminVehicleImageFile,
 } from "../../../infrastructure/supabase/adminImageRepository";
 import { AdminDrawer } from "../components/AdminDrawer";
 import { operationErrorMessage } from "../shared/errors";
@@ -14,10 +12,12 @@ import { VehicleEditorFooter } from "./VehicleEditorFooter";
 import { VehiclePresentationFields } from "./VehiclePresentationFields";
 import { VehiclePreview } from "./VehiclePreview";
 import {
+  ADMIN_VEHICLE_MAX_IMAGES,
   createVehicleEditorForm,
   firstVehicleEditorErrorField,
   toVehicleSavePayload,
   validateVehicleEditorForm,
+  vehicleEditorImages,
 } from "./vehicleEditorModel";
 import type {
   VehicleEditorErrors,
@@ -47,14 +47,15 @@ export function VehicleEditorDrawer({
   const isNew = !vehicle?.id;
   const [form, setForm] = useState<VehicleEditorForm>(() => createVehicleEditorForm(vehicle));
   const [errors, setErrors] = useState<VehicleEditorErrors>({});
-  const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
-  const [imagePreviewUrl, setImagePreviewUrl] = useState("");
+  const [selectedImageFiles, setSelectedImageFiles] = useState<File[]>([]);
+  const [selectedImagePreviewUrls, setSelectedImagePreviewUrls] = useState<string[]>([]);
   const [submitError, setSubmitError] = useState("");
   const [submittingPhase, setSubmittingPhase] = useState<SubmittingPhase>("idle");
   const formRef = useRef<HTMLFormElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const submissionInFlightRef = useRef(false);
   const effectiveBusy = busy || submittingPhase !== "idle";
+  const existingImages = vehicleEditorImages(form);
 
   useEffect(() => {
     onBusyChange(effectiveBusy);
@@ -62,14 +63,10 @@ export function VehicleEditorDrawer({
   }, [effectiveBusy, onBusyChange]);
 
   useEffect(() => {
-    if (!selectedImageFile) {
-      setImagePreviewUrl("");
-      return undefined;
-    }
-    const objectUrl = URL.createObjectURL(selectedImageFile);
-    setImagePreviewUrl(objectUrl);
-    return () => URL.revokeObjectURL(objectUrl);
-  }, [selectedImageFile]);
+    const objectUrls = selectedImageFiles.map((file) => URL.createObjectURL(file));
+    setSelectedImagePreviewUrls(objectUrls);
+    return () => objectUrls.forEach((url) => URL.revokeObjectURL(url));
+  }, [selectedImageFiles]);
 
   const update = (key: keyof VehicleEditorForm) => (
     event: ChangeEvent<HTMLInputElement | HTMLSelectElement>,
@@ -80,29 +77,60 @@ export function VehicleEditorDrawer({
     setSubmitError("");
   };
 
-  const clearSelectedImage = () => {
-    setSelectedImageFile(null);
+  const clearSelectedImages = () => {
+    setSelectedImageFiles([]);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const selectImage = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.currentTarget.files?.[0] || null;
-    if (!file) return;
-    let message = "";
-    if (!ADMIN_IMAGE_ALLOWED_MIME_TYPES.includes(file.type as (typeof ADMIN_IMAGE_ALLOWED_MIME_TYPES)[number])) {
-      message = ADMIN_IMAGE_ERROR_MESSAGES.ADMIN_IMAGE_TYPE_INVALID;
-    } else if (file.size <= 0) {
-      message = ADMIN_IMAGE_ERROR_MESSAGES.ADMIN_IMAGE_EMPTY;
-    } else if (file.size > ADMIN_IMAGE_MAX_BYTES) {
-      message = ADMIN_IMAGE_ERROR_MESSAGES.ADMIN_IMAGE_TOO_LARGE;
-    }
-    if (message) {
-      setSelectedImageFile(null);
-      event.currentTarget.value = "";
-      setErrors((current) => ({ ...current, image: message }));
+  const selectImages = (event: ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.currentTarget.files ?? []);
+    event.currentTarget.value = "";
+    if (!files.length) return;
+
+    const nextFiles = [...selectedImageFiles, ...files];
+    if (existingImages.length + nextFiles.length > ADMIN_VEHICLE_MAX_IMAGES) {
+      setErrors((current) => ({
+        ...current,
+        image: `Կարելի է ավելացնել առավելագույնը ${ADMIN_VEHICLE_MAX_IMAGES} նկար`,
+      }));
       return;
     }
-    setSelectedImageFile(file);
+
+    try {
+      nextFiles.forEach(validateAdminVehicleImageFile);
+    } catch (error) {
+      setErrors((current) => ({ ...current, image: operationErrorMessage(error) }));
+      return;
+    }
+
+    setSelectedImageFiles(nextFiles);
+    setErrors((current) => ({ ...current, image: "" }));
+    setSubmitError("");
+  };
+
+  const removeSelectedImage = (index: number) => {
+    setSelectedImageFiles((current) => current.filter((_, itemIndex) => itemIndex !== index));
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    setErrors((current) => ({ ...current, image: "" }));
+  };
+
+  const removeExistingImage = (index: number) => {
+    setForm((current) => {
+      const images = vehicleEditorImages(current).filter((_, itemIndex) => itemIndex !== index);
+      return { ...current, image: images[0] ?? "", images };
+    });
+    setErrors((current) => ({ ...current, image: "" }));
+    setSubmitError("");
+  };
+
+  const makeExistingImageCover = (index: number) => {
+    setForm((current) => {
+      const images = vehicleEditorImages(current);
+      const selected = images[index];
+      if (!selected || index === 0) return current;
+      const reordered = [selected, ...images.filter((_, itemIndex) => itemIndex !== index)];
+      return { ...current, image: selected, images: reordered };
+    });
     setErrors((current) => ({ ...current, image: "" }));
     setSubmitError("");
   };
@@ -110,7 +138,7 @@ export function VehicleEditorDrawer({
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (submissionInFlightRef.current || effectiveBusy) return;
-    const nextErrors = validateVehicleEditorForm(form, Boolean(selectedImageFile));
+    const nextErrors = validateVehicleEditorForm(form, selectedImageFiles.length);
     setErrors(nextErrors);
     const firstInvalidField = firstVehicleEditorErrorField(nextErrors);
     if (firstInvalidField) {
@@ -126,18 +154,18 @@ export function VehicleEditorDrawer({
     }
 
     submissionInFlightRef.current = true;
-    setSubmittingPhase(selectedImageFile ? "uploading" : "saving");
+    setSubmittingPhase(selectedImageFiles.length ? "uploading" : "saving");
     setSubmitError("");
     try {
-      let image = form.image.trim();
-      if (selectedImageFile) {
-        const uploaded = await uploadAdminVehicleImage(selectedImageFile);
-        image = uploaded.publicUrl;
-        setForm((current) => ({ ...current, image }));
-        clearSelectedImage();
+      let images = vehicleEditorImages(form);
+      if (selectedImageFiles.length) {
+        const uploaded = await uploadAdminVehicleImages(selectedImageFiles);
+        images = [...images, ...uploaded.map(({ publicUrl }) => publicUrl)];
+        setForm((current) => ({ ...current, image: images[0] ?? "", images }));
+        clearSelectedImages();
         setSubmittingPhase("saving");
       }
-      await onSave(toVehicleSavePayload(form, image));
+      await onSave(toVehicleSavePayload(form, images));
     } catch (error) {
       setSubmitError(operationErrorMessage(error));
     } finally {
@@ -155,7 +183,11 @@ export function VehicleEditorDrawer({
       locked={effectiveBusy}
     >
       <form ref={formRef} className="flex min-h-full flex-col" onSubmit={submit} noValidate aria-busy={effectiveBusy}>
-        <VehiclePreview form={form} imagePreviewUrl={imagePreviewUrl} />
+        <VehiclePreview
+          form={form}
+          existingImageUrls={existingImages}
+          selectedImagePreviewUrls={selectedImagePreviewUrls}
+        />
         {submitError ? (
           <div
             className="sticky top-0 z-10 mx-5 my-3 rounded-[10px] border border-[var(--red-border)] bg-[var(--red-pale)] px-3.5 py-3 text-[9px] font-bold text-[var(--red-ink)] shadow-[0_8px_24px_rgba(80,32,23,0.08)]"
@@ -171,10 +203,15 @@ export function VehicleEditorDrawer({
           errors={errors}
           update={update}
           disabled={effectiveBusy}
-          selectedImageFile={selectedImageFile}
+          existingImageUrls={existingImages}
+          selectedImageFiles={selectedImageFiles}
+          selectedImagePreviewUrls={selectedImagePreviewUrls}
           fileInputRef={fileInputRef}
-          onSelectImage={selectImage}
-          onClearSelectedImage={clearSelectedImage}
+          onSelectImages={selectImages}
+          onClearSelectedImages={clearSelectedImages}
+          onRemoveSelectedImage={removeSelectedImage}
+          onRemoveExistingImage={removeExistingImage}
+          onMakeExistingImageCover={makeExistingImageCover}
         />
         <VehicleEditorFooter
           isNew={isNew}

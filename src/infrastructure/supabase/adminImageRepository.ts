@@ -91,6 +91,12 @@ function validateFileSize(file: File): void {
   if (file.size > ADMIN_IMAGE_MAX_BYTES) fail("ADMIN_IMAGE_TOO_LARGE");
 }
 
+export function validateAdminVehicleImageFile(file: File): AdminImageMimeType {
+  const mimeType = resolveMimeType(file);
+  validateFileSize(file);
+  return mimeType;
+}
+
 function generatedPathId(): string {
   const uuid = globalThis.crypto?.randomUUID?.();
   if (uuid) return uuid;
@@ -155,8 +161,7 @@ export async function uploadAdminVehicleImage(
     pathId?: string;
   } = {},
 ): Promise<{ path: string; publicUrl: string }> {
-  const mimeType = resolveMimeType(file);
-  validateFileSize(file);
+  const mimeType = validateAdminVehicleImageFile(file);
   const path = buildImagePath(mimeType, pathId);
 
   let source: AdminImageDataSource;
@@ -177,4 +182,23 @@ export async function uploadAdminVehicleImage(
   } catch (error) {
     return fail("ADMIN_IMAGE_PUBLIC_URL_FAILED", error);
   }
+}
+
+/**
+ * Validates the complete batch before creating any Storage objects, then
+ * uploads sequentially so the returned URLs preserve the user's selection
+ * order.
+ */
+export async function uploadAdminVehicleImages(
+  files: readonly File[],
+  { dataSource }: { dataSource?: AdminImageDataSource } = {},
+): Promise<Array<{ path: string; publicUrl: string }>> {
+  const queue = [...files];
+  queue.forEach(validateAdminVehicleImageFile);
+
+  const uploaded: Array<{ path: string; publicUrl: string }> = [];
+  for (const file of queue) {
+    uploaded.push(await uploadAdminVehicleImage(file, { dataSource }));
+  }
+  return uploaded;
 }

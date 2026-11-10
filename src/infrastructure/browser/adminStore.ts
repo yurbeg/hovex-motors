@@ -5,6 +5,7 @@ import type {
   VehicleInput,
   VehicleStatus,
 } from "../../domain/vehicle";
+import { normalizeVehicleImages } from "../../domain/vehicle";
 
 export { DEFAULT_VEHICLE_FORM } from "../../domain/vehicle";
 export type {
@@ -72,6 +73,9 @@ function normalizeVehicle(
     && vehicleInventoryStatuses.has(rawInventoryStatus as VehicleInventoryStatus)
     ? rawInventoryStatus as VehicleInventoryStatus
     : "at_auction";
+  const legacyImage = text(item.image);
+  const images = normalizeVehicleImages(legacyImage, item.images);
+  const image = images[0] || legacyImage;
 
   return {
     ...item,
@@ -87,7 +91,8 @@ function normalizeVehicle(
     estimateMin: number(item.estimateMin),
     estimateMax: number(item.estimateMax),
     maxBid: number(item.maxBid),
-    image: text(item.image),
+    image,
+    images,
     imagePosition: text(item.imagePosition, "50% 50%"),
     badge: text(item.badge),
     accent: text(item.accent, "yellow"),

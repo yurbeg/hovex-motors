@@ -186,7 +186,7 @@ export function AuctionVehicleDetailsPage({ lotId }: { lotId: string }) {
           <aside className="sticky top-24 self-start overflow-hidden rounded-[18px] border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-sm)] [grid-column:2] [grid-row:1/span_2] max-[1080px]:static max-[1080px]:[grid-column:1] max-[1080px]:[grid-row:2]">
             <div className="border-b border-[var(--border)] p-6 max-[800px]:p-5">
               <p className="m-0 text-[10px] font-black tracking-[0.06em] text-[var(--yellow-ink)] uppercase">Copart · լոտ {lot.lotNumber || lot.providerLotId}</p>
-              <h1 className="mt-2 mb-0 text-[clamp(27px,3vw,38px)] leading-[1.2] font-black">{name}</h1>
+              <h1 className="mt-2 mb-0 text-[clamp(27px,3vw,38px)] leading-[1.26] font-bold">{name}</h1>
               <div className="mt-4 flex flex-wrap gap-2 text-[10px] font-bold">
                 {lot.status ? <span className="rounded-full bg-[var(--surface-soft)] px-3 py-2">{lot.status}</span> : null}
                 {lot.location ? <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--surface-soft)] px-3 py-2"><MapPin size={15} aria-hidden="true" />{lot.location}</span> : null}

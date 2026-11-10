@@ -56,8 +56,8 @@ export function VehicleBasicFields({ form, errors, update, disabled }: VehicleBa
           <input className={formControlClasses} value={form.damage} onChange={update("damage")} placeholder="Առջևի թեթև վնասվածք" />
         </label>
         <label className={classNames(formLabelClasses, "col-span-full max-[700px]:col-auto")}>
-          <span>Աղբյուր</span>
-          <input className={formControlClasses} value={form.auction} onChange={update("auction")} placeholder="Copart • ցուցադրական" />
+          <span>Գտնվելու վայր / նշում</span>
+          <input className={formControlClasses} value={form.auction} onChange={update("auction")} placeholder="Hovex Motors • Երևան" />
         </label>
       </div>
     </fieldset>

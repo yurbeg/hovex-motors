@@ -22,6 +22,7 @@ const ADMIN_VEHICLE_COLUMNS = [
   "estimate_max",
   "max_bid",
   "image",
+  "images",
   "image_position",
   "badge",
   "accent",
@@ -100,6 +101,7 @@ function mapCreateRow(vehicle: Vehicle): AdminVehicleInsertRow {
     estimate_max: vehicle.estimateMax,
     max_bid: vehicle.maxBid,
     image: vehicle.image,
+    images: vehicle.images,
     image_position: vehicle.imagePosition,
     badge: vehicle.badge,
     accent: vehicle.accent,
@@ -124,6 +126,7 @@ function mapUpdateRow(patch: Partial<Vehicle>): AdminVehicleUpdateRow {
     ...(patch.estimateMax !== undefined ? { estimate_max: patch.estimateMax } : {}),
     ...(patch.maxBid !== undefined ? { max_bid: patch.maxBid } : {}),
     ...(patch.image !== undefined ? { image: patch.image } : {}),
+    ...(patch.images !== undefined ? { images: patch.images } : {}),
     ...(patch.imagePosition !== undefined ? { image_position: patch.imagePosition } : {}),
     ...(patch.badge !== undefined ? { badge: patch.badge } : {}),
     ...(patch.accent !== undefined ? { accent: patch.accent } : {}),
@@ -207,6 +210,9 @@ export async function createAdminVehicle(
   { dataSource }: { dataSource?: AdminVehicleDataSource } = {},
 ): Promise<Vehicle> {
   try {
+    if (vehicle.inventoryStatus !== "available") {
+      throw new Error("Admin-created vehicles must be available inventory");
+    }
     const row = await requireDataSource(dataSource).create(mapCreateRow(vehicle));
     return mapVehicleRow(row);
   } catch (error) {

@@ -1,13 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
+import { vehicleDetailsPath } from "../../app/routes";
 import { loadPublicVehicles } from "../../application/publicCatalog";
-import {
-  countPublicInventoryVehicles,
-  filterPublicInventoryVehicles,
-  publicInventoryFilterFromSearch,
-  publicInventorySearchWithFilter,
-  type PublicInventoryFilter,
-} from "../../application/publicInventory";
 import type { Vehicle } from "../../domain/vehicle";
 import { getVehicles, subscribeVehicles } from "../../infrastructure/browser/adminStore";
 import { submitPublicLead } from "../../infrastructure/supabase/publicLeadRepository";
@@ -30,7 +24,6 @@ import { SocialProof } from "./home/SocialProof";
 import { Faq } from "./home/Faq";
 import { CompareBar } from "./vehicles/CompareBar";
 import { Notice } from "./shared/Notice";
-import { VehicleDetailsModal } from "./vehicles/VehicleDetailsModal";
 import { CompareModal } from "./vehicles/CompareModal";
 import { ConsultationModal } from "./consultation/ConsultationModal";
 
@@ -38,14 +31,11 @@ export function HomeApp() {
   const [allVehicles, setAllVehicles] = useState<Vehicle[]>(() => getVehicles());
   const [criteria, setCriteria] = useState<SearchCriteria>(DEFAULT_SEARCH_CRITERIA);
   const [appliedCriteria, setAppliedCriteria] = useState<SearchCriteria>(criteria);
-  const [inventoryFilter, setInventoryFilter] = useState<PublicInventoryFilter>(() => (
-    typeof window === "undefined"
-      ? "all"
-      : publicInventoryFilterFromSearch(window.location.search)
-  ));
   const [searchState, setSearchState] = useState<SearchState>("idle");
   const searchTimerRef = useRef<number | undefined>(undefined);
-  const vehicles = useMemo(() => allVehicles.filter((vehicle) => vehicle.status === "published"), [allVehicles]);
+  const vehicles = useMemo(() => allVehicles.filter((vehicle) => (
+    vehicle.status === "published" && vehicle.inventoryStatus === "available"
+  )), [allVehicles]);
   const interactions = usePublicInteractions(vehicles);
   const makes = useMemo(() => [...new Set(vehicles.map((vehicle) => vehicle.make).filter(Boolean))].sort((left, right) => left.localeCompare(right, "hy")), [vehicles]);
 
@@ -83,24 +73,6 @@ export function HomeApp() {
 
   useEffect(() => () => window.clearTimeout(searchTimerRef.current), []);
 
-  useEffect(() => {
-    const handlePopState = (): void => {
-      setInventoryFilter(publicInventoryFilterFromSearch(window.location.search));
-    };
-
-    window.addEventListener("popstate", handlePopState);
-    return () => window.removeEventListener("popstate", handlePopState);
-  }, []);
-
-  useEffect(() => {
-    const search = publicInventorySearchWithFilter(window.location.search, inventoryFilter);
-    const nextUrl = `${window.location.pathname}${search}${window.location.hash}`;
-    const currentUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
-    if (nextUrl !== currentUrl) {
-      window.history.replaceState(window.history.state, "", nextUrl);
-    }
-  }, [inventoryFilter]);
-
   const results = useMemo(() => {
     const budget = Number(appliedCriteria.budget) || Number.POSITIVE_INFINITY;
     const yearFrom = Number(appliedCriteria.yearFrom);
@@ -113,15 +85,7 @@ export function HomeApp() {
     });
   }, [appliedCriteria, vehicles]);
 
-  const inventoryBaseVehicles = searchState === "searched" ? results : vehicles;
-  const inventoryCounts = useMemo(
-    () => countPublicInventoryVehicles(inventoryBaseVehicles),
-    [inventoryBaseVehicles],
-  );
-  const inventoryResults = useMemo(
-    () => filterPublicInventoryVehicles(inventoryBaseVehicles, inventoryFilter),
-    [inventoryBaseVehicles, inventoryFilter],
-  );
+  const displayedVehicles = searchState === "searched" ? results : vehicles;
 
   const handleSearch = (event: FormEvent<HTMLFormElement>): void => {
     event.preventDefault();
@@ -143,19 +107,17 @@ export function HomeApp() {
   const resetFilters = (): void => {
     setCriteria(DEFAULT_SEARCH_CRITERIA);
     setAppliedCriteria(DEFAULT_SEARCH_CRITERIA);
-    setInventoryFilter("all");
     setSearchState("idle");
     window.setTimeout(() => scrollToId("finder"), 0);
-  };
-
-  const changeInventoryFilter = (nextFilter: PublicInventoryFilter): void => {
-    setInventoryFilter(nextFilter);
-    window.setTimeout(() => scrollToId("vehicles"), 0);
   };
 
   const openFinder = (): void => {
     interactions.setAssistantOpen(false);
     scrollToId("finder");
+  };
+
+  const openVehicleDetails = (vehicle: Vehicle): void => {
+    window.location.assign(vehicleDetailsPath(vehicle.id));
   };
 
   return (
@@ -165,7 +127,7 @@ export function HomeApp() {
         <Hero onConsultation={interactions.openConsultation} />
         <VehicleFinder criteria={criteria} setCriteria={setCriteria} onSearch={handleSearch} isLoading={searchState === "loading"} makes={makes} />
         <CostStrip />
-        <SearchResults results={inventoryResults} state={searchState} criteria={appliedCriteria} inventoryFilter={inventoryFilter} inventoryCounts={inventoryCounts} compared={interactions.compared} onInventoryFilterChange={changeInventoryFilter} onCompare={interactions.toggleCompare} onDetails={interactions.setDetailVehicle} onConsultation={interactions.openConsultation} onReset={resetFilters} />
+        <SearchResults results={displayedVehicles} state={searchState} criteria={appliedCriteria} compared={interactions.compared} onCompare={interactions.toggleCompare} onConsultation={interactions.openConsultation} onReset={resetFilters} />
         <HowItWorks />
         <ConsultationBanner onConsultation={interactions.openConsultation} />
         <TransparencySection onConsultation={interactions.openConsultation} />
@@ -173,11 +135,10 @@ export function HomeApp() {
         <Faq />
       </main>
       <PublicFooter />
-      <AiAssistant open={interactions.assistantOpen} onOpenChange={interactions.setAssistantOpen} vehicles={vehicles} criteria={criteria} compared={interactions.compared} onVehicleDetails={interactions.setDetailVehicle} onCompare={interactions.toggleCompare} onConsultation={(id) => interactions.openConsultation(id, "ai-assistant")} onOpenFinder={() => window.location.assign("/catalog")} />
+      <AiAssistant open={interactions.assistantOpen} onOpenChange={interactions.setAssistantOpen} vehicles={vehicles} criteria={criteria} compared={interactions.compared} onVehicleDetails={openVehicleDetails} onCompare={interactions.toggleCompare} onConsultation={(id) => interactions.openConsultation(id, "ai-assistant")} onOpenFinder={() => window.location.assign("/catalog")} />
       <MobileActionBar page="home" assistantOpen={interactions.assistantOpen} onOpenAssistant={() => interactions.setAssistantOpen(true)} onConsultation={() => interactions.openConsultation(null)} onPrimaryAction={openFinder} />
       {interactions.compared.length ? <CompareBar count={interactions.compared.length} onOpen={interactions.openCompare} onClear={() => interactions.setCompared([])} /> : null}
       <Notice message={interactions.notice} />
-      {interactions.detailVehicle ? <VehicleDetailsModal vehicle={interactions.detailVehicle} onClose={() => interactions.setDetailVehicle(null)} onConsultation={interactions.openConsultation} isCompared={interactions.compared.includes(interactions.detailVehicle.id)} onCompare={interactions.toggleCompare} /> : null}
       {interactions.compareOpen ? <CompareModal items={interactions.comparedVehicles} onClose={() => interactions.setCompareOpen(false)} onRemove={interactions.removeCompareItem} onConsultation={interactions.openConsultation} /> : null}
       {interactions.consultVehicleId !== undefined ? <ConsultationModal selectedVehicle={interactions.selectedConsultVehicle} onClose={interactions.closeConsultation} source={interactions.consultSource} onSubmitLead={submitPublicLead} /> : null}
     </>

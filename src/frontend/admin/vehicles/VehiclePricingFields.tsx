@@ -1,6 +1,6 @@
 import { classNames } from "../shared/classNames";
 import { formControlClasses, formLabelClasses } from "../shared/styles";
-import { vehicleInventoryStatus } from "../shared/statuses";
+import { StatusBadge } from "../components/StatusBadge";
 import type {
   VehicleEditorErrors,
   VehicleEditorForm,
@@ -43,11 +43,14 @@ export function VehiclePricingFields({ form, errors, update }: VehiclePricingFie
       </label>
       <label className={formLabelClasses}>
         <span>Մեքենայի գտնվելու վիճակ</span>
-        <select name="inventoryStatus" className={formControlClasses} value={form.inventoryStatus} onChange={update("inventoryStatus")}>
-          {Object.entries(vehicleInventoryStatus).map(([value, item]) => (
-            <option key={value} value={value}>{item.label}</option>
-          ))}
-        </select>
+        <span className="flex min-h-[43px] items-center rounded-[9px] border border-[var(--border)] bg-[var(--surface-soft)] px-[11px]">
+          <StatusBadge type="inventory" value={form.inventoryStatus} />
+        </span>
+        <small className="!leading-[1.5] !text-[var(--muted)]">
+          {form.id
+            ? "Կարգավիճակը պահպանվում է։ Նոր աճուրդային մեքենաները ներմուծվում են Copart API-ով։"
+            : "Admin-ից նոր մեքենան ավելացվում է միայն որպես «Առկա»։ Աճուրդային մեքենաները գալիս են Copart API-ից։"}
+        </small>
       </label>
       <label className={formLabelClasses}>
         <span>Հրապարակման վիճակ</span>

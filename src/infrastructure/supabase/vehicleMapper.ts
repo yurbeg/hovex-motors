@@ -3,6 +3,10 @@ import type {
   VehicleInventoryStatus,
   VehicleStatus,
 } from "../../domain/vehicle";
+import {
+  isSafeVehicleImageUrl,
+  normalizeVehicleImages,
+} from "../../domain/vehicle";
 
 const vehicleStatuses = new Set<VehicleStatus>(["published", "draft", "archived"]);
 const vehicleInventoryStatuses = new Set<VehicleInventoryStatus>([
@@ -57,6 +61,12 @@ export function mapVehicleRow(value: unknown): Vehicle {
     throw new Error("Vehicle row has an invalid timestamp");
   }
 
+  const image = requiredText(row, "image").trim();
+  if (!isSafeVehicleImageUrl(image)) {
+    throw new Error("Vehicle row has an invalid image");
+  }
+  const images = normalizeVehicleImages(image, row.images);
+
   return {
     id: requiredText(row, "id"),
     make: requiredText(row, "make"),
@@ -70,7 +80,8 @@ export function mapVehicleRow(value: unknown): Vehicle {
     estimateMin: requiredNumber(row, "estimate_min"),
     estimateMax: requiredNumber(row, "estimate_max"),
     maxBid: requiredNumber(row, "max_bid"),
-    image: requiredText(row, "image"),
+    image,
+    images,
     imagePosition: requiredText(row, "image_position"),
     badge: requiredText(row, "badge", true),
     accent: requiredText(row, "accent"),

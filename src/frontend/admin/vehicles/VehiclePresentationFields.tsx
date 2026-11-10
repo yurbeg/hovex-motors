@@ -14,10 +14,15 @@ interface VehiclePresentationFieldsProps {
   errors: VehicleEditorErrors;
   update: VehicleFieldUpdater;
   disabled: boolean;
-  selectedImageFile: File | null;
+  existingImageUrls: readonly string[];
+  selectedImageFiles: readonly File[];
+  selectedImagePreviewUrls: readonly string[];
   fileInputRef: RefObject<HTMLInputElement | null>;
-  onSelectImage: (event: ChangeEvent<HTMLInputElement>) => void;
-  onClearSelectedImage: () => void;
+  onSelectImages: (event: ChangeEvent<HTMLInputElement>) => void;
+  onClearSelectedImages: () => void;
+  onRemoveSelectedImage: (index: number) => void;
+  onRemoveExistingImage: (index: number) => void;
+  onMakeExistingImageCover: (index: number) => void;
 }
 
 export function VehiclePresentationFields({
@@ -25,10 +30,15 @@ export function VehiclePresentationFields({
   errors,
   update,
   disabled,
-  selectedImageFile,
+  existingImageUrls,
+  selectedImageFiles,
+  selectedImagePreviewUrls,
   fileInputRef,
-  onSelectImage,
-  onClearSelectedImage,
+  onSelectImages,
+  onClearSelectedImages,
+  onRemoveSelectedImage,
+  onRemoveExistingImage,
+  onMakeExistingImageCover,
 }: VehiclePresentationFieldsProps) {
   return (
     <fieldset className={formFieldsetClasses} disabled={disabled}>
@@ -39,10 +49,15 @@ export function VehiclePresentationFields({
           form={form}
           errors={errors}
           update={update}
-          selectedImageFile={selectedImageFile}
+          existingImageUrls={existingImageUrls}
+          selectedImageFiles={selectedImageFiles}
+          selectedImagePreviewUrls={selectedImagePreviewUrls}
           fileInputRef={fileInputRef}
-          onSelectImage={onSelectImage}
-          onClearSelectedImage={onClearSelectedImage}
+          onSelectImages={onSelectImages}
+          onClearSelectedImages={onClearSelectedImages}
+          onRemoveSelectedImage={onRemoveSelectedImage}
+          onRemoveExistingImage={onRemoveExistingImage}
+          onMakeExistingImageCover={onMakeExistingImageCover}
         />
         <VehicleFeaturedField form={form} update={update} />
       </div>

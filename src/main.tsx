@@ -11,13 +11,17 @@ const RootApp = appRoute === "admin"
   ? lazy(() => import("./frontend/admin/AdminApp").then((module) => ({ default: module.AdminApp })))
   : appRoute === "catalog"
     ? lazy(() => import("./frontend/public/CatalogApp").then((module) => ({ default: module.CatalogApp })))
-    : lazy(() => import("./frontend/public/HomeApp").then((module) => ({ default: module.HomeApp })));
+    : appRoute === "vehicle"
+      ? lazy(() => import("./frontend/public/vehicles/VehicleDetailsApp").then((module) => ({ default: module.VehicleDetailsApp })))
+      : lazy(() => import("./frontend/public/HomeApp").then((module) => ({ default: module.HomeApp })));
 
 document.title = appRoute === "admin"
   ? "Hovex Admin"
   : appRoute === "catalog"
     ? "Մեքենաների կատալոգ | Hovex Motors"
-    : "Hovex Motors — մեքենաների ընտրություն և ներմուծում";
+    : appRoute === "vehicle"
+      ? "Մեքենայի մանրամասներ | Hovex Motors"
+      : "Hovex Motors — մեքենաների ընտրություն և ներմուծում";
 
 const root = document.getElementById("root");
 

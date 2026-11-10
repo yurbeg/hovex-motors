@@ -77,7 +77,7 @@ export function VehiclesPage({
   return (
     <>
       <section className={pageHeadingClasses}>
-        <div className="min-w-0"><p className={eyebrowClasses}>Հանրային առաջարկներ</p><h1 className="mb-[7px] mt-1 text-[clamp(27px,2.4vw,36px)] leading-[1.15] tracking-[-0.035em] max-[700px]:text-2xl max-[430px]:text-[21px]">Մեքենաների կառավարում</h1><span className="text-[13px] text-[var(--ink-soft)]">{availableCount} առկա · {inTransitCount} ճանապարհին · {atAuctionCount} աճուրդում</span></div>
+        <div className="min-w-0"><p className={eyebrowClasses}>Հանրային առաջարկներ</p><h1 className="mb-[7px] mt-1 text-[clamp(27px,2.4vw,36px)] leading-[1.22] font-bold max-[700px]:text-2xl max-[430px]:text-[21px]">Մեքենաների կառավարում</h1><span className="text-[13px] text-[var(--ink-soft)]">{availableCount} առկա · {inTransitCount} ճանապարհին · {atAuctionCount} աճուրդում</span></div>
         <AdminButton className={pageHeadingButtonClasses} icon={Plus} onClick={onNew} disabled={mutationsLocked} aria-label="Ավելացնել մեքենա">Ավելացնել մեքենա</AdminButton>
       </section>
       <DataModeNotice scope="vehicles" />

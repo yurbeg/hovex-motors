@@ -57,7 +57,7 @@ export function RequestsPage({ leads, managers, now, loading, onOpenLead, onExpo
   return (
     <>
       <section className={pageHeadingClasses}>
-        <div className="min-w-0"><p className={eyebrowClasses}>Հաճախորդների հոսք</p><h1 className="mb-[7px] mt-1 text-[clamp(27px,2.4vw,36px)] leading-[1.15] tracking-[-0.035em] max-[700px]:text-2xl max-[430px]:text-[21px]">Խորհրդատվության հարցումներ</h1><span className="text-[13px] text-[var(--ink-soft)]">{loading ? "Տվյալները բեռնվում են…" : `${leads.length} ընդհանուր · ${leads.filter((lead) => lead.status === "new").length} նոր · ${overdueCount} ուշացած`}</span></div>
+        <div className="min-w-0"><p className={eyebrowClasses}>Հաճախորդների հոսք</p><h1 className="mb-[7px] mt-1 text-[clamp(27px,2.4vw,36px)] leading-[1.22] font-bold max-[700px]:text-2xl max-[430px]:text-[21px]">Խորհրդատվության հարցումներ</h1><span className="text-[13px] text-[var(--ink-soft)]">{loading ? "Տվյալները բեռնվում են…" : `${leads.length} ընդհանուր · ${leads.filter((lead) => lead.status === "new").length} նոր · ${overdueCount} ուշացած`}</span></div>
         <AdminButton className={pageHeadingButtonClasses} icon={DownloadSimple} variant="secondary" onClick={onExport} disabled={loading || !leads.length} aria-label="Ներբեռնել հարցումները CSV ձևաչափով">Ներբեռնել CSV</AdminButton>
       </section>
       <DataModeNotice scope="requests" />

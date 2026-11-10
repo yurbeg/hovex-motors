@@ -29,7 +29,7 @@ export function AuctionVehicleCard({ lot }: { lot: AuctionCatalogLot }) {
 
       <div className="p-[18px]">
         <p className="m-0 text-[10px] font-bold tracking-[0.04em] text-[var(--muted)]">Լոտ {lot.lotNumber || lot.providerLotId}</p>
-        <h3 className="mt-1 mb-0 min-h-[52px] text-[19px] leading-[1.35] font-black max-[800px]:min-h-0">
+        <h3 className="mt-1 mb-0 min-h-[52px] text-[19px] leading-[1.4] font-bold max-[800px]:min-h-0">
           <a className="hover:underline" href={detailUrl}>{name}</a>
         </h3>
 

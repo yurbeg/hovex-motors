@@ -30,6 +30,7 @@ const baseRow: VehicleRow = {
   estimate_max: 12000,
   max_bid: 8000,
   image: "/assets/test.jpg",
+  images: ["/assets/test.jpg", "/assets/test-side.jpg"],
   image_position: "50% 40%",
   badge: "Test",
   accent: "yellow",
@@ -89,6 +90,7 @@ test("create maps only writable columns and trusts database timestamps", async (
   let inserted: AdminVehicleInsertRow | undefined;
   const databaseRow: VehicleRow = {
     ...baseRow,
+    inventory_status: "available",
     created_at: "2026-11-05T10:00:00.000Z",
     updated_at: "2026-11-05T10:00:01.000Z",
   };
@@ -99,7 +101,7 @@ test("create maps only writable columns and trusts database timestamps", async (
     },
   });
   const input = {
-    ...asVehicle(),
+    ...asVehicle(databaseRow),
     createdAt: "2000-01-01T00:00:00.000Z",
     updatedAt: "2000-01-01T00:00:00.000Z",
     ignoredField: "must not reach the database",
@@ -121,11 +123,12 @@ test("create maps only writable columns and trusts database timestamps", async (
     estimate_max: baseRow.estimate_max,
     max_bid: baseRow.max_bid,
     image: baseRow.image,
+    images: baseRow.images,
     image_position: baseRow.image_position,
     badge: baseRow.badge,
     accent: baseRow.accent,
     status: baseRow.status,
-    inventory_status: baseRow.inventory_status,
+    inventory_status: databaseRow.inventory_status,
     featured: baseRow.featured,
     sort_order: baseRow.sort_order,
   });
@@ -135,6 +138,27 @@ test("create maps only writable columns and trusts database timestamps", async (
   assert.equal(created.updatedAt, databaseRow.updated_at);
 });
 
+test("create rejects non-available inventory before calling the data source", async () => {
+  let createCalls = 0;
+  const dataSource = makeDataSource({
+    create: async () => {
+      createCalls += 1;
+      return baseRow;
+    },
+  });
+
+  await assert.rejects(
+    () => createAdminVehicle(asVehicle(), { dataSource }),
+    (error: unknown) => {
+      assert.ok(error instanceof AdminVehicleRepositoryError);
+      assert.equal(error.code, "ADMIN_VEHICLE_CREATE_FAILED");
+      assert.equal(error.message, ADMIN_VEHICLE_ERROR_MESSAGES.ADMIN_VEHICLE_CREATE_FAILED);
+      return true;
+    },
+  );
+  assert.equal(createCalls, 0);
+});
+
 test("update whitelists mutable fields and returns the database row", async () => {
   let updatedId = "";
   let updatedPatch: AdminVehicleUpdateRow | undefined;
@@ -142,6 +166,8 @@ test("update whitelists mutable fields and returns the database row", async () =
   const databaseRow: VehicleRow = {
     ...baseRow,
     badge: "",
+    image: "/assets/new-cover.jpg",
+    images: ["/assets/new-cover.jpg", "/assets/test-side.jpg"],
     inventory_status: "in_transit",
     featured: false,
     sort_order: 0,
@@ -158,6 +184,8 @@ test("update whitelists mutable fields and returns the database row", async () =
   const patch = {
     id: "attempted-id-change",
     badge: "",
+    image: "/assets/new-cover.jpg",
+    images: ["/assets/new-cover.jpg", "/assets/test-side.jpg"],
     inventoryStatus: "in_transit",
     featured: false,
     sortOrder: 0,
@@ -174,12 +202,15 @@ test("update whitelists mutable fields and returns the database row", async () =
   assert.equal(updatedId, baseRow.id);
   assert.deepEqual(updatedPatch, {
     badge: "",
+    image: "/assets/new-cover.jpg",
+    images: ["/assets/new-cover.jpg", "/assets/test-side.jpg"],
     inventory_status: "in_transit",
     featured: false,
     sort_order: 0,
   });
   assert.equal(expectedUpdatedAt, baseRow.updated_at);
   assert.equal(updated.id, baseRow.id);
+  assert.deepEqual(updated.images, databaseRow.images);
   assert.equal(updated.updatedAt, databaseRow.updated_at);
 });
 
@@ -214,7 +245,10 @@ test("repository operations reject with stable errors and never fall back locall
       code: "ADMIN_VEHICLES_LOAD_FAILED",
     },
     {
-      action: () => createAdminVehicle(asVehicle(), { dataSource: failingDataSource }),
+      action: () => createAdminVehicle(asVehicle({
+        ...baseRow,
+        inventory_status: "available",
+      }), { dataSource: failingDataSource }),
       code: "ADMIN_VEHICLE_CREATE_FAILED",
     },
     {
@@ -237,9 +271,10 @@ test("repository operations reject with stable errors and never fall back locall
 test("invalid returned rows and empty updates use the same stable operation errors", async () => {
   const malformed = { ...baseRow, updated_at: "not-a-date" } as VehicleRow;
   const malformedSource = makeDataSource({ create: async () => malformed });
+  const availableVehicle = asVehicle({ ...baseRow, inventory_status: "available" });
 
   await assert.rejects(
-    () => createAdminVehicle(asVehicle(), { dataSource: malformedSource }),
+    () => createAdminVehicle(availableVehicle, { dataSource: malformedSource }),
     (error: unknown) => error instanceof AdminVehicleRepositoryError
       && error.code === "ADMIN_VEHICLE_CREATE_FAILED",
   );

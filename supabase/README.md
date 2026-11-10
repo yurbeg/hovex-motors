@@ -20,8 +20,8 @@ defines the server-enforced authorization rules used by the browser app.
   only explicit archive events may deactivate lots.
 - `migrations/202611090001_motorapi_catalog_title_search.sql` keeps title-only
   AuctionsAPI vehicles searchable in the public catalog.
-- `migrations/202611090002_vehicle_inventory_status.sql` adds the independent
-  available / in-transit / at-auction stage used by admin and public cards.
+- `migrations/202611090002_vehicle_inventory_status.sql` adds the legacy
+  available / in-transit / at-auction stage retained for existing rows.
 - `migrations/202611100001_create_leads.sql` creates the protected consultation
   lead store, consent/idempotency fields, admin read/status-only RLS, and the
   private hashed rate-limit counter.
@@ -31,6 +31,16 @@ defines the server-enforced authorization rules used by the browser app.
   updates with audited workflow RPCs, adds managers, a server-owned 30-minute
   first-response SLA, append-only activities/internal notes, and the private
   leased Telegram notification outbox.
+- `migrations/202611100004_vehicle_gallery.sql` adds the ordered curated-car
+  gallery while keeping the legacy cover field synchronized.
+- `migrations/202611100005_available_inventory_boundary.sql` defaults and
+  restricts new admin rows to available inventory, while public vehicle reads
+  exclude legacy transit/auction rows. Copart lots remain in
+  `motorapi_catalog`.
+- `migrations/202611100006_seed_listam_test_inventory.sql` adds ten explicitly
+  labeled List.am prototype vehicles with source listing IDs and 5–7 public
+  gallery URLs each. It intentionally excludes seller contact details, precise
+  addresses, and VINs.
 - `functions/motorapis-sync/` is the legacy-named, server-only AuctionsAPI
   scheduled importer. Shared client, mapping, repository, and orchestration
   code lives in `functions/_shared/`.
@@ -159,10 +169,11 @@ admin's manager identity when the lead workflow migration is installed.
 
 On a non-production Supabase project, verify that:
 
-- anonymous users can read only `published` vehicles and cannot write;
+- anonymous users can read only published, available vehicles and cannot write;
 - an authenticated non-admin cannot read drafts or mutate catalog/storage;
-- the allowlisted admin can read all vehicles, insert/update rows, and upload
-  allowed image types under `vehicle-images/vehicles/`;
+- the allowlisted admin can read and update all legacy vehicles, insert only
+  available vehicles, and upload allowed image types under
+  `vehicle-images/vehicles/`;
 - public image delivery works without granting public object mutation.
 - anonymous and ordinary authenticated clients cannot select, insert, update,
   or delete `leads` directly;

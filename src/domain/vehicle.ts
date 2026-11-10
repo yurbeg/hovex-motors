@@ -1,6 +1,38 @@
 export type VehicleStatus = "published" | "draft" | "archived";
 export type VehicleInventoryStatus = "available" | "in_transit" | "at_auction";
 
+export const MAX_VEHICLE_IMAGES = 12;
+
+const safeVehicleImagePattern = /^(?:https?:\/\/[^\s]+|\/[^\s]*)$/i;
+
+export function isSafeVehicleImageUrl(value: unknown): value is string {
+  return typeof value === "string"
+    && value === value.trim()
+    && value.length > 0
+    && value.length <= 2048
+    && safeVehicleImagePattern.test(value);
+}
+
+/**
+ * Normalizes legacy or untrusted gallery values while retaining `image` as the
+ * canonical cover. The database enforces the same ordering and size limit.
+ */
+export function normalizeVehicleImages(image: string, value: unknown): string[] {
+  const candidates = [image, ...(Array.isArray(value) ? value : [])];
+  const images: string[] = [];
+  const seen = new Set<string>();
+
+  for (const candidate of candidates) {
+    const normalized = typeof candidate === "string" ? candidate.trim() : "";
+    if (!isSafeVehicleImageUrl(normalized) || seen.has(normalized)) continue;
+    seen.add(normalized);
+    images.push(normalized);
+    if (images.length === MAX_VEHICLE_IMAGES) break;
+  }
+
+  return images;
+}
+
 export interface Vehicle {
   id: string;
   make: string;
@@ -15,6 +47,7 @@ export interface Vehicle {
   estimateMax: number;
   maxBid: number;
   image: string;
+  images: string[];
   imagePosition: string;
   badge: string;
   accent: string;
@@ -45,6 +78,7 @@ export interface VehicleForm {
   estimateMax: string;
   maxBid: string;
   image: string;
+  images: string[];
   imagePosition: string;
   badge: string;
   accent: string;
@@ -66,10 +100,11 @@ export const DEFAULT_VEHICLE_FORM: VehicleForm = {
   estimateMax: "",
   maxBid: "",
   image: "",
+  images: [],
   imagePosition: "50% 50%",
   badge: "",
   accent: "yellow",
   status: "draft",
-  inventoryStatus: "at_auction",
+  inventoryStatus: "available",
   featured: false,
 };

@@ -4,14 +4,13 @@ import type { ConsultationHandler, ConsultationSource } from "../shared/types";
 
 export function usePublicInteractions(vehicles: Vehicle[]) {
   const [compared, setCompared] = useState<string[]>([]);
-  const [detailVehicle, setDetailVehicle] = useState<Vehicle | null>(null);
   const [consultVehicleId, setConsultVehicleId] = useState<string | null | undefined>(undefined);
   const [compareOpen, setCompareOpen] = useState(false);
   const [assistantOpen, setAssistantOpen] = useState(false);
   const [consultSource, setConsultSource] = useState<ConsultationSource>("website");
   const [notice, setNotice] = useState("");
   const noticeTimerRef = useRef<number | undefined>(undefined);
-  const modalOpen = Boolean(detailVehicle) || consultVehicleId !== undefined || compareOpen;
+  const modalOpen = consultVehicleId !== undefined || compareOpen;
 
   const comparedVehicles = useMemo(() => vehicles.filter((vehicle) => compared.includes(vehicle.id)), [compared, vehicles]);
   const selectedConsultVehicle = useMemo(() => vehicles.find((vehicle) => vehicle.id === consultVehicleId) || null, [consultVehicleId, vehicles]);
@@ -19,7 +18,6 @@ export function usePublicInteractions(vehicles: Vehicle[]) {
   useEffect(() => {
     const currentVehicles = new Map(vehicles.map((vehicle) => [vehicle.id, vehicle]));
     setCompared((current) => current.filter((id) => currentVehicles.has(id)));
-    setDetailVehicle((current) => current ? currentVehicles.get(current.id) || null : null);
     setConsultVehicleId((current) => (
       typeof current === "string" && !currentVehicles.has(current) ? null : current
     ));
@@ -29,7 +27,6 @@ export function usePublicInteractions(vehicles: Vehicle[]) {
     document.body.classList.toggle("modal-open", modalOpen);
     const onKeyDown = (event: KeyboardEvent): void => {
       if (event.key !== "Escape") return;
-      setDetailVehicle(null);
       setConsultVehicleId(undefined);
       setCompareOpen(false);
     };
@@ -82,7 +79,6 @@ export function usePublicInteractions(vehicles: Vehicle[]) {
   };
 
   const openConsultation: ConsultationHandler = (id, source = "website") => {
-    setDetailVehicle(null);
     setCompareOpen(false);
     setAssistantOpen(false);
     setConsultSource(source);
@@ -102,7 +98,6 @@ export function usePublicInteractions(vehicles: Vehicle[]) {
     comparedVehicles,
     consultSource,
     consultVehicleId,
-    detailVehicle,
     notice,
     openCompare,
     openConsultation,
@@ -111,7 +106,6 @@ export function usePublicInteractions(vehicles: Vehicle[]) {
     setAssistantOpen,
     setCompareOpen,
     setCompared,
-    setDetailVehicle,
     showNotice,
     toggleCompare,
   };

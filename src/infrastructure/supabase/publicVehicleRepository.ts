@@ -20,6 +20,7 @@ const PUBLIC_VEHICLE_COLUMNS = [
   "estimate_max",
   "max_bid",
   "image",
+  "images",
   "image_position",
   "badge",
   "accent",
@@ -53,6 +54,7 @@ async function fetchSupabaseVehicleRows(
     .from("vehicles")
     .select(PUBLIC_VEHICLE_COLUMNS)
     .eq("status", "published")
+    .eq("inventory_status", "available")
     .order("featured", { ascending: false })
     .order("sort_order", { ascending: true })
     .order("id", { ascending: true });
@@ -69,7 +71,9 @@ function errorMessage(error: unknown): string {
 
 function publicVehicles(items: readonly Vehicle[]): Vehicle[] {
   return items
-    .filter((vehicle) => vehicle.status === "published")
+    .filter((vehicle) => (
+      vehicle.status === "published" && vehicle.inventoryStatus === "available"
+    ))
     .slice()
     .sort((left, right) => {
       if (left.featured !== right.featured) return left.featured ? -1 : 1;

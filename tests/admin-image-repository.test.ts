@@ -6,6 +6,7 @@ import {
   ADMIN_IMAGE_MAX_BYTES,
   AdminImageRepositoryError,
   uploadAdminVehicleImage,
+  uploadAdminVehicleImages,
 } from "../src/adminImageRepository";
 import type {
   AdminImageDataSource,
@@ -212,4 +213,37 @@ test("rejects a missing or unsafe public URL with a stable Armenian error", asyn
         && error.message === ADMIN_IMAGE_ERROR_MESSAGES.ADMIN_IMAGE_PUBLIC_URL_FAILED,
     );
   }
+});
+
+test("batch upload preserves file order and validates every file before Storage writes", async () => {
+  const calls: Array<{ file: File; path: string }> = [];
+  const dataSource = makeDataSource({
+    upload: async (path, file) => { calls.push({ file, path }); },
+    getPublicUrl: (path) => `https://cdn.example.test/${path}`,
+  });
+  const files = [
+    imageFile("image/jpeg", 4, "front.jpg"),
+    imageFile("image/webp", 5, "side.webp"),
+    imageFile("image/png", 6, "rear.png"),
+  ];
+
+  const uploaded = await uploadAdminVehicleImages(files, { dataSource });
+
+  assert.deepEqual(calls.map(({ file }) => file.name), ["front.jpg", "side.webp", "rear.png"]);
+  assert.deepEqual(uploaded.map(({ publicUrl }) => publicUrl), calls.map(({ path }) => `https://cdn.example.test/${path}`));
+  assert.equal(new Set(calls.map(({ path }) => path)).size, 3);
+
+  let invalidBatchUploads = 0;
+  const invalidDataSource = makeDataSource({
+    upload: async () => { invalidBatchUploads += 1; },
+  });
+  await assert.rejects(
+    () => uploadAdminVehicleImages([
+      imageFile("image/jpeg", 4, "valid.jpg"),
+      imageFile("image/gif", 4, "invalid.gif"),
+    ], { dataSource: invalidDataSource }),
+    (error: unknown) => error instanceof AdminImageRepositoryError
+      && error.code === "ADMIN_IMAGE_TYPE_INVALID",
+  );
+  assert.equal(invalidBatchUploads, 0);
 });
